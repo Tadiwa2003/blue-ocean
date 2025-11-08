@@ -14,6 +14,7 @@ import { CallToAction } from './sections/CallToAction.jsx';
 import { DashboardLayout } from './dashboard/DashboardLayout.jsx';
 import { SignInModal } from './components/SignInModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
+import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
 
 function BackgroundTexture() {
@@ -33,16 +34,27 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewingStorefront, setIsViewingStorefront] = useState(false);
+  const [storefrontType, setStorefrontType] = useState('products'); // 'products' or 'spa'
   const [isStorefrontLoading, setIsStorefrontLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const storefrontTimeoutRef = useRef(null);
 
-  const handleSignInSuccess = () => {
+  const handleSignInSuccess = (userData) => {
+    // userData is passed from SignInModal after successful authentication
+    if (userData) {
+      setCurrentUser({
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+      });
+    } else {
+      // Fallback for backward compatibility
     setCurrentUser({
       name: 'Kim Moyo',
       email: 'founder@blueocean.co',
       role: 'owner',
     });
+    }
     setIsModalOpen(false);
     setIsAuthenticated(true);
   };
@@ -53,7 +65,8 @@ export default function App() {
     closeStorefront();
   };
 
-  const openStorefront = () => {
+  const openStorefront = (type = 'products') => {
+    setStorefrontType(type);
     setIsViewingStorefront(true);
     setIsStorefrontLoading(true);
     if (storefrontTimeoutRef.current) {
@@ -83,12 +96,27 @@ export default function App() {
         onSuccess={handleSignInSuccess}
       />
       {isViewingStorefront ? (
-        isStorefrontLoading ? <StorefrontLoading /> : <Storefront onClose={closeStorefront} />
+        isStorefrontLoading ? (
+          <StorefrontLoading />
+        ) : storefrontType === 'spa' ? (
+          <BeautySpaStorefront onClose={closeStorefront} />
+        ) : (
+          <Storefront onClose={closeStorefront} />
+        )
       ) : isAuthenticated ? (
-        <DashboardLayout currentUser={currentUser} onSignOut={handleSignOut} onViewStorefront={openStorefront} />
+        <DashboardLayout
+          currentUser={currentUser}
+          onSignOut={handleSignOut}
+          onViewStorefront={openStorefront}
+          onViewSpaStorefront={() => openStorefront('spa')}
+        />
       ) : (
         <>
-          <Header onSignInClick={() => setIsModalOpen(true)} onViewStorefront={openStorefront} />
+          <Header
+            onSignInClick={() => setIsModalOpen(true)}
+            onViewStorefront={() => openStorefront('products')}
+            onViewSpaStorefront={() => openStorefront('spa')}
+          />
           <main className="flex flex-col gap-20 pb-24">
             <Hero />
             <Intro />

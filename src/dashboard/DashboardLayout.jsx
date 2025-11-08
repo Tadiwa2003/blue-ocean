@@ -7,6 +7,8 @@ import { analyticsBreakdown } from '../data/analytics.js';
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'products', label: 'Products', icon: '👜' },
+  { id: 'spaServices', label: 'Beauty Spa', icon: '💆' },
+  { id: 'bookings', label: 'Bookings', icon: '📅' },
   { id: 'storefront', label: 'Storefront', icon: '🛍️' },
   { id: 'reports', label: 'Reports', icon: '📑' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
@@ -33,12 +35,6 @@ const metricSummary = [
     value: '12',
     icon: '🛒',
     tone: 'from-amber-500/30 to-amber-500/10',
-  },
-  {
-    label: 'Website Visits',
-    value: '78',
-    icon: '👁️',
-    tone: 'from-violet-500/30 to-violet-500/10',
   },
 ];
 
@@ -89,6 +85,53 @@ const salesTrendData = {
   ],
 };
 
+const spaAnalyticsTiles = [
+  {
+    label: 'Spa Revenue',
+    value: '$18,240.00',
+    delta: '+9.1%',
+    icon: '💆',
+    tone: 'from-purple-500/30 to-purple-500/10',
+  },
+  {
+    label: 'Average Ticket',
+    value: '$142.00',
+    delta: '+4.2%',
+    icon: '💳',
+    tone: 'from-emerald-500/30 to-emerald-500/10',
+  },
+  {
+    label: 'Guest Repeat Rate',
+    value: '37%',
+    delta: '+6.5%',
+    icon: '🔁',
+    tone: 'from-amber-500/30 to-amber-500/10',
+  },
+];
+
+const spaTrendData = {
+  Week: [
+    { period: 'Mon', bookings: 5, revenue: 620, profit: 390, repeat: 0.35 },
+    { period: 'Tue', bookings: 4, revenue: 540, profit: 330, repeat: 0.31 },
+    { period: 'Wed', bookings: 7, revenue: 910, profit: 580, repeat: 0.4 },
+    { period: 'Thu', bookings: 6, revenue: 820, profit: 510, repeat: 0.38 },
+    { period: 'Fri', bookings: 8, revenue: 1120, profit: 720, repeat: 0.42 },
+    { period: 'Sat', bookings: 10, revenue: 1450, profit: 960, repeat: 0.44 },
+    { period: 'Sun', bookings: 8, revenue: 1180, profit: 760, repeat: 0.39 },
+  ],
+  Month: [
+    { period: 'Week 1', bookings: 42, revenue: 5580, profit: 3540, repeat: 0.33 },
+    { period: 'Week 2', bookings: 48, revenue: 6320, profit: 4010, repeat: 0.35 },
+    { period: 'Week 3', bookings: 51, revenue: 6780, profit: 4300, repeat: 0.37 },
+    { period: 'Week 4', bookings: 55, revenue: 7560, profit: 4800, repeat: 0.39 },
+  ],
+  Quarter: [
+    { period: 'Jan', bookings: 168, revenue: 21450, profit: 13520, repeat: 0.34 },
+    { period: 'Feb', bookings: 182, revenue: 22860, profit: 14430, repeat: 0.36 },
+    { period: 'Mar', bookings: 198, revenue: 24540, profit: 15480, repeat: 0.38 },
+  ],
+};
+
 const recentOrders = [
   { customer: 'Solomon Johnson', items: 5, amount: '$67,000.00', status: 'Paid', date: '2 Jan 2025 · 21:29' },
   { customer: 'Tochukwu Michael', items: 5, amount: '$67,000.00', status: 'Paid', date: '2 Jan 2025 · 21:29' },
@@ -116,6 +159,102 @@ const productStatusStyles = {
   Draft: 'text-amber-300',
   Unpublished: 'text-sky-300',
 };
+
+const beautySpaBookings = [
+  {
+    client: 'Samantha Chikosi',
+    service: 'Oceanstone Glow Facial',
+    therapist: 'Nyasha M.',
+    date: 'Mon · Jan 13 • 09:30',
+    status: 'Confirmed',
+    amount: '$125',
+  },
+  {
+    client: 'Wangari N.',
+    service: 'Tidal Stone Therapy',
+    therapist: 'Chelsea K.',
+    date: 'Mon · Jan 13 • 13:00',
+    status: 'Pending',
+    amount: '$135',
+  },
+  {
+    client: 'Kim Moyo',
+    service: 'Seaweed Wrap Ritual',
+    therapist: 'Mutsa P.',
+    date: 'Tue · Jan 14 • 11:00',
+    status: 'Confirmed',
+    amount: '$155',
+  },
+  {
+    client: 'Solomon Johnson',
+    service: 'Coastal Aromatherapy Massage',
+    therapist: 'Tariro M.',
+    date: 'Wed · Jan 15 • 16:30',
+    status: 'Awaiting Payment',
+    amount: '$145',
+  },
+  {
+    client: 'Patience Dube',
+    service: 'Pearl Infusion Facial',
+    therapist: 'Chelsea K.',
+    date: 'Thu · Jan 16 • 10:00',
+    status: 'Confirmed',
+    amount: '$140',
+  },
+  {
+    client: 'Alvin Ndlovu',
+    service: 'Reef-Safe Luxury Manicure',
+    therapist: 'Nyasha M.',
+    date: 'Fri · Jan 17 • 12:45',
+    status: 'Cancelled',
+    amount: '$65',
+  },
+];
+
+const bookingStatusStyles = {
+  Confirmed: 'text-emerald-300',
+  Pending: 'text-amber-300',
+  'Awaiting Payment': 'text-sky-300',
+  Cancelled: 'text-rose-400',
+};
+
+const spaSalesBreakdown = [
+  {
+    service: 'Oceanstone Glow Facial',
+    sessions: 68,
+    revenue: 8500,
+    avgTicket: 125,
+    utilisation: 0.82,
+  },
+  {
+    service: 'Tidal Stone Therapy',
+    sessions: 54,
+    revenue: 7290,
+    avgTicket: 135,
+    utilisation: 0.78,
+  },
+  {
+    service: 'Seaweed Wrap Ritual',
+    sessions: 41,
+    revenue: 6355,
+    avgTicket: 155,
+    utilisation: 0.74,
+  },
+  {
+    service: 'Pearl Infusion Facial',
+    sessions: 46,
+    revenue: 6440,
+    avgTicket: 140,
+    utilisation: 0.69,
+  },
+  {
+    service: 'Reef-Safe Luxury Manicure',
+    sessions: 52,
+    revenue: 3380,
+    avgTicket: 65,
+    utilisation: 0.61,
+  },
+];
 
 function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   return (
@@ -150,7 +289,7 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   );
 }
 
-function DashboardHero({ currentUser, onViewStorefront }) {
+function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront }) {
   return (
     <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/90 via-ocean to-midnight/90 px-6 py-6 text-white shadow-glow">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -163,8 +302,15 @@ function DashboardHero({ currentUser, onViewStorefront }) {
         </div>
         <div className="flex flex-wrap gap-3">
           <Button variant="secondary" className="border-white/20" onClick={onViewStorefront}>
-            View Storefront
+            <span className="mr-2">🛍️</span>
+            Products Storefront
           </Button>
+          {onViewSpaStorefront && (
+            <Button variant="secondary" className="border-white/20" onClick={onViewSpaStorefront}>
+              <span className="mr-2">💆</span>
+              Beauty Spa Storefront
+            </Button>
+          )}
           <Button className="bg-brand-500/80 hover:bg-brand-500">Copy Share Link</Button>
         </div>
       </div>
@@ -174,7 +320,7 @@ function DashboardHero({ currentUser, onViewStorefront }) {
 
 function MetricRow() {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-3">
       {metricSummary.map((metric) => (
         <div
           key={metric.label}
@@ -961,6 +1107,222 @@ function StorefrontPanel() {
   );
 }
 
+function SpaServicesPanel() {
+  const services = useMemo(
+    () => highlightProducts.filter((product) => product.category === 'Beauty Spa Services'),
+    [],
+  );
+
+  const summary = useMemo(() => {
+    const total = services.length;
+    let durationSum = 0;
+    let durationCount = 0;
+    let premiumCount = 0;
+
+    services.forEach((service) => {
+      const durationBadge = service.badges?.find((badge) => badge.toLowerCase().includes('min'));
+      if (durationBadge) {
+        const numeric = parseInt(durationBadge.replace(/\D/g, ''), 10);
+        if (!Number.isNaN(numeric)) {
+          durationSum += numeric;
+          durationCount += 1;
+        }
+      }
+      if (service.badges?.some((badge) => /premium|signature|luxury/i.test(badge))) {
+        premiumCount += 1;
+      }
+    });
+
+    const averageDuration = durationCount ? Math.round(durationSum / durationCount) : null;
+
+    return {
+      total,
+      averageDuration,
+      premiumCount,
+    };
+  }, [services]);
+
+  return (
+    <div className="space-y-6 text-white">
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          title="Total Spa Services"
+          value={summary.total}
+          subtitle="Active beauty spa experiences"
+        />
+        <StatCard
+          title="Average Duration"
+          value={summary.averageDuration ? `${summary.averageDuration} min` : '—'}
+          subtitle="Across all listed services"
+        />
+        <StatCard
+          title="Premium Treatments"
+          value={summary.premiumCount}
+          subtitle="Signature & luxury offerings"
+        />
+      </div>
+
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl">Beauty Spa Services</h2>
+            <p className="mt-2 text-sm text-white/70">
+              Manage your treatment menu, highlight premium rituals, and align spa merchandising with seasonal demand.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" className="border-white/20">
+              Add New Service
+            </Button>
+            <Button>Sync to Storefront</Button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {services.map((service) => (
+            <div
+              key={service.id}
+              className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-4 text-white/80 backdrop-blur"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-brand-200/80">{service.category}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-white">{service.name}</h3>
+                </div>
+                <span className="rounded-full border border-brand-400/40 bg-brand-500/20 px-3 py-1 text-sm font-semibold text-white">
+                  {service.price}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed">{service.description}</p>
+              {service.badges?.length ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {service.badges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <div className="mt-5 flex items-center justify-between text-xs text-white/60">
+                <span>Updated · {new Date().toLocaleDateString()}</span>
+                <button className="text-brand-200 hover:text-brand-100">View in storefront →</button>
+              </div>
+            </div>
+          ))}
+          {!services.length && (
+            <div className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-white/60">
+              No spa services configured yet. Use “Add New Service” to build your menu.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpaBookingsTable() {
+  const stats = useMemo(() => {
+    return beautySpaBookings.reduce(
+      (acc, booking) => {
+        const key = booking.status;
+        acc[key] = (acc[key] || 0) + 1;
+        acc.total += 1;
+        return acc;
+      },
+      { total: 0 },
+    );
+  }, []);
+
+  return (
+    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl">Bookings & Schedule</h2>
+          <p className="mt-2 text-sm text-white/70">
+            Track upcoming treatments, therapist assignments, and client status in real time.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" className="border-white/20">
+            Export Week
+          </Button>
+          <Button>Schedule Booking</Button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Total Bookings</p>
+          <p className="mt-2 text-2xl font-semibold text-white">
+            {stats.total || beautySpaBookings.length}
+          </p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Confirmed</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{stats.Confirmed ?? 0}</p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Pending</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{stats.Pending ?? 0}</p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+          <p className="text-xs uppercase tracking-[0.3em] text-sky-300">Awaiting Payment</p>
+          <p className="mt-2 text-2xl font-semibold text-white">{stats['Awaiting Payment'] ?? 0}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-white/5">
+        <table className="w-full text-left text-sm text-white/70">
+          <thead className="border-b border-white/10 text-xs uppercase tracking-[0.3em] text-white/50">
+            <tr>
+              <th className="px-4 py-3">Client</th>
+              <th className="px-4 py-3">Service</th>
+              <th className="px-4 py-3">Therapist</th>
+              <th className="px-4 py-3">Date & Time</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10 text-sm">
+            {beautySpaBookings.map((booking) => (
+              <tr key={`${booking.client}-${booking.date}`}>
+                <td className="px-4 py-3 text-white">{booking.client}</td>
+                <td className="px-4 py-3">{booking.service}</td>
+                <td className="px-4 py-3 text-white/80">{booking.therapist}</td>
+                <td className="px-4 py-3 text-white/70">{booking.date}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
+                      bookingStatusStyles[booking.status] ?? 'text-white/80'
+                    }`}
+                  >
+                    {booking.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right text-white">{booking.amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function SpaAnalyticsPanel() {
+  return (
+    <div className="space-y-6 text-white">
+      <SpaAnalyticsSummary />
+      <SpaTrendChart />
+      <SpaSalesTable />
+      <SpaBookingsTable />
+    </div>
+  );
+}
+
 function ReportsPanel() {
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
@@ -1034,10 +1396,415 @@ function AnalyticsTable({ title, data }) {
   );
 }
 
-function DashboardPanel({ currentUser, onViewStorefront }) {
+function SpaAnalyticsSummary() {
+  return (
+    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <h2 className="font-display text-2xl">Beauty Spa Performance</h2>
+          <p className="text-sm text-white/70">Bookings cadence, guest repeat rate, and service mix.</p>
+        </div>
+        <div className="ml-auto flex flex-wrap gap-2">
+          {spaAnalyticsTiles.map((tile) => (
+            <div
+              key={tile.label}
+              className={`rounded-2xl border border-white/10 bg-gradient-to-br ${tile.tone} px-4 py-3 text-sm`}
+            >
+              <div className="flex items-center gap-3 text-white/80">
+                <span className="text-lg">{tile.icon}</span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">{tile.label}</p>
+                  <p className="text-lg font-semibold text-white">{tile.value}</p>
+                  <p className="text-xs text-emerald-300">Trend {tile.delta}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <StatCard title="Week" value={`$${spaTrendData.Week.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`} subtitle="Week-to-date revenue" />
+        <StatCard title="Bookings" value={spaTrendData.Week.reduce((sum, item) => sum + item.bookings, 0)} subtitle="Spa guests this week" />
+        <StatCard title="Repeat Guests" value={`${Math.round(spaTrendData.Week.reduce((sum, item) => sum + item.repeat, 0) / spaTrendData.Week.length * 100)}%`} subtitle="Return spa clients" />
+      </div>
+    </div>
+  );
+}
+
+function SpaTrendChart() {
+  const [timeframe, setTimeframe] = useState('Week');
+  const trendData = spaTrendData[timeframe];
+  const chartWidth = 640;
+  const chartHeight = 220;
+  const verticalPadding = 30;
+  const horizontalPadding = 20;
+
+  const revenueMax = Math.max(...trendData.map((item) => item.revenue));
+  const bookingsMax = Math.max(...trendData.map((item) => item.bookings));
+  const profitMax = Math.max(...trendData.map((item) => item.profit));
+
+  const revenuePoints = trendData.map((item, index) => {
+    const x =
+      horizontalPadding +
+      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
+    const valueScale = (chartHeight - verticalPadding * 2) / (revenueMax || 1);
+    const y =
+      chartHeight - verticalPadding - item.revenue * valueScale;
+    return { x, y };
+  });
+
+  const bookingsPoints = trendData.map((item, index) => {
+    const x =
+      horizontalPadding +
+      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
+    const valueScale = (chartHeight - verticalPadding * 2) / (bookingsMax || 1);
+    const y =
+      chartHeight - verticalPadding - item.bookings * valueScale;
+    return { x, y };
+  });
+
+  const profitPoints = trendData.map((item, index) => {
+    const x =
+      horizontalPadding +
+      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
+    const valueScale = (chartHeight - verticalPadding * 2) / (profitMax || 1);
+    const y =
+      chartHeight - verticalPadding - item.profit * valueScale;
+    return { x, y };
+  });
+
+  const revenueAreaPath = revenuePoints.reduce((path, point, index) => {
+    if (index === 0) {
+      return `M ${point.x} ${chartHeight - verticalPadding} L ${point.x} ${point.y}`;
+    }
+    return `${path} L ${point.x} ${point.y}`;
+  }, '');
+
+  const revenueAreaClosed =
+    `${revenueAreaPath} L ${
+      revenuePoints[revenuePoints.length - 1]?.x ?? horizontalPadding
+    } ${chartHeight - verticalPadding} Z`;
+
+  const bookingsLinePath = bookingsPoints.reduce((path, point, index) => {
+    if (index === 0) {
+      return `M ${point.x} ${point.y}`;
+    }
+    return `${path} L ${point.x} ${point.y}`;
+  }, '');
+
+  const profitLinePath = profitPoints.reduce((path, point, index) => {
+    if (index === 0) {
+      return `M ${point.x} ${point.y}`;
+    }
+    return `${path} L ${point.x} ${point.y}`;
+  }, '');
+
+  return (
+    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl">Spa Bookings & Revenue</h2>
+          <p className="text-sm text-white/70">Monitor bookings pace and average ticket across spa services.</p>
+        </div>
+        <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/5 p-1">
+          {['Week', 'Month', 'Quarter'].map((period) => (
+            <button
+              key={period}
+              onClick={() => setTimeframe(period)}
+              className={[
+                'rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-300',
+                timeframe === period
+                  ? 'bg-purple-500/30 text-white shadow-[0_4px_20px_rgba(168,85,247,0.3)]'
+                  : 'text-white/60 hover:bg-white/10 hover:text-white/80',
+              ].join(' ')}
+            >
+              {period}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Revenue trend</h3>
+              <p className="text-xs text-white/50">Stacked view of revenue (area) and bookings (line)</p>
+            </div>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/60">
+              {timeframe}
+            </span>
+          </div>
+          <div className="relative mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-midnight/60">
+            <svg
+              width="100%"
+              height={chartHeight}
+              viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="spaRevenueGradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id="spaBookingLine" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#22d3ee" />
+                </linearGradient>
+                <linearGradient id="spaProfitLine" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor="#facc15" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+                <linearGradient id="chartBG" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
+                </linearGradient>
+              </defs>
+              <rect
+                x="0"
+                y="0"
+                width={chartWidth}
+                height={chartHeight}
+                fill="url(#chartBG)"
+                opacity="0.02"
+              />
+              <path
+                d={revenueAreaClosed}
+                fill="url(#spaRevenueGradient)"
+                stroke="none"
+              />
+              <path
+                d={bookingsLinePath}
+                fill="none"
+                stroke="url(#spaBookingLine)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d={profitLinePath}
+                fill="none"
+                stroke="url(#spaProfitLine)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="6 6"
+              />
+              {bookingsPoints.map((point, index) => (
+                <circle
+                  key={point.x}
+                  cx={point.x}
+                  cy={point.y}
+                  r="5"
+                  fill="#0ea5e9"
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth="2"
+                >
+                  <title>
+                    {trendData[index].period}: {trendData[index].bookings} bookings
+                  </title>
+                </circle>
+              ))}
+              {profitPoints.map((point, index) => (
+                <circle
+                  key={`profit-${point.x}`}
+                  cx={point.x}
+                  cy={point.y}
+                  r="4"
+                  fill="#facc15"
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth="1.5"
+                >
+                  <title>
+                    {trendData[index].period}: ${trendData[index].profit.toLocaleString()} profit
+                  </title>
+                </circle>
+              ))}
+
+              <g>
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                  const value = Math.round(revenueMax * ratio);
+                  const y =
+                    chartHeight - verticalPadding - ratio * (chartHeight - verticalPadding * 2);
+                  return (
+                    <g key={ratio}>
+                      <line
+                        x1={horizontalPadding - 6}
+                        y1={y}
+                        x2={chartWidth - horizontalPadding + 6}
+                        y2={y}
+                        stroke="rgba(255,255,255,0.08)"
+                      />
+                      <text
+                        x={horizontalPadding - 14}
+                        y={y + 4}
+                        textAnchor="end"
+                        fontSize="11"
+                        fill="rgba(255,255,255,0.5)"
+                      >
+                        ${value.toLocaleString()}
+                      </text>
+                    </g>
+                  );
+                })}
+                <text
+                  x={horizontalPadding - 46}
+                  y={chartHeight / 2}
+                  transform={`rotate(-90 ${horizontalPadding - 46} ${chartHeight / 2})`}
+                  fontSize="11"
+                  fill="rgba(255,255,255,0.55)"
+                  letterSpacing="0.2em"
+                >
+                  REVENUE ($)
+                </text>
+              </g>
+              <g className="text-white/50">
+                {trendData.map((point, index) => {
+                  const x =
+                    horizontalPadding +
+                    (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
+                  return (
+                    <g key={point.period}>
+                      <line
+                        x1={x}
+                        y1={chartHeight - verticalPadding + 6}
+                        x2={x}
+                        y2={chartHeight - verticalPadding + 14}
+                        stroke="rgba(255,255,255,0.2)"
+                      />
+                      <text
+                        x={x}
+                        y={chartHeight - verticalPadding + 28}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fill="rgba(255,255,255,0.6)"
+                      >
+                        {point.period}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+            <div className="absolute right-5 top-5 flex items-center gap-4 rounded-full border border-white/10 bg-midnight/60 px-3 py-2 text-xs text-white/60 backdrop-blur">
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-purple-400 to-purple-600" />
+                Revenue
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-sky-400 to-cyan-300" />
+                Bookings
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-yellow-300 to-orange-400" />
+                Profit
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h3 className="text-sm font-semibold text-white">Quick metrics</h3>
+          <div className="mt-5 space-y-4">
+            {[
+              {
+                label: 'Total bookings',
+                value: trendData.reduce((sum, item) => sum + item.bookings, 0),
+                icon: '🗓️',
+              },
+              {
+                label: 'Revenue',
+                value: `$${trendData.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`,
+                icon: '💳',
+              },
+              {
+                label: 'Profit',
+                value: `$${trendData.reduce((sum, item) => sum + item.profit, 0).toLocaleString()}`,
+                icon: '💰',
+              },
+              {
+                label: 'Repeat rate',
+                value: `${Math.round(
+                  (trendData.reduce((sum, item) => sum + item.repeat, 0) / trendData.length) * 100,
+                )}%`,
+                icon: '🔁',
+              },
+              {
+                label: 'Peak day',
+                value: trendData.reduce(
+                  (max, item) => (item.revenue > max.revenue ? item : max),
+                  trendData[0],
+                ).period,
+                icon: '⭐',
+              },
+            ].map((metric) => (
+              <div
+                key={metric.label}
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+              >
+                <div className="flex items-center gap-3 text-sm text-white/70">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-500/10 text-lg text-white">
+                    {metric.icon}
+                  </span>
+                  <span>{metric.label}</span>
+                </div>
+                <span className="text-white font-semibold">{metric.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpaSalesTable() {
+  return (
+    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl">Service Sales Breakdown</h2>
+          <p className="text-sm text-white/70">
+            Compare session volume, revenue contribution, and utilisation across the spa menu.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" className="border-white/20">
+            Download CSV
+          </Button>
+          <Button>Manage Services</Button>
+        </div>
+      </div>
+      <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+        <table className="w-full text-left text-sm text-white/70">
+          <thead className="border-b border-white/10 text-xs uppercase tracking-[0.3em] text-white/50">
+            <tr>
+              <th className="px-4 py-3">Service</th>
+              <th className="px-4 py-3 text-right">Sessions</th>
+              <th className="px-4 py-3 text-right">Revenue</th>
+              <th className="px-4 py-3 text-right">Avg Ticket</th>
+              <th className="px-4 py-3 text-right">Utilisation</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10 text-sm">
+            {spaSalesBreakdown.map((row) => (
+              <tr key={row.service}>
+                <td className="px-4 py-3 text-white">{row.service}</td>
+                <td className="px-4 py-3 text-right text-white/80">{row.sessions}</td>
+                <td className="px-4 py-3 text-right text-white">${row.revenue.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-white">${row.avgTicket.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-white/80">{Math.round(row.utilisation * 100)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront }) {
   return (
     <div className="space-y-6">
-      <DashboardHero currentUser={currentUser} onViewStorefront={onViewStorefront} />
+      <DashboardHero currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} />
       <MetricRow />
       <AnalyticsSummary />
       <SalesTrend />
@@ -1046,7 +1813,7 @@ function DashboardPanel({ currentUser, onViewStorefront }) {
   );
 }
 
-export function DashboardLayout({ currentUser, onSignOut, onViewStorefront }) {
+export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onViewSpaStorefront }) {
   const [activeSection, setActiveSection] = useState('dashboard');
   const isOwner = currentUser?.role === 'owner';
 
@@ -1054,6 +1821,10 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront }) {
     switch (activeSection) {
       case 'products':
         return <ProductsTable isOwner={isOwner} />;
+      case 'spaServices':
+        return <SpaServicesPanel />;
+      case 'bookings':
+        return <SpaAnalyticsPanel />;
       case 'storefront':
         return <StorefrontPanel />;
       case 'reports':
@@ -1072,7 +1843,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront }) {
         );
       case 'dashboard':
       default:
-        return <DashboardPanel currentUser={currentUser} onViewStorefront={onViewStorefront} />;
+        return <DashboardPanel currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} />;
     }
   };
 

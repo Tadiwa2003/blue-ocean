@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { highlightProducts } from '../data/products.js';
 import { ProductCard } from '../components/ProductCard.jsx';
+import { ProductDetailsModal } from '../components/ProductDetailsModal.jsx';
+import { Cart } from '../components/Cart.jsx';
+import { CartNotification } from '../components/CartNotification.jsx';
 import { Button } from '../components/Button.jsx';
+import { Logo } from '../components/Logo.jsx';
 
 const FALLBACK_GRADIENT =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
@@ -54,12 +58,18 @@ export function Storefront({ onClose }) {
     }),
     [],
   );
+  // Filter out Beauty Spa Services - this is for products only
+  const productItems = useMemo(
+    () => highlightProducts.filter((p) => p.category !== 'Beauty Spa Services'),
+    []
+  );
+
   const categoryCounts = useMemo(() => {
-    return highlightProducts.reduce((acc, product) => {
+    return productItems.reduce((acc, product) => {
       acc[product.category] = (acc[product.category] || 0) + 1;
       return acc;
     }, {});
-  }, []);
+  }, [productItems]);
 
   const categories = useMemo(() => ['All', ...Object.keys(categoryCounts)], [categoryCounts]);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -69,9 +79,9 @@ export function Storefront({ onClose }) {
   const filteredProducts = useMemo(
     () =>
       activeCategory === 'All'
-        ? highlightProducts
-        : highlightProducts.filter((p) => p.category === activeCategory),
-    [activeCategory],
+        ? productItems
+        : productItems.filter((p) => p.category === activeCategory),
+    [activeCategory, productItems],
   );
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -89,6 +99,77 @@ export function Storefront({ onClose }) {
   // Storefront preferences
   const [currency, setCurrency] = useState('ZWG $');
   const [language, setLanguage] = useState('English');
+  
+  // Product details modal state
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Cart state
+  const [cartItems, setCartItems] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [notification, setNotification] = useState({ message: '', isVisible: false });
+
+  const handleViewProductDetails = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleViewRelatedProduct = (relatedProduct) => {
+    // Close current modal and open new one with related product
+    setSelectedProduct(relatedProduct);
+    // Modal state stays open, just change the product
+  };
+
+  // Cart functions
+  const addToCart = (product, color = '', size = '') => {
+    const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
+    const newItem = {
+      cartId,
+      ...product,
+      color,
+      size,
+      quantity: 1,
+    };
+    setCartItems((prev) => [...prev, newItem]);
+    const variantText = [color, size].filter(Boolean).join(', ');
+    const message = variantText 
+      ? `Added to cart: ${product.name} (${variantText})`
+      : `Added to cart: ${product.name}`;
+    showNotification(message);
+  };
+
+  const removeFromCart = (cartId) => {
+    setCartItems((prev) => prev.filter((item) => item.cartId !== cartId));
+  };
+
+  const updateQuantity = (cartId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(cartId);
+      return;
+    }
+    setCartItems((prev) =>
+      prev.map((item) => (item.cartId === cartId ? { ...item, quantity: newQuantity } : item))
+    );
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    showNotification('Cart cleared');
+  };
+
+  const showNotification = (message) => {
+    setNotification({ message, isVisible: true });
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const paymentChips = useMemo(
     () => [
       { name: 'VISA', logo: paymentLogos.visa, color: 'from-blue-600/20', bgColor: 'bg-white/95' },
@@ -104,10 +185,30 @@ export function Storefront({ onClose }) {
   return (
     <div className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <p className="text-sm uppercase tracking-[0.35em] text-brand-200">Blue Ocean Storefront Preview</p>
-          <div className="flex items-center gap-3 text-sm text-white/70">
-            <span className="hidden sm:inline">Immersive capsule preview for buyers</span>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
+          <Logo className="hidden sm:flex" />
+          <p className="sm:hidden text-sm uppercase tracking-[0.35em] text-brand-200">Blue Ocean Products</p>
+          <div className="flex items-center gap-2 sm:gap-3 text-sm text-white/70 ml-auto">
+            <span className="hidden sm:inline">Shop products & accessories</span>
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(true)}
+              className="relative rounded-full border border-white/20 bg-white/10 px-4 py-2 hover:bg-white/20 transition backdrop-blur-sm"
+            >
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-400 text-xs font-bold text-white">
+                  {cartItemCount > 9 ? '9+' : cartItemCount}
+                </span>
+              )}
+            </button>
             <Button variant="secondary" onClick={onClose}>
               Exit Preview
             </Button>
@@ -119,19 +220,20 @@ export function Storefront({ onClose }) {
         <section className="relative overflow-hidden">
           <div className="absolute inset-0">
             <img
-              src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85"
+              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85"
               data-fallback-index="0"
-              alt="Guest receiving a relaxing beauty spa facial treatment"
+              alt="Luxury retail store with products on display"
               className="h-full w-full object-cover"
               loading="eager"
               decoding="async"
               fetchpriority="high"
-              style={{ backgroundColor: '#0b233e', objectPosition: 'center 40%', filter: 'brightness(1.08) contrast(1.02)' }}
+              style={{ backgroundColor: '#0b233e', objectPosition: 'center 50%', filter: 'brightness(0.85) contrast(1.1)' }}
               onError={(e) => {
                 const sources = [
-                  'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1600&q=85', // spa therapist with client
-                  'https://images.unsplash.com/photo-1556228453-efd1b22f0e46?auto=format&fit=crop&w=1600&q=85', // spa towel mask
-                  'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1600&q=85', // boutique shopping
+                  'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1600&q=85', // modern retail store
+                  'https://images.unsplash.com/photo-1555529908-3a01abb9bb93?auto=format&fit=crop&w=1600&q=85', // boutique shop interior
+                  'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1600&q=85', // shopping boutique
+                  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85', // retail storefront
                   '/assets/images/hero-bg.jpg',
                   FALLBACK_GRADIENT,
                 ];
@@ -141,7 +243,7 @@ export function Storefront({ onClose }) {
                 e.currentTarget.src = sources[nextIndex];
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-midnight/55 via-ocean/45 to-midnight/65" />
+            <div className="absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
             <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
@@ -234,7 +336,12 @@ export function Storefront({ onClose }) {
           {/* Filtered Grid */}
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onViewDetails={handleViewProductDetails}
+                onAddToCart={(product) => addToCart(product)}
+              />
             ))}
           </div>
 
@@ -494,6 +601,32 @@ export function Storefront({ onClose }) {
           </div>
         </section>
       </main>
+
+      {/* Product Details Modal */}
+      <ProductDetailsModal
+        product={selectedProduct}
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        onViewProduct={handleViewRelatedProduct}
+        onAddToCart={addToCart}
+      />
+
+      {/* Cart */}
+      <Cart
+        cartItems={cartItems}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onRemoveItem={removeFromCart}
+        onUpdateQuantity={updateQuantity}
+        onClearCart={clearCart}
+      />
+
+      {/* Cart Notification */}
+      <CartNotification
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={() => setNotification({ message: '', isVisible: false })}
+      />
     </div>
   );
 }
