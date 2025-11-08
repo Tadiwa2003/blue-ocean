@@ -1,0 +1,40 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#041020" />
+      <stop offset="50%" stop-color="#0b2747" />
+      <stop offset="100%" stop-color="#09121F" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="rgba(29,160,230,0.35)" />
+      <stop offset="100%" stop-color="rgba(29,160,230,0)" />
+    </radialGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#45C4FB" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#1DA0E6" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="palm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3ED598" />
+      <stop offset="100%" stop-color="#0C5F4B" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <circle cx="800" cy="360" r="520" fill="url(#glow)" />
+  <path d="M0 620C210 560 380 540 520 560C730 590 820 680 1040 700C1260 720 1460 650 1600 590V900H0V620Z" fill="url(#wave)" fill-opacity="0.45" />
+  <path d="M0 700C180 640 360 660 520 700C760 760 900 820 1200 780C1330 764 1480 720 1600 680V900H0V700Z" fill="url(#wave)" fill-opacity="0.25" />
+  <g opacity="0.9">
+    <path d="M320 430C370 390 430 370 480 380C430 410 400 450 380 510C360 470 335 450 320 430Z" fill="url(#palm)" />
+    <path d="M390 380C450 340 540 330 600 360C530 380 470 430 440 520C420 450 400 400 390 380Z" fill="url(#palm)" />
+    <path d="M460 360C520 320 620 320 700 350C630 370 560 430 540 520C520 430 490 380 460 360Z" fill="url(#palm)" />
+    <path d="M390 640C430 640 470 640 520 630C600 610 660 580 740 580C820 580 900 610 960 630C1080 670 1190 680 1360 650C1410 640 1490 610 1520 590V900H240V700L390 640Z" fill="#0B1E33" fill-opacity="0.55" />
+    <rect x="960" y="430" width="320" height="220" rx="24" fill="#0E233C" fill-opacity="0.65" />
+    <rect x="995" y="460" width="250" height="90" rx="18" fill="#142F4F" fill-opacity="0.85" />
+    <rect x="995" y="562" width="120" height="60" rx="16" fill="#1DA0E6" fill-opacity="0.6" />
+    <rect x="1125" y="562" width="120" height="60" rx="16" fill="#45C4FB" fill-opacity="0.4" />
+  </g>
+  <g opacity="0.5">
+    <circle cx="1280" cy="260" r="80" fill="#45C4FB" fill-opacity="0.15" />
+    <circle cx="300" cy="220" r="60" fill="#1DA0E6" fill-opacity="0.18" />
+    <circle cx="1380" cy="480" r="60" fill="#3ED598" fill-opacity="0.18" />
+  </g>
+</svg>
