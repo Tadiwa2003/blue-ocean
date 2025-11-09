@@ -1,12 +1,30 @@
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
 
-const navigation = [
-  { name: 'Platform', href: '#about' },
-  { name: 'Offerings', href: '#offerings' },
-  { name: 'Impact', href: '#impact' },
-  { name: 'Founder', href: '#founder' },
-  { name: 'Wholesale', href: '#wholesale' },
+const navSections = [
+  {
+    label: 'Personal',
+    type: 'menu',
+    items: [
+      { name: 'Blue Ocean Capsules', href: '#retail' },
+      { name: 'Tana’s Spa Menu', href: '#spa' },
+    ],
+  },
+  {
+    label: 'Business',
+    type: 'link',
+    href: '#cta',
+  },
+  {
+    label: 'Company',
+    type: 'menu',
+    items: [
+      { name: 'Our Story', href: '#intro' },
+      { name: 'Partnerships', href: '#retail' },
+      { name: 'Media Kit', href: '#journal' },
+      { name: 'Release Notes', href: '#cta' },
+    ],
+  },
 ];
 
 export function Header({ onSignInClick, onViewStorefront, onViewSpaStorefront }) {
@@ -16,40 +34,64 @@ export function Header({ onSignInClick, onViewStorefront, onViewSpaStorefront })
         <a href="#hero" className="transition hover:opacity-90">
           <Logo />
         </a>
-        <nav className="hidden items-center gap-8 text-sm font-medium text-white/80 md:flex">
-          {navigation.map((item) => (
-            <a key={item.name} href={item.href} className="hover:text-white transition">
-              {item.name}
-            </a>
-          ))}
-        </nav>
-        <div className="hidden gap-3 md:flex">
-          <div className="relative group">
-          <Button variant="ghost" onClick={onViewStorefront}>
-            View Storefront
-          </Button>
-            {onViewSpaStorefront && (
-              <div className="absolute top-full left-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="bg-ocean/95 backdrop-blur-md border border-white/10 rounded-2xl p-2 min-w-[200px] shadow-xl">
-                  <button
-                    type="button"
-                    onClick={onViewStorefront}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-white/10 text-sm text-white transition"
-                  >
-                    🛍️ Products Storefront
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onViewSpaStorefront}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-white/10 text-sm text-white transition"
-                  >
-                    💆 Beauty Spa Storefront
-                  </button>
+        <nav className="hidden items-center gap-6 text-sm font-medium text-white/80 md:flex">
+          {navSections.map((section) =>
+            section.type === 'menu' ? (
+              <div key={section.label} className="relative group">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-white/80 transition hover:text-white"
+                >
+                  {section.label}
+                  <span className="text-xs opacity-60">▾</span>
+                </button>
+                <div className="invisible absolute left-0 top-full mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-ocean/95 p-2 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                  {section.items.map((item) => (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className="block rounded-xl px-4 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+                    >
+                      {item.name}
+                    </a>
+                  ))}
                 </div>
+              </div>
+            ) : (
+              <a key={section.label} href={section.href} className="rounded-full px-3 py-1 text-white/80 transition hover:text-white">
+                {section.label}
+              </a>
+            )
+          )}
+        </nav>
+        <div className="hidden items-center gap-3 md:flex">
+          <div className="relative group">
+            <Button variant="ghost" onClick={onViewStorefront}>
+              Storefronts
+            </Button>
+            {onViewSpaStorefront && (
+              <div className="invisible absolute right-0 top-full mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-ocean/95 p-2 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={onViewStorefront}
+                  className="w-full rounded-xl px-4 py-2 text-left text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  🛍️ Products Storefront
+                </button>
+                <button
+                  type="button"
+                  onClick={onViewSpaStorefront}
+                  className="w-full rounded-xl px-4 py-2 text-left text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  💆 Spa Storefront
+                </button>
               </div>
             )}
           </div>
-          <Button onClick={onSignInClick}>Sign In</Button>
+          <Button variant="ghost" onClick={onSignInClick}>
+            Log in
+          </Button>
+          <Button>Sign up</Button>
         </div>
         <button
           type="button"

@@ -3,13 +3,10 @@ import { Header } from './components/Header.jsx';
 import { Footer } from './components/Footer.jsx';
 import { Hero } from './sections/Hero.jsx';
 import { Intro } from './sections/Intro.jsx';
-import { About } from './sections/About.jsx';
+import { FeatureTiles } from './sections/FeatureTiles.jsx';
+import { ValueJourney } from './sections/ValueJourney.jsx';
 import { Offerings } from './sections/Offerings.jsx';
-import { Impact } from './sections/Impact.jsx';
-import { Founder } from './sections/Founder.jsx';
-import { Features } from './sections/Features.jsx';
 import { Testimonials } from './sections/Testimonials.jsx';
-import { Wholesale } from './sections/Wholesale.jsx';
 import { CallToAction } from './sections/CallToAction.jsx';
 import { DashboardLayout } from './dashboard/DashboardLayout.jsx';
 import { SignInModal } from './components/SignInModal.jsx';
@@ -119,14 +116,11 @@ export default function App() {
           />
           <main className="flex flex-col gap-20 pb-24">
             <Hero />
+            <FeatureTiles />
             <Intro />
-            <About />
+            <ValueJourney />
             <Offerings />
-            <Impact />
-            <Features />
-            <Founder />
             <Testimonials />
-            <Wholesale />
             <CallToAction />
           </main>
           <Footer />

@@ -1,9 +1,9 @@
 import { SectionTitle } from '../components/SectionTitle.jsx';
 
 const stats = [
-  { label: 'Partner Boutiques', value: '320+' },
-  { label: 'SKUs in Capsule Drops', value: '480' },
-  { label: 'Fulfillment Accuracy', value: '99.4%' },
+  { label: 'Boutiques Merchandised', value: '320+' },
+  { label: 'Spa Venues Activated', value: '185' },
+  { label: 'SKUs Across Drops', value: '480' },
   { label: 'Average Sell-Through', value: '87%' },
 ];
 
@@ -12,13 +12,14 @@ export function Intro() {
     <section id="intro" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="grid gap-12 lg:grid-cols-[0.6fr,1fr] lg:items-center">
         <SectionTitle
-          eyebrow="Blue Ocean Platform"
-          title="From shoreline inspiration to sell-through results, every touchpoint is orchestrated."
-          description="Blue Ocean empowers retailers to curate, launch, and optimise coastal-luxury capsules with editorial storytelling, logistics, and analytics built in."
+          eyebrow="One platform, two experiences"
+          title="Blue Ocean stocks the shelves while Tana’s Beauty Boost Spa fills the treatment rooms."
+          description="Merchandise your boutique with coastal-luxury capsules and pair them with restorative spa itineraries. We supply the assets, scripts, and operations so retail and wellness launch in sync."
         />
         <div className="rounded-[32px] border border-brand-500/30 bg-ocean/40 p-8 backdrop-blur">
           <p className="text-sm text-white/70">
-            Introduce guests to the world of Blue Ocean with immersive assets, ready-to-style merchandising kits, and performance dashboards tuned for decisive retail teams.
+            Introduce guests to the world of Blue Ocean and Tana’s Beauty Boost Spa with immersive assets, ready-to-style
+            merchandising kits, and ritual training that make every touchpoint feel coastal, curated, and profitable.
           </p>
           <ul className="mt-8 grid grid-cols-2 gap-6 text-white">
             {stats.map((stat) => (
@@ -30,44 +31,44 @@ export function Intro() {
           </ul>
           <div className="mt-10 grid gap-4 text-sm text-white/80 md:grid-cols-2">
             <div className="space-y-2">
-              <p className="text-white/90 font-medium">What you can do with Blue Ocean</p>
+              <p className="text-white/90 font-medium">Blue Ocean for retail leaders</p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-400" />
-                  <span>Curate and sell coastal-luxury products with storytelling assets</span>
+                  <span>Curate coastal-luxury capsules with done-for-you lookbooks and copy.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-400" />
-                  <span>Offer signature beauty spa services alongside retail experiences</span>
+                  <span>Synchronise merchandising, packaging, and launch storytelling.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-400" />
-                  <span>Preview your storefront and merchandising before going live</span>
+                  <span>Preview the storefront layout before you publish a single SKU.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-400" />
-                  <span>Track sales and profit analytics by day, week and month</span>
+                  <span>Analyse performance with day, week, and month revenue dashboards.</span>
                 </li>
               </ul>
             </div>
             <div className="space-y-2">
-              <p className="text-white/90 font-medium">Why partners choose us</p>
+              <p className="text-white/90 font-medium">Tana’s Beauty Boost Spa for wellness teams</p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-300" />
-                  <span>Editorial-grade visuals and copy to accelerate sell-through</span>
+                  <span>Launch spa itineraries with therapist scripts and sensory styling guides.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-300" />
-                  <span>Operational clarity from inventory to fulfillment</span>
+                  <span>Offer upsell-friendly add-ons, pricing, and booking flows out of the box.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-300" />
-                  <span>Owner-only product publishing for quality control</span>
+                  <span>Coordinate guest communications, reminders, and follow-up rituals.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-brand-300" />
-                  <span>Modern, fast storefront experiences powered by Blue Ocean</span>
+                  <span>Blend retail and spa storytelling so guests leave with keepsakes.</span>
                 </li>
               </ul>
             </div>

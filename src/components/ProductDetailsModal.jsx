@@ -330,8 +330,8 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
             {/* Action Buttons */}
             <div className="mt-8 pt-6 border-t border-white/10 space-y-3">
-              <Button
-                onClick={handleAddToCart}
+              <Button 
+                onClick={handleAddToCart} 
                 className="w-full justify-center text-base py-4"
                 disabled={(requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)}
               >

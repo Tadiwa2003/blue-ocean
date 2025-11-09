@@ -2,25 +2,44 @@ import { Button } from '../components/Button.jsx';
 
 export function CallToAction() {
   return (
-    <section id="cta" className="mx-auto mt-24 max-w-4xl px-6">
-      <div className="rounded-[40px] border border-brand-400/30 bg-gradient-to-br from-ocean via-midnight to-brand-700/40 p-10 text-center shadow-glow">
-        <h2 className="font-display text-3xl text-white sm:text-4xl">
-          Join the Blue Ocean tide alerts
+    <section id="cta" className="mx-auto mt-24 max-w-5xl px-6">
+      <div className="rounded-[48px] border border-white/12 bg-gradient-to-br from-brand-500/20 via-midnight/90 to-ocean/95 p-12 text-center shadow-[0_40px_90px_rgba(4,11,24,0.45)] backdrop-blur">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">All-in-one platform</p>
+        <h2 className="mt-3 font-display text-3xl text-white sm:text-[2.75rem]">
+          All your retail + spa operations. One login.
         </h2>
-        <p className="mt-4 text-sm text-white/70">
-          Receive first-look access to capsule reveals, ocean-forward collaborations, and sensory playlists that set the mood for your next launch.
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-white/70">
+          Join 1,000+ boutiques, resorts, and spa teams who orchestrate product drops and treatment journeys through a single,
+          secure account. You can be live in minutes.
         </p>
-        <form className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <input
-            type="email"
-            required
-            placeholder="Enter your email"
-            className="h-12 w-full max-w-sm rounded-full border border-white/10 bg-white/5 px-5 text-sm text-white placeholder:text-white/40 focus:border-brand-300 focus:outline-none"
-          />
-          <Button type="submit">Join the List</Button>
-        </form>
-        <p className="mt-3 text-xs text-white/40">
-          Monthly tides, no spam. Opt out anytime.
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button>Get started</Button>
+          <Button variant="secondary">Talk to our team</Button>
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs text-white/60">
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/15 hover:text-white"
+          >
+            <span className="text-xl"></span>
+            <span>
+              Download on <br />
+              App Store
+            </span>
+          </a>
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/15 hover:text-white"
+          >
+            <span className="text-lg">▶</span>
+            <span>
+              Get it on <br />
+              Ocean Play
+            </span>
+          </a>
+        </div>
+        <p className="mt-6 text-xs uppercase tracking-[0.3em] text-white/40">
+          No setup fees · Concierge onboarding · 24/7 coastal support
         </p>
       </div>
     </section>

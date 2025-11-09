@@ -4,7 +4,7 @@ import { SectionTitle } from '../components/SectionTitle.jsx';
 
 export function ProductShowcase() {
   return (
-    <section id="collections" className="mx-auto mt-24 max-w-6xl px-6">
+    <section id="retail" data-section="collections" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
         <SectionTitle
           eyebrow="Featured Capsule"
