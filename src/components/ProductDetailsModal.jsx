@@ -31,6 +31,8 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   const productVariants = product ? getProductVariants(product.id) : { colors: [], sizes: [] };
   const colorVariants = productVariants.colors || [];
   const sizeVariants = productVariants.sizes || [];
+  const requiresColorSelection = colorVariants.length > 0;
+  const requiresSizeSelection = sizeVariants.length > 0;
 
   // Initialize selections
   useEffect(() => {
@@ -328,12 +330,21 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
             {/* Action Buttons */}
             <div className="mt-8 pt-6 border-t border-white/10 space-y-3">
-              <Button 
-                onClick={handleAddToCart} 
+              <Button
+                onClick={handleAddToCart}
                 className="w-full justify-center text-base py-4"
-                disabled={!selectedColor || !selectedSize}
+                disabled={(requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)}
               >
-                Add to Cart {selectedColor && selectedSize && `(${selectedColor}, ${selectedSize})`}
+                Add to Cart
+                {(selectedColor || selectedSize) && (
+                  <span className="ml-2 text-sm text-white/80">
+                    {selectedColor && selectedSize
+                      ? `(${selectedColor}, ${selectedSize})`
+                      : selectedColor
+                        ? `(${selectedColor})`
+                        : `(${selectedSize})`}
+                  </span>
+                )}
               </Button>
               <Button variant="secondary" className="w-full justify-center text-base py-4">
                 Save for Later
