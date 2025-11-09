@@ -336,39 +336,39 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                   {imageGallery.map((img, idx) => {
                     const isActive = selectedImage === img;
                     return (
-                      <button
-                        key={`${service?.id || 'service'}-thumb-${idx}`}
-                        type="button"
-                        onClick={() => setSelectedImage(img || fallbackImage)}
+                  <button
+                    key={`${service?.id || 'service'}-thumb-${idx}`}
+                    type="button"
+                    onClick={() => setSelectedImage(img || fallbackImage)}
                         className={[
                           'relative flex-shrink-0 overflow-hidden rounded-2xl border-2 transition',
                           'h-20 w-24 sm:h-24 sm:w-28',
                           isActive
-                            ? 'border-brand-400 shadow-lg shadow-brand-400/30'
+                        ? 'border-brand-400 shadow-lg shadow-brand-400/30'
                             : 'border-white/10 hover:border-white/25',
                         ].join(' ')}
                         aria-label={`View gallery image ${idx + 1}`}
-                      >
-                        <img
-                          src={img || fallbackImage}
-                          alt={`View ${idx + 1}`}
-                          className="h-full w-full object-cover"
-                          referrerPolicy="no-referrer"
-                          crossOrigin="anonymous"
-                          onError={(e) => {
-                            e.currentTarget.src = fallbackImage;
-                          }}
-                        />
+                  >
+                    <img
+                      src={img || fallbackImage}
+                      alt={`View ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        e.currentTarget.src = fallbackImage;
+                      }}
+                    />
                         <span
                           className={[
                             'pointer-events-none absolute inset-0 border-2 border-transparent transition',
                             isActive ? 'border-brand-400/80' : '',
                           ].join(' ')}
                         />
-                      </button>
+                  </button>
                     );
                   })}
-                </div>
+              </div>
               )}
 
               {hasVideo && (
@@ -376,7 +376,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
-                        Treatment Illustration
+                    Treatment Illustration
                       </p>
                       <h3 className="mt-2 text-base font-semibold text-white">Step inside the ritual</h3>
                     </div>
@@ -409,10 +409,10 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
           <div className="flex flex-col gap-8 bg-gradient-to-bl from-midnight/95 to-ocean/60 p-6 sm:p-8 lg:p-10">
             <section className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_28px_70px_rgba(7,45,72,0.35)] backdrop-blur">
               <div className="flex flex-wrap items-start justify-between gap-6">
-                <div className="space-y-3">
+              <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.4em] text-brand-300">
-                    {service.serviceCategory}
-                  </p>
+                  {service.serviceCategory}
+                </p>
                   <h1 className="font-display text-3xl text-white sm:text-4xl lg:text-5xl">{service.name}</h1>
                   {service.headline && (
                     <p className="text-base font-semibold text-brand-100/90">{service.headline}</p>
@@ -425,7 +425,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                     {formatCurrency(service.basePrice, service.currency)}
                   </p>
                   <p className="text-xs text-white/55">per guest</p>
-                </div>
+                  </div>
               </div>
 
               {quickFacts.length > 0 && (
@@ -438,7 +438,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                       <span>{fact.icon}</span>
                       <span className="text-white/80">{fact.value}</span>
                     </span>
-                  ))}
+                    ))}
                 </div>
               )}
             </section>
@@ -468,7 +468,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                         {benefit}
                       </div>
                     ))}
-                  </div>
+                </div>
                 </section>
               ) : (
                 renderDetailSection(
@@ -478,7 +478,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                   'Benefits will be published once the treatment is finalized.'
                 )
               )}
-            </div>
+                    </div>
 
             {hasAddOns && (
               <section className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_28px_70px_rgba(7,45,72,0.32)] backdrop-blur">
@@ -561,10 +561,10 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                 </span>
               </div>
 
-              {service.bookableDates?.length > 0 && (
+                {service.bookableDates?.length > 0 && (
                 <div className="mt-5 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Preferred Date</p>
-                  <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3">
                     {service.bookableDates.map((dateOption) => {
                       const isActive = selectedDate === dateOption.value;
                       return (
@@ -583,14 +583,14 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                         </button>
                       );
                     })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {service.timeSlots?.length > 0 && (
+                {service.timeSlots?.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Preferred Time</p>
-                  <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3">
                     {service.timeSlots.map((timeOption) => {
                       const isActive = selectedTime === timeOption;
                       return (
@@ -606,55 +606,55 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                           ].join(' ')}
                         >
                           {timeOption}
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div className="mt-5 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
-                  Notes for Your Therapist (Optional)
-                </p>
-                <textarea
-                  value={guestNote}
-                  onChange={(event) => setGuestNote(event.target.value)}
-                  rows={3}
-                  placeholder="Share preferences, focus areas, or celebration details."
+                    Notes for Your Therapist (Optional)
+                  </p>
+                  <textarea
+                    value={guestNote}
+                    onChange={(event) => setGuestNote(event.target.value)}
+                    rows={3}
+                    placeholder="Share preferences, focus areas, or celebration details."
                   className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
-                />
-              </div>
+                  />
+            </div>
 
               <div className="mt-6 rounded-[24px] border border-white/20 bg-white/10 px-5 py-4 text-sm text-white/80 backdrop-blur">
                 <div className="flex items-center justify-between">
-                  <span>Service Investment</span>
-                  <span>{formatCurrency(service.basePrice, service.currency)}</span>
-                </div>
-                {addOnTotal > 0 && (
+                <span>Service Investment</span>
+                <span>{formatCurrency(service.basePrice, service.currency)}</span>
+              </div>
+              {addOnTotal > 0 && (
                   <div className="mt-2 flex items-center justify-between text-white/75">
-                    <span>Enhancements</span>
-                    <span>{formatCurrency(addOnTotal, service.currency)}</span>
-                  </div>
-                )}
+                  <span>Enhancements</span>
+                  <span>{formatCurrency(addOnTotal, service.currency)}</span>
+                </div>
+              )}
                 <div className="mt-3 flex items-center justify-between text-base font-semibold text-white">
                   <span>Total Due</span>
-                  <span>{formatCurrency(totalPrice, service.currency)}</span>
+                <span>{formatCurrency(totalPrice, service.currency)}</span>
                 </div>
               </div>
 
               <div className="mt-6 space-y-3">
-                <Button
-                  onClick={handleBook}
-                  className="w-full justify-center py-4 text-base"
-                  disabled={!selectedDate || !selectedTime}
-                >
-                  {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
-                </Button>
+              <Button
+                onClick={handleBook}
+                className="w-full justify-center py-4 text-base"
+                disabled={!selectedDate || !selectedTime}
+              >
+                {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
+              </Button>
                 <Button variant="secondary" onClick={onClose} className="w-full justify-center py-4 text-base">
-                  Decide Later
-                </Button>
-              </div>
+                Decide Later
+              </Button>
+            </div>
             </section>
           </div>
         </div>

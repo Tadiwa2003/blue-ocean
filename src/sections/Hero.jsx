@@ -7,22 +7,22 @@ const FALLBACK_GRADIENT =
 export function Hero() {
   return (
     <section id="hero" className="relative overflow-hidden pt-32">
-      {/* Background image layer - with robust runtime fallbacks */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1920&q=80"
+          src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"
           data-fallback-index="0"
-          alt="Till operator serving a client at checkout"
+          alt="Coastal retail boutique with spa lounge"
           className="h-full w-full object-cover"
           loading="eager"
           decoding="async"
           fetchpriority="high"
-          style={{ backgroundColor: '#0b233e', objectPosition: '35% center', filter: 'brightness(1.1) contrast(1.03)' }}
+          style={{ backgroundColor: '#0b233e', objectPosition: 'center 45%', filter: 'brightness(0.92) contrast(1.05)' }}
           onError={(e) => {
             const sources = [
-              'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&w=1920&q=80', // POS payment close-up
-              'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1920&q=80', // boutique shopping with people
-              'https://images.unsplash.com/photo-1505575972945-2104479a8ef3?auto=format&fit=crop&w=1920&q=80', // spa products / stones (contextual)
+              'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1920&q=80',
+              'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1920&q=80',
+              'https://images.unsplash.com/photo-1505575972945-2104479a8ef3?auto=format&fit=crop&w=1920&q=80',
+              'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1920&q=80',
               '/assets/images/hero-bg.jpg',
               FALLBACK_GRADIENT,
             ];
@@ -33,85 +33,138 @@ export function Hero() {
           }}
         />
       </div>
-      {/* Overlay gradients for text readability */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/25 via-midnight/12 to-transparent" />
-      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(29,160,230,0.12),_transparent_60%)]" />
-      <div className="relative z-30 mx-auto max-w-6xl px-6 pb-20 pt-24 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
-          <div className="space-y-6 rounded-3xl border border-white/10 bg-midnight/45 p-8 text-left shadow-[0_30px_60px_rgba(4,11,24,0.35)] backdrop-blur-lg">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">
-              Curated Products · Signature Spa Rituals
+      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/55 via-midnight/30 to-transparent" />
+      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(29,160,230,0.2),_transparent_60%)]" />
+
+      <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">
+          <div className="space-y-8">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-brand-100 backdrop-blur">
+              Blue Ocean · Tana&apos;s Beauty Boost Spa
             </span>
-            <h1 className="font-display text-3xl leading-tight text-white sm:text-4xl md:text-[44px] md:leading-tight">
-              Blue Ocean supplies coastal-luxury merchandise and beauty spa experiences that sell through and soothe.
+            <h1 className="font-display text-[2.75rem] leading-tight text-white sm:text-[3.1rem]">
+              Two coastal brands, one elevated guest journey.
             </h1>
             <p className="max-w-2xl text-base text-white/75 md:text-lg">
-              Source ready-to-style totes, resort footwear, and skincare while offering guests restorative spa rituals designed by our shoreline artisans.
-              Every product and treatment comes with story-driven assets for retail and wellness lounges.
+              Blue Ocean curates the retail capsules, merchandising stories, and logistics that keep boutiques selling
+              out signature drops. Tana&apos;s Beauty Boost Spa brings the ritual—marine-inspired facials, body
+              treatments, and sensory design that transform your wellness suites into revenue-driving sanctuaries.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button>Shop Signature Collection</Button>
-              <Button variant="secondary">Book Spa Ritual Menu</Button>
-              <Button variant="ghost" className="px-4" onClick={() => document.querySelector('#intro')?.scrollIntoView({ behavior: 'smooth' })}>
-                Learn more
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
+              <Button onClick={() => document.querySelector('#retail')?.scrollIntoView({ behavior: 'smooth' })}>
+                Explore Blue Ocean Capsules
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => document.querySelector('#spa')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                View Tana&apos;s Spa Menu
+              </Button>
+              <Button
+                variant="ghost"
+                className="px-4"
+                onClick={() => document.querySelector('#intro')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                How it works
               </Button>
             </div>
-          </div>
-          <div className="hidden lg:block">
-            <div className="relative overflow-hidden rounded-[32px] border border-white/15 bg-midnight/75 p-6 text-left shadow-[0_25px_45px_rgba(4,11,24,0.5)] backdrop-blur-xl">
-              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-500/25 blur-3xl" />
-              <div className="absolute -left-24 bottom-0 h-32 w-32 rounded-full bg-brand-300/20 blur-3xl" />
-              <div className="relative flex flex-col gap-4">
-                <span className="w-fit rounded-full border border-brand-400/40 bg-brand-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-brand-100">
-                  Storefront Spotlight
-                </span>
-                <h3 className="font-display text-2xl text-white">Lamu Boutique Partners</h3>
-                <p className="text-sm text-white/80 leading-relaxed">
-                Recently sold out of the Sea Glass Tote capsule within 72 hours of launch, pairing retail with our Oceanstone Glow facial ritual.
-                We supply launch kits, merchandising scripts, and tasting notes for every drop.
-              </p>
-                <div className="grid grid-cols-2 gap-3 text-sm text-white/75">
-                  <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3 text-center">
-                    <span className="block text-[11px] uppercase tracking-[0.35em] text-brand-200">AOV Lift</span>
-                    <span className="mt-1 block text-lg font-semibold text-white">+18%</span>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3 text-center">
-                    <span className="block text-[11px] uppercase tracking-[0.35em] text-brand-200">Guest Score</span>
-                    <span className="mt-1 block text-lg font-semibold text-white">4.9 / 5</span>
-                  </div>
-                </div>
-                <div className="mt-4 flex gap-3 text-xs text-white/60">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                    <span className="h-2 w-2 rounded-full bg-brand-400" />
-                    VIP Retail Support
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1">
-                    <span className="h-2 w-2 rounded-full bg-brand-300" />
-                    72hr Sell-through
-                  </span>
-                </div>
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60">
+              <a
+                href="#cta"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/20 hover:text-white"
+              >
+                <span className="text-xl"></span>
+                <span>Download on the App Store</span>
+              </a>
+              <a
+                href="#cta"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/20 hover:text-white"
+              >
+                <span className="text-lg">▶</span>
+                <span>Get it on Blue Ocean Play</span>
+              </a>
             </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/8 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.4)] backdrop-blur-xl">
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
+              <div className="relative space-y-4 text-left text-white">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
+                  Blue Ocean Marketplace
+                </span>
+                <h2 className="font-display text-2xl">Retail capsules that ship ready-to-sell.</h2>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Seasonal assortments, lookbooks, and fulfilment handled end-to-end. Launch coastal-luxury stories in
+                  days, not months.
+                </p>
+                <ul className="space-y-2 text-xs text-white/65">
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                    Merchandising playbooks for every drop
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                    Logistics + packaging with shoreline flair
+                  </li>
+                </ul>
+              </div>
+            </article>
+
+            <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-midnight/75 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.45)] backdrop-blur-xl">
+              <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-brand-300/20 blur-3xl" />
+              <div className="relative space-y-4 text-left text-white">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
+                  Tana&apos;s Beauty Boost Spa
+                </span>
+                <h2 className="font-display text-2xl">Signature rituals, concierge booking built in.</h2>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  Oceanstone facials, tidal massages, and curated add-ons that lift spa revenue while deepening guest
+                  loyalty.
+                </p>
+                <ul className="space-y-2 text-xs text-white/65">
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
+                    Bookable itineraries with guest communications
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
+                    Ritual training, scent design, and therapist scripts
+                  </li>
+                </ul>
+              </div>
+            </article>
           </div>
         </div>
       </div>
-      <div className="relative z-30 mx-auto -mt-6 grid w-full max-w-6xl grid-cols-2 gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4">
+
+      <div className="relative z-30 mx-auto -mt-4 grid w-full max-w-6xl gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4">
         <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Curated Brands</dt>
-          <dd className="mt-2 text-2xl font-semibold">24+</dd>
+          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Retail partners</dt>
+          <dd className="mt-2 text-2xl font-semibold">320+</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Spa Rituals</dt>
-          <dd className="mt-2 text-2xl font-semibold">12</dd>
+          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Spa rituals curated</dt>
+          <dd className="mt-2 text-2xl font-semibold">18</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Global Orders</dt>
-          <dd className="mt-2 text-2xl font-semibold">18K</dd>
+          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Sell-through in 72 hrs</dt>
+          <dd className="mt-2 text-2xl font-semibold">82%</dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Satisfaction</dt>
-          <dd className="mt-2 text-2xl font-semibold">4.9/5</dd>
+          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Guest satisfaction</dt>
+          <dd className="mt-2 text-2xl font-semibold">4.9 / 5</dd>
         </div>
+      </div>
+      <div className="relative z-30 mt-8 flex justify-center">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:bg-white/15 hover:text-white"
+          onClick={() => document.querySelector('#retail')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          Scroll
+          <span className="text-white">⌄</span>
+        </button>
       </div>
     </section>
   );

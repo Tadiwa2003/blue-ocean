@@ -1,0 +1,63 @@
+const pillars = [
+  {
+    number: '01',
+    title: 'Account',
+    description: 'Align your retail and spa teams with a single dashboard that shares inventory, schedules, and brand assets.',
+  },
+  {
+    number: '02',
+    title: 'Curate',
+    description: 'Select capsules and treatments tailored to your property—complete with sensory storytelling and pricing guidance.',
+  },
+  {
+    number: '03',
+    title: 'Activate',
+    description: 'Invite staff, sync calendars, and launch guest communications with automated confirmations and reminders.',
+  },
+  {
+    number: '04',
+    title: 'Delight',
+    description: 'Deliver immersive on-site rituals and let guests take home what they loved with bundled retail suggestions.',
+  },
+  {
+    number: '05',
+    title: 'Review',
+    description: 'Track sell-through, guest sentiment, and team performance in one analytics view—iterate in a single click.',
+  },
+];
+
+export function ValueJourney() {
+  return (
+    <section id="journey" className="mx-auto mt-24 max-w-6xl px-6">
+      <div className="rounded-[40px] border border-white/10 bg-white/5 p-8 shadow-[0_28px_70px_rgba(4,11,24,0.4)] backdrop-blur">
+        <div className="flex flex-col gap-6 text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Simple · Fast · Guided</p>
+            <h2 className="mt-2 font-display text-3xl text-white sm:text-[2.5rem]">Every launch follows the same tide.</h2>
+          </div>
+          <p className="text-sm text-white/65 sm:max-w-md">
+            Whether you&apos;re stocking a pop-up boutique or opening a spa wing, Blue Ocean and Tana&apos;s Beauty Boost Spa
+            keep the process five steps end-to-end.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-5">
+          {pillars.map((pillar) => (
+            <div
+              key={pillar.number}
+              className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-white/4 p-5 text-left text-white transition hover:border-brand-400/40 hover:bg-white/8"
+            >
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
+                {pillar.number}
+              </span>
+              <h3 className="text-lg font-semibold">{pillar.title}</h3>
+              <p className="text-xs text-white/65 leading-relaxed">{pillar.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
