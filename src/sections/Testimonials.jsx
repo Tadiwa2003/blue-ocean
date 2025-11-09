@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { testimonials } from '../data/testimonials.js';
 
 const extendedTestimonials = [
@@ -40,12 +41,150 @@ const colors = [
   { text: '#1F2F2B', background: '#CFFFE4' },
 ];
 
+const countryFlags = [
+  '🇦🇫', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿',
+  '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪', '🇧🇿', '🇧🇯', '🇧🇲', '🇧🇹', '🇧🇴', '🇧🇶', '🇧🇦', '🇧🇼', '🇧🇷', '🇮🇴', '🇻🇬',
+  '🇧🇳', '🇧🇬', '🇧🇫', '🇧🇮', '🇰🇭', '🇨🇲', '🇨🇦', '🇨🇻', '🇰🇾', '🇨🇫', '🇹🇩', '🇨🇱', '🇨🇳', '🇨🇽', '🇨🇨', '🇨🇴',
+  '🇰🇲', '🇨🇬', '🇨🇩', '🇨🇰', '🇨🇷', '🇭🇷', '🇨🇺', '🇨🇼', '🇨🇾', '🇨🇿', '🇩🇰', '🇩🇯', '🇩🇲', '🇩🇴', '🇪🇨', '🇪🇬', '🇸🇻',
+  '🇬🇶', '🇪🇷', '🇪🇪', '🇸🇿', '🇪🇹', '🇫🇰', '🇫🇴', '🇫🇯', '🇫🇮', '🇫🇷', '🇬🇫', '🇵🇫', '🇵🇲', '🇬🇦', '🇬🇲', '🇬🇪', '🇩🇪',
+  '🇬🇭', '🇬🇮', '🇬🇷', '🇬🇱', '🇬🇩', '🇬🇺', '🇬🇹', '🇬🇬', '🇬🇳', '🇬🇼', '🇬🇾', '🇭🇹', '🇭🇳', '🇭🇰', '🇭🇺', '🇮🇸', '🇮🇳',
+  '🇮🇩', '🇮🇷', '🇮🇶', '🇮🇪', '🇮🇲', '🇮🇱', '🇮🇹', '🇨🇮', '🇯🇲', '🇯🇵', '🇯🇪', '🇯🇴', '🇰🇿', '🇰🇪', '🇰🇮', '🇽🇰', '🇰🇼',
+  '🇰🇬', '🇱🇦', '🇱🇻', '🇱🇧', '🇱🇸', '🇱🇷', '🇱🇾', '🇱🇮', '🇱🇹', '🇱🇺', '🇲🇴', '🇲🇰', '🇲🇬', '🇲🇼', '🇲🇾', '🇲🇻', '🇲🇱',
+  '🇲🇹', '🇲🇭', '🇲🇶', '🇲🇷', '🇲🇺', '🇾🇹', '🇲🇽', '🇫🇲', '🇲🇩', '🇲🇨', '🇲🇳', '🇲🇪', '🇲🇸', '🇲🇦', '🇲🇿', '🇲🇲', '🇳🇦',
+  '🇳🇷', '🇳🇵', '🇳🇱', '🇳🇨', '🇳🇿', '🇳🇮', '🇳🇪', '🇳🇬', '🇳🇺', '🇳🇫', '🇲🇵', '🇰🇵', '🇲🇰', '🇳🇴', '🇴🇲', '🇵🇰', '🇵🇼',
+  '🇵🇸', '🇵🇦', '🇵🇬', '🇵🇾', '🇵🇪', '🇵🇭', '🇵🇳', '🇵🇱', '🇵🇹', '🇵🇷', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇺', '🇷🇼', '🇸🇭', '🇰🇳',
+  '🇱🇨', '🇻🇨', '🇼🇸', '🇸🇲', '🇸🇹', '🇸🇦', '🇸🇳', '🇷🇸', '🇸🇨', '🇸🇱', '🇸🇬', '🇸🇽', '🇸🇰', '🇸🇮', '🇸🇧', '🇸🇴', '🇿🇦',
+  '🇬🇸', '🇰🇷', '🇸🇸', '🇪🇸', '🇱🇰', '🇸🇩', '🇸🇷', '🇸🇯', '🇸🇪', '🇨🇭', '🇸🇾', '🇹🇼', '🇹🇯', '🇹🇿', '🇹🇭', '🇹🇱', '🇹🇬',
+  '🇹🇰', '🇹🇴', '🇹🇹', '🇹🇳', '🇹🇷', '🇹🇲', '🇹🇨', '🇹🇻', '🇺🇬', '🇺🇦', '🇦🇪', '🇬🇧', '🇺🇸', '🇺🇾', '🇺🇲', '🇺🇿', '🇻🇺',
+  '🇻🇦', '🇻🇪', '🇻🇳', '🇻🇬', '🇻🇮', '🇼🇫', '🇪🇭', '🇾🇪', '🇿🇲', '🇿🇼'
+];
+
+const flagGradients = [
+  'from-sky-500/90 to-sky-600/90',
+  'from-rose-500/90 to-rose-600/90',
+  'from-indigo-500/90 to-indigo-600/90',
+  'from-emerald-500/90 to-emerald-600/90',
+  'from-purple-500/90 to-purple-600/90',
+  'from-amber-500/90 to-amber-600/90',
+  'from-cyan-500/90 to-cyan-600/90',
+  'from-lime-500/90 to-lime-600/90',
+];
+
+const BASE_ZONE_HEIGHT = 220;
+const FLAG_SIZE = 64;
+const SLOT_POSITIONS = Array.from({ length: 36 }, (_, index) => 6 + index * 2.5);
+const MAX_TOTAL_FLAGS = 108;
+const STACK_VERTICAL_OFFSET = 5;
+const STACK_HEIGHT = 26;
+
+function createFlagBall(idOffset = 0) {
+  const flag = countryFlags[Math.floor(Math.random() * countryFlags.length)];
+  const gradient = flagGradients[Math.floor(Math.random() * flagGradients.length)];
+  const fallDuration = 1.8 + Math.random() * 0.6;
+
+  return {
+    id: Date.now() + idOffset + Math.random(),
+    flag,
+    gradient,
+    x: Math.random() * 70 + 15,
+    delay: Math.random() * 0.4,
+    duration: fallDuration,
+  };
+}
+
+function FallingFlag({ ball, targetY, onSettle }) {
+  return (
+    <motion.div
+      key={ball.id}
+      initial={{ y: -220, opacity: 0, scale: 0.94 }}
+      animate={{ y: targetY, opacity: 1, scale: 1 }}
+      transition={{ delay: ball.delay, duration: ball.duration, ease: [0.28, 0.74, 0.37, 1.02] }}
+      onAnimationComplete={() => onSettle(ball)}
+      className={`absolute flex -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_24px_60px_rgba(6,18,32,0.45)]`}
+      style={{ left: `${ball.x}%`, width: FLAG_SIZE, height: FLAG_SIZE }}
+    >
+      <span>{ball.flag}</span>
+    </motion.div>
+  );
+}
+
+function SettledFlag({ ball }) {
+  return (
+    <motion.div
+      key={`settled-${ball.id}`}
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 420 - ball.stackIndex * 20, damping: 30 + ball.stackIndex * 3, mass: 0.6 }}
+      className={`absolute flex -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_16px_38px_rgba(4,13,26,0.4)]`}
+      style={{ left: `${ball.finalX}%`, bottom: ball.bottomOffset, width: FLAG_SIZE, height: FLAG_SIZE }}
+    >
+      <span>{ball.flag}</span>
+    </motion.div>
+  );
+}
+
 export function Testimonials() {
   const containerRef = useRef(null);
+  const resizeObserverRef = useRef(null);
   const offsets = useMemo(
     () => extendedTestimonials.map((_, index) => index - (extendedTestimonials.length - 1) / 2),
-    []
+    [],
   );
+  const [containerHeight, setContainerHeight] = useState(720);
+  const [fallingFlags, setFallingFlags] = useState([]);
+  const [settledFlags, setSettledFlags] = useState([]);
+  const [totalFlags, setTotalFlags] = useState(0);
+  const [hasLaunched, setHasLaunched] = useState(false);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || hasLaunched) return undefined;
+
+    if (typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') {
+      setHasLaunched(true);
+      setFallingFlags(countryFlags.slice(0, MAX_TOTAL_FLAGS).map((_, index) => createFlagBall(index)));
+      return undefined;
+    }
+
+    const handleIntersection = (entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && !hasLaunched) {
+        setHasLaunched(true);
+        setFallingFlags(countryFlags.slice(0, MAX_TOTAL_FLAGS).map((_, index) => createFlagBall(index)));
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, { threshold: 0.35 });
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [hasLaunched]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    if (typeof window === 'undefined' || typeof window.ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry?.contentRect?.height) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserverRef.current = observer;
+    observer.observe(container);
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -67,7 +206,6 @@ export function Testimonials() {
       container.style.setProperty('--tilt-scale', '0');
     };
 
-    resetTilt();
     container.addEventListener('pointermove', updateTilt);
     container.addEventListener('pointerleave', resetTilt);
 
@@ -76,6 +214,51 @@ export function Testimonials() {
       container.removeEventListener('pointerleave', resetTilt);
     };
   }, []);
+
+  const targetY = useMemo(() => Math.max(containerHeight - BASE_ZONE_HEIGHT - FLAG_SIZE, 260), [containerHeight]);
+
+  const handleSettle = (ball) => {
+    setFallingFlags((prev) => prev.filter((item) => item.id !== ball.id));
+    setSettledFlags((prev) => {
+      if (totalFlags >= MAX_TOTAL_FLAGS) {
+        return prev;
+      }
+
+      const slotCounts = SLOT_POSITIONS.reduce((acc, slot) => {
+        acc[slot] = prev.filter((item) => item.slot === slot).length;
+        return acc;
+      }, {});
+
+      const bestSlot = SLOT_POSITIONS.reduce(
+        (best, slot) => {
+          const count = slotCounts[slot] ?? 0;
+          const cost = Math.abs(slot - ball.x) + count * 6;
+          if (cost < best.cost) {
+            return { slot, count, cost };
+          }
+          return best;
+        },
+        { slot: SLOT_POSITIONS[0], count: slotCounts[SLOT_POSITIONS[0]] ?? 0, cost: Number.POSITIVE_INFINITY },
+      );
+
+      const stackIndex = bestSlot.count;
+      const horizontalJitter = (Math.random() - 0.5) * (stackIndex > 0 ? 4 : 2);
+
+      const next = [
+        ...prev,
+        {
+          ...ball,
+          slot: bestSlot.slot,
+          finalX: Math.max(3, Math.min(97, bestSlot.slot + horizontalJitter)),
+          bottomOffset: STACK_VERTICAL_OFFSET + stackIndex * STACK_HEIGHT,
+          stackIndex,
+        },
+      ].sort((a, b) => (a.finalX === b.finalX ? a.stackIndex - b.stackIndex : a.finalX - b.finalX));
+
+      return next;
+    });
+    setTotalFlags((count) => Math.min(count + 1, MAX_TOTAL_FLAGS));
+  };
 
   return (
     <section
@@ -91,6 +274,20 @@ export function Testimonials() {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-midnight/85 via-midnight/80 to-midnight/90" />
+        <div className="pointer-events-none absolute inset-0">
+          <AnimatePresence>
+            {fallingFlags.map((ball) => (
+              <FallingFlag key={ball.id} ball={ball} targetY={targetY} onSettle={handleSettle} />
+            ))}
+          </AnimatePresence>
+          <div className="absolute inset-x-0 bottom-0 h-[240px] bg-gradient-to-t from-midnight/94 via-midnight/78 to-transparent">
+            <div className="relative h-full w-full">
+              {settledFlags.map((ball) => (
+                <SettledFlag ball={ball} key={ball.id} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="relative mx-auto max-w-6xl px-6">
@@ -99,7 +296,7 @@ export function Testimonials() {
             Customer testimonials
           </h2>
         </div>
-        <ul className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4 text-white">
+        <ul className="relative grid gap-6 text-white sm:grid-cols-2 lg:grid-cols-4">
           {extendedTestimonials.map((testimonial, index) => {
             const palette = colors[index % colors.length];
             const initials = testimonial.name

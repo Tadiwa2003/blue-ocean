@@ -13,19 +13,10 @@ import { SignInModal } from './components/SignInModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
-
-function BackgroundTexture() {
-  return (
-    <div className="pointer-events-none fixed inset-0 -z-20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(29,160,230,0.18),_transparent_60%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,_rgba(4,11,24,0.95),_rgba(4,11,24,1))]" />
-      <div
-        className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
-        style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/asfalt-dark.png")' }}
-      />
-    </div>
-  );
-}
+import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
+import { ReactPlugin } from '@21st-extension/react';
+import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
+import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -85,8 +76,12 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-midnight text-white">
-      <BackgroundTexture />
+    <GradientBackground>
+      <div className="relative min-h-screen text-white">
+        <div className="pointer-events-none fixed inset-0 -z-10 opacity-70">
+          <ShaderAnimation />
+        </div>
+        <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
       <SignInModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -116,9 +111,9 @@ export default function App() {
           />
           <main className="flex flex-col gap-20 pb-24">
             <Hero />
-            <FeatureTiles />
+              <FeatureTiles />
             <Intro />
-            <ValueJourney />
+              <ValueJourney />
             <Offerings />
             <Testimonials />
             <CallToAction />
@@ -127,5 +122,6 @@ export default function App() {
         </>
       )}
     </div>
+    </GradientBackground>
   );
 }
