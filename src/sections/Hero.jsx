@@ -1,3 +1,4 @@
+import { BlurTextAnimation } from '../components/ui/blur-text-animation.jsx';
 import { Button } from '../components/Button.jsx';
 
 // Inline base64 encoded gradient as guaranteed fallback
@@ -39,17 +40,31 @@ export function Hero() {
       <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">
           <div className="space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-brand-100 backdrop-blur">
-              Blue Ocean · Tana&apos;s Beauty Boost Spa
-            </span>
-            <h1 className="font-display text-[2.75rem] leading-tight text-white sm:text-[3.1rem]">
-              Two coastal brands, one elevated guest journey.
-            </h1>
-            <p className="max-w-2xl text-base text-white/75 md:text-lg">
-              Blue Ocean curates the retail capsules, merchandising stories, and logistics that keep boutiques selling
-              out signature drops. Tana&apos;s Beauty Boost Spa brings the ritual—marine-inspired facials, body
-              treatments, and sensory design that transform your wellness suites into revenue-driving sanctuaries.
-            </p>
+            <BlurTextAnimation
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur"
+              text="Blue Ocean · Tana's Beauty Boost Spa"
+              fontSize="text-xs"
+              fontFamily="font-sans"
+              textColor="text-brand-100"
+              animationDelay={7000}
+              textClassName="font-semibold uppercase tracking-[0.35em] m-0"
+            />
+            <BlurTextAnimation
+              className="text-left max-w-3xl"
+              text="Two coastal brands, one elevated guest journey."
+              fontSize="font-display text-[2.75rem] leading-tight sm:text-[3.1rem]"
+              animationDelay={6000}
+              textClassName="font-semibold sm:font-medium tracking-tight m-0"
+            />
+            <BlurTextAnimation
+              className="max-w-2xl text-left"
+              text="Launch capsule drops, layer in spa itineraries, and orchestrate every guest touchpoint with data-backed storytelling, concierge fulfilment, and sensory brand kits."
+              fontSize="text-base md:text-lg"
+              fontFamily="font-sans"
+              textColor="text-white/80"
+              animationDelay={6500}
+              textClassName="font-normal leading-relaxed m-0"
+            />
             <div className="grid gap-3 sm:flex sm:flex-wrap">
               <Button onClick={() => document.querySelector('#retail')?.scrollIntoView({ behavior: 'smooth' })}>
                 Explore Blue Ocean Capsules
@@ -97,7 +112,7 @@ export function Hero() {
                 <p className="text-sm text-white/80 leading-relaxed">
                   Seasonal assortments, lookbooks, and fulfilment handled end-to-end. Launch coastal-luxury stories in
                   days, not months.
-                </p>
+              </p>
                 <ul className="space-y-2 text-xs text-white/65">
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
@@ -108,7 +123,7 @@ export function Hero() {
                     Logistics + packaging with shoreline flair
                   </li>
                 </ul>
-              </div>
+                  </div>
             </article>
 
             <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-midnight/75 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.45)] backdrop-blur-xl">
@@ -116,7 +131,7 @@ export function Hero() {
               <div className="relative space-y-4 text-left text-white">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Tana&apos;s Beauty Boost Spa
-                </span>
+                  </span>
                 <h2 className="font-display text-2xl">Signature rituals, concierge booking built in.</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
                   Oceanstone facials, tidal massages, and curated add-ons that lift spa revenue while deepening guest

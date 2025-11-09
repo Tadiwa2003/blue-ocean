@@ -301,16 +301,32 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" className="border-white/20" onClick={onViewStorefront}>
-            <span className="mr-2">🛍️</span>
-            Products Storefront
-          </Button>
-          {onViewSpaStorefront && (
-            <Button variant="secondary" className="border-white/20" onClick={onViewSpaStorefront}>
-              <span className="mr-2">💆</span>
-              Beauty Spa Storefront
+          <div className="relative group">
+            <Button variant="secondary" className="border-white/20 pr-10">
+              <span className="mr-2">🛍️</span>
+              Storefronts
             </Button>
-          )}
+            <div className="invisible absolute right-0 top-full z-30 mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-ocean/95 p-2 text-left text-sm text-white/80 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white"
+                onClick={onViewStorefront}
+              >
+                <span className="text-lg">🛍️</span>
+                Products Storefront
+              </button>
+              {onViewSpaStorefront && (
+                <button
+                  type="button"
+                  className="mt-1 flex w-full items-center gap-2 rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white"
+                  onClick={onViewSpaStorefront}
+                >
+                  <span className="text-lg">💆</span>
+                  Beauty Spa Storefront
+                </button>
+              )}
+            </div>
+          </div>
           <Button className="bg-brand-500/80 hover:bg-brand-500">Copy Share Link</Button>
         </div>
       </div>
@@ -1214,7 +1230,7 @@ function SpaServicesPanel() {
           ))}
           {!services.length && (
             <div className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-white/60">
-              No spa services configured yet. Use “Add New Service” to build your menu.
+              No spa services configured yet. Use "Add New Service" to build your menu.
             </div>
           )}
         </div>

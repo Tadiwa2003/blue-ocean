@@ -9,7 +9,77 @@
 }
 
 body {
-  @apply font-body antialiased bg-midnight text-slate-100;
+  @apply bg-midnight text-white antialiased;
+}
+
+.gradient-background__layer {
+  position: absolute;
+  inset: 0;
+}
+
+.gradient-background__layer--base {
+  background: linear-gradient(180deg, #010308 0%, #051023 25%, #0c2a45 50%, #162f5c 70%, #1b4a7e 100%);
+}
+
+.gradient-background__layer--texture {
+  opacity: 0.05;
+  background-repeat: repeat;
+  background-image: url('https://images.unsplash.com/photo-1517816743773-6e0fd518b4a6?auto=format&fit=crop&w=400&q=20');
+  background-size: 150px;
+  mix-blend-mode: screen;
+}
+
+.gradient-background__layer--grid {
+  opacity: 0.18;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 70px 70px;
+  mix-blend-mode: overlay;
+}
+
+.gradient-background__layer--diagonal {
+  opacity: 0.12;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.gradient-background__layer--liquid {
+  filter: blur(120px);
+  opacity: 0.9;
+  animation: liquid-gradient-motion 52s ease-in-out infinite;
+  background: radial-gradient(circle at 20% 25%, rgba(51, 152, 255, 0.45), transparent 60%),
+    radial-gradient(circle at 80% 25%, rgba(112, 89, 255, 0.4), transparent 60%),
+    radial-gradient(circle at 25% 75%, rgba(17, 209, 189, 0.35), transparent 60%),
+    radial-gradient(circle at 75% 80%, rgba(255, 126, 188, 0.3), transparent 65%);
+}
+
+.shader-animation {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes liquid-gradient-motion {
+  0% {
+    transform: translate3d(-4%, -5%, 0) scale(1.05);
+    background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%;
+  }
+  25% {
+    transform: translate3d(3%, -2%, 0) scale(1.08);
+    background-position: 15% 20%, 90% 10%, 25% 85%, 80% 90%;
+  }
+  50% {
+    transform: translate3d(5%, 4%, 0) scale(1.02);
+    background-position: 20% 45%, 75% 20%, 35% 95%, 60% 80%;
+  }
+  75% {
+    transform: translate3d(-2%, 4%, 0) scale(1.07);
+    background-position: 10% 60%, 95% 40%, 20% 70%, 70% 85%;
+  }
+  100% {
+    transform: translate3d(-4%, -5%, 0) scale(1.05);
+    background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%;
+  }
 }
 
 a {

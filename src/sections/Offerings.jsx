@@ -13,7 +13,7 @@ export function Offerings() {
             </span>
             <h2 className="font-display text-3xl leading-tight sm:text-[2.5rem]">
               Contactless retail refresh? Absolutely. Inventory controls? Covered.
-            </h2>
+          </h2>
             <p className="text-sm text-white/75">
               Build coastal-luxury collections with spending limits, capsule locks, and instant restock options. Freeze a drop,
               launch a new one, or tailor assortments per property—all from one dashboard.
@@ -42,7 +42,7 @@ export function Offerings() {
         <article
           id="spa"
           className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/6 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur"
-        >
+              >
           <div className="absolute -right-12 top-6 h-32 w-32 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute -left-16 bottom-0 h-28 w-28 rounded-full bg-brand-300/15 blur-3xl" />
           <div className="relative space-y-6">
@@ -64,11 +64,11 @@ export function Offerings() {
                 <div className="flex items-center justify-between">
                   <span>Therapist choreography pack</span>
                   <span className="text-white/85">Included</span>
-                </div>
+          </div>
                 <div className="flex items-center justify-between">
                   <span>Retail upsell pairing</span>
                   <span className="text-brand-200">Sea Glass Body Oil</span>
-                </div>
+        </div>
                 <div className="flex items-center justify-between">
                   <span>Guest communications</span>
                   <span className="text-white/85">Automated</span>
