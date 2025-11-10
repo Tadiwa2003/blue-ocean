@@ -1,28 +1,15 @@
-// Import services data
-import { services as servicesData } from '../data/servicesData.js';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { getAllServices, getServiceById as getServiceByIdDB, createService as createServiceDB } from '../db/services.js';
+import crypto from 'crypto';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const servicesFilePath = path.join(__dirname, '../data/servicesData.js');
-
-// Helper function to save services to file
-async function saveServices(services) {
-  const content = `// Services data - imported from frontend
-export const services = ${JSON.stringify(services, null, 2)};
-`;
-  await fs.writeFile(servicesFilePath, content, 'utf8');
-}
 
 // Get all services
 export const getServices = async (req, res) => {
   try {
+    const services = await getAllServices();
     res.json({
       success: true,
       data: {
-        services: servicesData,
+        services,
       },
     });
   } catch (error) {
@@ -38,7 +25,7 @@ export const getServices = async (req, res) => {
 export const getServiceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = servicesData.find(s => s.id === id);
+    const service = await getServiceByIdDB(id);
 
     if (!service) {
       return res.status(404).json({
@@ -65,6 +52,7 @@ export const getServiceById = async (req, res) => {
 // Create new service
 export const createService = async (req, res) => {
   try {
+    
     const {
       name,
       serviceCategory,
@@ -85,53 +73,31 @@ export const createService = async (req, res) => {
       });
     }
 
-    // Generate ID from name
-    const id = name
+    // Generate unique ID from name with UUID suffix
+    const baseSlug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
+    
+    const id = `${baseSlug}-${crypto.randomUUID().substring(0, 8)}`;
 
-    // Check if service with same ID already exists
-    if (servicesData.find(s => s.id === id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'A service with this name already exists.',
-      });
-    }
-
-    const newService = {
+    // Create service in database
+    const createdService = await createServiceDB({
       id,
-      name,
+      name: name.trim(),
       serviceCategory,
-      category: serviceCategory, // For compatibility
+      description: description || '',
       duration: duration || 60,
       basePrice: parseFloat(basePrice),
       currency: currency || 'USD',
-      price: `$${basePrice}`,
       image: image || 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=900&q=80',
-      headline: headline || description || '',
-      description: description || '',
       badges: badges || [],
-      tags: badges || [],
-      gallery: image ? [image] : [],
-      experienceHighlights: [],
-      includes: [],
-      benefits: [],
-      bookableDates: [],
-      timeSlots: [],
-      addOns: [],
-    };
-
-    // Add to services array
-    servicesData.push(newService);
-
-    // Save to file
-    await saveServices(servicesData);
+    });
 
     res.status(201).json({
       success: true,
       data: {
-        service: newService,
+        service: createdService,
       },
       message: 'Service created successfully.',
     });

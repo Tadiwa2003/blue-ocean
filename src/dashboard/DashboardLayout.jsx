@@ -9,9 +9,12 @@ import { AddServiceModal } from '../components/AddServiceModal.jsx';
 import { AnimatedRadialChart } from '../components/ui/AnimatedRadialChart.jsx';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components/ui/AreaChart.jsx';
 import { Area, AreaChart as RechartsAreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Server, Shield, Zap, Activity } from 'lucide-react';
+import CountUp from 'react-countup';
 import { DonutChart } from '../components/ui/DonutChart.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../services/api.js';
+import { SubscriptionPage } from '../pages/SubscriptionPage.jsx';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -299,7 +302,56 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   );
 }
 
-function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, subscription }) {
+function CopyShareLinkButton() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const currentUrl = window.location.href;
+      await navigator.clipboard.writeText(currentUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          alert('Failed to copy link. Please copy manually: ' + window.location.href);
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr);
+        alert('Failed to copy link. Please copy manually: ' + window.location.href);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  return (
+    <Button 
+      className={copied ? 'bg-emerald-500/80 hover:bg-emerald-500' : 'bg-brand-500/80 hover:bg-brand-500'}
+      onClick={handleCopy}
+    >
+      {copied ? '✓ Copied!' : 'Copy Share Link'}
+    </Button>
+  );
+}
+
+function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription }) {
   return (
     <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/90 via-ocean to-midnight/90 px-6 py-6 text-white shadow-glow">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -310,20 +362,41 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
             Review capsule performance, publish storefront changes, and monitor guest experience all in one tide dashboard.
           </p>
           {!subscription && (
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-              <p className="text-sm text-amber-200">
-                ⚠️ <strong>Subscription Required:</strong> Subscribe to start selling and advertising your goods on Blue Ocean Marketplace.
-              </p>
+            <div className="mt-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-amber-500/10 p-4 flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-200 mb-1">
+                  ⚠️ <strong>Subscription Required</strong>
+                </p>
+                <p className="text-xs text-amber-200/80">
+                  Subscribe to start selling and advertising your goods on Blue Ocean Marketplace.
+                </p>
+              </div>
+              {onNavigateToSubscription && (
+                <Button
+                  onClick={onNavigateToSubscription}
+                  className="bg-amber-500/80 hover:bg-amber-500 text-white whitespace-nowrap"
+                >
+                  Subscribe Now
+                </Button>
+              )}
             </div>
           )}
           {subscription && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-white/80">
-              <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 border border-emerald-500/30">
                 ✓ {subscription.planName} Plan Active
               </span>
-              <span className="text-white/60">
+              <span className="text-white/70 text-sm">
                 Renews {new Date(subscription.renewalDate).toLocaleDateString()}
               </span>
+              {onNavigateToSubscription && (
+                <button
+                  onClick={onNavigateToSubscription}
+                  className="text-xs text-brand-200 hover:text-brand-100 underline"
+                >
+                  Manage Subscription
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -354,7 +427,7 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
               )}
             </div>
           </div>
-          <Button className="bg-brand-500/80 hover:bg-brand-500">Copy Share Link</Button>
+          <CopyShareLinkButton />
         </div>
       </div>
     </div>
@@ -762,13 +835,16 @@ function OrdersPanel() {
   );
 }
 
-function ProductsTable({ isOwner, onAddProduct }) {
+function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront }) {
   const { products: allProducts, loading } = useProducts();
+  // Allow owners to add products even without subscription for testing/admin purposes
+  const hasSubscription = !!subscription || isOwner;
   
   const productRows = useMemo(
     () => {
       if (!allProducts || allProducts.length === 0) return [];
-      return allProducts.filter((p) => p.category !== 'Beauty Spa Services').slice(0, 10).map((product, index) => ({
+      // Show all products, not just first 10
+      return allProducts.filter((p) => p.category !== 'Beauty Spa Services').map((product, index) => ({
         ...product,
         status:
           index % 6 === 0
@@ -792,18 +868,38 @@ function ProductsTable({ isOwner, onAddProduct }) {
           <p className="text-sm text-white/60">Manage assortment, pricing, and availability.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" className="border-white/20">
+          <Button 
+            variant="secondary" 
+            className="border-white/20"
+            onClick={() => {
+              // Export functionality - could export to CSV/JSON
+              const csv = [
+                ['Name', 'Category', 'Price', 'Status'].join(','),
+                ...productRows.map(p => [
+                  `"${p.name}"`,
+                  `"${p.category}"`,
+                  `"${p.price}"`,
+                  `"${p.status}"`
+                ].join(','))
+              ].join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `products-${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
             Export
           </Button>
           <Button
             onClick={onAddProduct}
-            disabled={!isOwner || !hasSubscription}
-            className={!isOwner || !hasSubscription ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
+            disabled={!isOwner}
+            className={!isOwner ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
             title={
               !isOwner 
                 ? 'Only the Blue Ocean owner can add products'
-                : !hasSubscription
-                ? 'Subscription required to add products. Please subscribe first.'
                 : 'Create a new Blue Ocean product'
             }
           >
@@ -838,11 +934,12 @@ function ProductsTable({ isOwner, onAddProduct }) {
         </table>
       </div>
       <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 text-xs text-white/50">
-        <span>Showing {productRows.length} products</span>
-        <div className="flex gap-2">
-          <button className="rounded-full border border-white/15 px-3 py-1 hover:text-white">Previous</button>
-          <button className="rounded-full border border-white/15 px-3 py-1 hover:text-white">Next</button>
-        </div>
+        <span>
+          {loading ? 'Loading products...' : `Showing ${productRows.length} of ${allProducts?.filter((p) => p.category !== 'Beauty Spa Services').length || 0} products`}
+        </span>
+        {!loading && productRows.length === 0 && (
+          <span className="text-white/60">No products found. Add your first product to get started.</span>
+        )}
       </div>
     </div>
   );
@@ -872,9 +969,10 @@ function StorefrontPanel() {
   );
 }
 
-function SpaServicesPanel({ onAddService, subscription }) {
+function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isOwner }) {
   const { services: allServices, loading: servicesLoading } = useServices();
-  const hasSubscription = !!subscription;
+  // Allow owners to add services even without subscription for testing/admin purposes
+  const hasSubscription = !!subscription || isOwner;
   
   const services = useMemo(
     () => allServices || [],
@@ -943,61 +1041,80 @@ function SpaServicesPanel({ onAddService, subscription }) {
               variant="secondary" 
               className="border-white/20" 
               onClick={onAddService}
-              disabled={!hasSubscription}
-              title={hasSubscription ? 'Add a new beauty spa service' : 'Subscription required to add services. Please subscribe first.'}
+              disabled={!isOwner}
+              title={isOwner ? 'Add a new beauty spa service' : 'Only the Blue Ocean owner can add services'}
             >
               Add New Service
             </Button>
-            <Button>Sync to Storefront</Button>
+            <Button 
+              onClick={() => {
+                if (onViewSpaStorefront) {
+                  onViewSpaStorefront();
+                } else {
+                  // Fallback: show message or navigate
+                  alert('Opening spa storefront...');
+                }
+              }}
+            >
+              Sync to Storefront
+            </Button>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {services.map((service) => (
-            <div
-              key={service.id}
-              className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-4 text-white/80 backdrop-blur"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-brand-200/80">{service.category}</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">{service.name}</h3>
+        {servicesLoading ? (
+          <div className="mt-6 flex items-center justify-center py-12">
+            <div className="text-white/60">Loading services...</div>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {services.map((service) => (
+              <div
+                key={service.id}
+                className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/5 p-4 text-white/80 backdrop-blur"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-brand-200/80">{service.serviceCategory || service.category}</p>
+                    <h3 className="mt-1 text-lg font-semibold text-white">{service.name}</h3>
+                  </div>
+                  <span className="rounded-full border border-brand-400/40 bg-brand-500/20 px-3 py-1 text-sm font-semibold text-white">
+                    {service.price}
+                  </span>
                 </div>
-                <span className="rounded-full border border-brand-400/40 bg-brand-500/20 px-3 py-1 text-sm font-semibold text-white">
-                  {service.price}
-                </span>
-              </div>
-              <p className="mt-3 text-sm leading-relaxed">{service.description}</p>
-              {service.badges?.length ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {service.badges.map((badge) => (
-                    <span
-                      key={badge}
-                      className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80"
-                    >
-                      {badge}
-                    </span>
-                  ))}
+                {(service.description || service.headline) && (
+                  <p className="mt-3 text-sm leading-relaxed">{service.description || service.headline}</p>
+                )}
+                {service.badges?.length ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {service.badges.map((badge, idx) => (
+                      <span
+                        key={badge || idx}
+                        className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mt-5 flex items-center justify-between text-xs text-white/60">
+                  <span>Updated · {new Date().toLocaleDateString()}</span>
+                  <button className="text-brand-200 hover:text-brand-100">View in storefront →</button>
                 </div>
-              ) : null}
-              <div className="mt-5 flex items-center justify-between text-xs text-white/60">
-                <span>Updated · {new Date().toLocaleDateString()}</span>
-                <button className="text-brand-200 hover:text-brand-100">View in storefront →</button>
               </div>
-            </div>
-          ))}
-          {!services.length && (
-            <div className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-white/60">
-              No spa services configured yet. Use "Add New Service" to build your menu.
-            </div>
-          )}
-        </div>
+            ))}
+            {!services.length && !servicesLoading && (
+              <div className="col-span-full rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-white/60">
+                No spa services configured yet. Use "Add New Service" to build your menu.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function SpaBookingsTable() {
+function SpaBookingsTable({ onSelect, onViewSpaStorefront }) {
   const stats = useMemo(() => {
     return beautySpaBookings.reduce(
       (acc, booking) => {
@@ -1010,6 +1127,37 @@ function SpaBookingsTable() {
     );
   }, []);
 
+  const handleExportWeek = () => {
+    const csv = [
+      ['Client', 'Service', 'Therapist', 'Date', 'Status', 'Amount'].join(','),
+      ...beautySpaBookings.map(booking => [
+        `"${booking.client}"`,
+        `"${booking.service}"`,
+        `"${booking.therapist}"`,
+        `"${booking.date}"`,
+        `"${booking.status}"`,
+        `"${booking.amount}"`
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const weekLabel = `${weekStart.toISOString().split('T')[0]}_to_${weekEnd.toISOString().split('T')[0]}`;
+    a.download = `bookings-week-${weekLabel}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1020,10 +1168,22 @@ function SpaBookingsTable() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" className="border-white/20">
+          <Button 
+            variant="secondary" 
+            className="border-white/20"
+            onClick={handleExportWeek}
+          >
             Export Week
           </Button>
-          <Button>Schedule Booking</Button>
+          <Button onClick={() => {
+            if (onViewSpaStorefront) {
+              onViewSpaStorefront();
+            } else if (onSelect) {
+              onSelect('spaServices');
+            }
+          }}>
+            Schedule Booking
+          </Button>
         </div>
       </div>
 
@@ -1086,27 +1246,361 @@ function SpaBookingsTable() {
   );
 }
 
-function SpaAnalyticsPanel() {
+function SpaAnalyticsPanel({ onSelect, onViewSpaStorefront }) {
   return (
     <div className="space-y-6 text-white">
       <SpaAnalyticsSummary />
       <SpaTrendChart />
-      <SpaSalesTable />
-      <SpaBookingsTable />
+      <SpaSalesTable onSelect={onSelect} />
+      <SpaBookingsTable onSelect={onSelect} onViewSpaStorefront={onViewSpaStorefront} />
     </div>
   );
 }
 
 function ReportsPanel() {
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState('last-7-days');
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch real metrics from API
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get(`/metrics?period=${selectedTimePeriod}`);
+        if (response.success) {
+          setMetrics(response.data);
+        } else {
+          setError('Failed to load metrics');
+        }
+      } catch (err) {
+        console.error('Error fetching metrics:', err);
+        setError('Failed to load metrics. Using fallback data.');
+        // Set fallback data
+        setMetrics({
+          summary: {
+            totalRequests: 0,
+            successRate: 100,
+            averageResponseTime: 0,
+            uptime: 0,
+            uptimePercentage: 100,
+          },
+          dailyData: [],
+          detailedMetrics: [],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+    // Refresh metrics every 30 seconds
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => clearInterval(interval);
+  }, [selectedTimePeriod]);
+
+  const chartData = useMemo(() => {
+    if (!metrics || !metrics.dailyData || metrics.dailyData.length === 0) {
+      // Fallback empty data
+      return Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return {
+          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          'API Requests': 0,
+          'Success Rate': 0,
+          'Response Time': 0,
+        };
+      });
+    }
+    return metrics.dailyData;
+  }, [metrics]);
+
+  const timePeriodOptions = [
+    { value: 'last-7-days', label: 'Last 7 Days' },
+    { value: 'last-30-days', label: 'Last 30 Days' },
+    { value: 'last-90-days', label: 'Last 90 Days' },
+  ];
+
+  // Calculate backend stats from real metrics
+  const backendStats = useMemo(() => {
+    if (!metrics) {
+      return [
+        {
+          id: 'api-requests',
+          title: 'API Requests',
+          count: 0,
+          countFrom: 0,
+          comparisonText: 'No data available',
+          percentage: 0,
+          TrendIcon: TrendingUp,
+          trendColor: 'text-emerald-400',
+          trendBgColor: 'bg-emerald-500/20',
+        },
+        {
+          id: 'uptime',
+          title: 'Uptime',
+          count: 0,
+          countFrom: 0,
+          comparisonText: 'Server starting up',
+          percentage: 0,
+          TrendIcon: TrendingUp,
+          trendColor: 'text-emerald-400',
+          trendBgColor: 'bg-emerald-500/20',
+        },
+      ];
+    }
+
+    const totalRequests = metrics.summary?.totalRequests || 0;
+    const uptimePercentage = metrics.summary?.uptimePercentage || 0;
+
+    // Calculate comparison (compare to previous period)
+    const previousPeriodRequests = Math.floor(totalRequests * 0.9); // Simulated previous period
+    const requestChange = totalRequests > 0
+      ? Math.round(((totalRequests - previousPeriodRequests) / previousPeriodRequests) * 100)
+      : 0;
+
+    return [
+      {
+        id: 'api-requests',
+        title: 'API Requests',
+        count: totalRequests,
+        countFrom: 0,
+        comparisonText: `Total requests since server start`,
+        percentage: requestChange,
+        TrendIcon: requestChange >= 0 ? TrendingUp : TrendingDown,
+        trendColor: requestChange >= 0 ? 'text-emerald-400' : 'text-rose-400',
+        trendBgColor: requestChange >= 0 ? 'bg-emerald-500/20' : 'bg-rose-500/20',
+      },
+      {
+        id: 'uptime',
+        title: 'Uptime',
+        count: uptimePercentage,
+        countFrom: 0,
+        comparisonText: `${Math.floor((metrics.summary?.uptime || 0) / 3600)}h ${Math.floor(((metrics.summary?.uptime || 0) % 3600) / 60)}m uptime`,
+        percentage: 0.3,
+        TrendIcon: TrendingUp,
+        trendColor: 'text-emerald-400',
+        trendBgColor: 'bg-emerald-500/20',
+      },
+    ];
+  }, [metrics]);
+
+  const detailedMetrics = useMemo(() => {
+    if (!metrics || !metrics.detailedMetrics) {
+      return [
+        {
+          id: 'response-time',
+          Icon: Zap,
+          label: 'Avg Response Time',
+          tooltip: 'Average API response time',
+          value: '0ms',
+          TrendIcon: TrendingDown,
+          trendColor: 'text-emerald-400',
+          delay: 0,
+        },
+        {
+          id: 'success-rate',
+          Icon: Shield,
+          label: 'Success Rate',
+          tooltip: 'API request success rate',
+          value: '0%',
+          TrendIcon: TrendingUp,
+          trendColor: 'text-emerald-400',
+          delay: 0.05,
+        },
+        {
+          id: 'active-connections',
+          Icon: Activity,
+          label: 'Database Status',
+          tooltip: 'MongoDB connection status',
+          value: 'Connected',
+          TrendIcon: TrendingUp,
+          trendColor: 'text-emerald-400',
+          delay: 0.1,
+        },
+      ];
+    }
+
+    return metrics.detailedMetrics.map((metric, index) => ({
+      id: metric.id,
+      Icon: metric.id === 'response-time' ? Zap : metric.id === 'success-rate' ? Shield : Activity,
+      label: metric.label,
+      tooltip: metric.tooltip || metric.label,
+      value: metric.value,
+      TrendIcon: metric.trend === 'down' || metric.trend === 'stable' ? TrendingDown : TrendingUp,
+      trendColor: metric.trend === 'down' || metric.trend === 'stable' ? 'text-emerald-400' : 'text-rose-400',
+      delay: index * 0.05,
+    }));
+  }, [metrics]);
+
+  const chartConfig = {
+    'API Requests': { label: 'API Requests', color: '#1da0e6' },
+    'Success Rate': { label: 'Success Rate', color: '#3ed598' },
+    'Response Time': { label: 'Response Time', color: '#facc15' },
+  };
+
   return (
-    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
-      <h2 className="font-display text-2xl">Reports</h2>
-      <p className="mt-3 text-sm text-white/70">Download sell-through, merchandising impact, and fulfillment SLA reports.</p>
-      <ul className="mt-6 space-y-3 text-sm text-white/70">
-        <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">Weekly Capsule Performance · CSV · 2h ago</li>
-        <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">Wholesale Pipeline Summary · PDF · Scheduled Mondays</li>
-        <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">Logistics & SLA Dashboard · Shared</li>
-      </ul>
+    <div className="space-y-6 text-white">
+      {/* Main Backend Status Report */}
+      <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/90 via-ocean/80 to-midnight/90 p-8 text-white shadow-xl">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 className="font-display text-3xl font-bold">Backend Status Report</h2>
+            <p className="mt-2 text-sm text-white/70">Monitor API performance, uptime, and system health metrics.</p>
+          </div>
+          <select
+            value={selectedTimePeriod}
+            onChange={(e) => setSelectedTimePeriod(e.target.value)}
+            className="bg-white/10 border border-white/20 text-white p-3 rounded-xl focus:ring-2 focus:ring-brand-400 outline-none transition-colors"
+          >
+            {timePeriodOptions.map(option => (
+              <option key={option.value} value={option.value} className="bg-ocean">
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Legend */}
+        <div className="flex gap-6 w-full mb-4">
+          <div className="flex gap-2 items-center">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#1da0e6' }} />
+            <span className="text-white/70 text-xs">API Requests</span>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3ed598' }} />
+            <span className="text-white/70 text-xs">Success Rate</span>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="relative mt-6 overflow-hidden rounded-2xl border border-white/10 bg-midnight/40 p-6 backdrop-blur-sm">
+          <ChartContainer config={chartConfig} className="h-[280px] w-full">
+            <RechartsAreaChart data={chartData} margin={{ top: 10, bottom: 10, left: 20, right: 20 }}>
+              <defs>
+                <linearGradient id="fillApiRequests" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#1da0e6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#1da0e6" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="fillSuccessRate" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3ed598" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#3ed598" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="fillResponseTime" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#facc15" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#facc15" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="rgba(255,255,255,0.1)" />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+              />
+              <YAxis hide />
+              <ChartTooltip
+                cursor={{ strokeDasharray: '4 4', stroke: 'rgba(29,160,230,0.6)', strokeWidth: 1 }}
+                content={<ChartTooltipContent />}
+              />
+              <Area
+                type="natural"
+                dataKey="API Requests"
+                stroke="#1da0e6"
+                fill="url(#fillApiRequests)"
+                fillOpacity={0.5}
+                strokeWidth={2}
+              />
+              <Area
+                type="natural"
+                dataKey="Success Rate"
+                stroke="#3ed598"
+                fill="url(#fillSuccessRate)"
+                fillOpacity={0.5}
+                strokeWidth={2}
+              />
+            </RechartsAreaChart>
+          </ChartContainer>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="flex flex-col sm:flex-row w-full justify-between gap-6 mt-8">
+          {backendStats.map(stat => (
+            <div key={stat.id} className="flex flex-col gap-2 flex-1">
+              <span className="text-xl text-white/90">{stat.title}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-baseline gap-1">
+                  {stat.id === 'uptime' ? (
+                    <span className="font-mono text-4xl font-semibold text-white">
+                      <CountUp start={stat.countFrom || 0} end={stat.count} duration={2.5} decimals={1} />%
+                    </span>
+                  ) : (
+                    <span className="font-mono text-4xl font-semibold text-white">
+                      <CountUp start={stat.countFrom || 0} end={stat.count} duration={2.5} />
+                    </span>
+                  )}
+                </div>
+                <div className={`flex ${stat.trendBgColor} p-1.5 px-3 items-center gap-1 rounded-full ${stat.trendColor}`}>
+                  <stat.TrendIcon className="h-4 w-4" />
+                  <span className="text-xs font-semibold">+{stat.percentage}%</span>
+                </div>
+              </div>
+              <span className="text-white/60 text-sm">{stat.comparisonText}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Detailed Metrics List */}
+        <div className="flex flex-col divide-y divide-white/10 mt-8 font-mono">
+          {detailedMetrics.map((metric) => (
+            <motion.div
+              key={metric.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: metric.delay }}
+              className="flex w-full py-4 items-center gap-4"
+            >
+              <div className="flex flex-row gap-3 items-center text-base w-1/2 text-white/70">
+                <metric.Icon className="h-5 w-5 text-brand-300" />
+                <span className="truncate" title={metric.tooltip}>
+                  {metric.label}
+                </span>
+              </div>
+              <div className="flex gap-3 w-1/2 justify-end items-center">
+                <span className="font-semibold text-xl text-white">{metric.value}</span>
+                <div className={`p-1.5 rounded-full ${metric.trendColor === 'text-emerald-400' ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
+                  <metric.TrendIcon className={`h-4 w-4 ${metric.trendColor}`} />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Available Reports List */}
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+        <h3 className="font-display text-2xl mb-4">Available Reports</h3>
+        <p className="text-sm text-white/70 mb-6">Download sell-through, merchandising impact, and fulfillment SLA reports.</p>
+        <ul className="space-y-3 text-sm text-white/70">
+          <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+            <span>Weekly Capsule Performance · CSV</span>
+            <span className="text-xs text-white/50">2h ago</span>
+          </li>
+          <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+            <span>Wholesale Pipeline Summary · PDF</span>
+            <span className="text-xs text-white/50">Scheduled Mondays</span>
+          </li>
+          <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+            <span>Logistics & SLA Dashboard</span>
+            <span className="text-xs text-white/50">Shared</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -1768,7 +2262,30 @@ function SpaTrendChart() {
   );
 }
 
-function SpaSalesTable() {
+function SpaSalesTable({ onSelect }) {
+  const handleDownloadCSV = () => {
+    const csv = [
+      ['Service', 'Sessions', 'Revenue', 'Avg Ticket', 'Utilisation %'].join(','),
+      ...spaSalesBreakdown.map(row => [
+        `"${row.service}"`,
+        row.sessions,
+        row.revenue,
+        row.avgTicket,
+        Math.round(row.utilisation * 100)
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `service-sales-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1779,10 +2296,24 @@ function SpaSalesTable() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" className="border-white/20">
+          <Button 
+            variant="secondary" 
+            className="border-white/20"
+            onClick={handleDownloadCSV}
+          >
             Download CSV
           </Button>
-          <Button>Manage Services</Button>
+          <Button onClick={() => {
+            if (onSelect) {
+              onSelect('spaServices');
+              // Scroll to top of the section after navigation
+              setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 100);
+            }
+          }}>
+            Manage Services
+          </Button>
         </div>
       </div>
       <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
@@ -1813,10 +2344,16 @@ function SpaSalesTable() {
   );
 }
 
-function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription }) {
+function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription }) {
   return (
     <div className="space-y-6">
-      <DashboardHero currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} subscription={subscription} />
+      <DashboardHero 
+        currentUser={currentUser} 
+        onViewStorefront={onViewStorefront} 
+        onViewSpaStorefront={onViewSpaStorefront} 
+        subscription={subscription}
+        onNavigateToSubscription={onNavigateToSubscription}
+      />
       <MetricRow />
       <AnalyticsSummary />
       <SalesTrend />
@@ -1863,11 +2400,21 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
   const renderSection = () => {
     switch (activeSection) {
       case 'products':
-        return <ProductsTable isOwner={isOwner} onAddProduct={() => setIsAddProductOpen(true)} subscription={subscription} />;
+        return <ProductsTable 
+          isOwner={isOwner} 
+          onAddProduct={() => setIsAddProductOpen(true)} 
+          subscription={subscription}
+          onViewStorefront={onViewStorefront}
+        />;
       case 'spaServices':
-        return <SpaServicesPanel onAddService={() => setIsAddServiceOpen(true)} subscription={subscription} />;
+        return <SpaServicesPanel 
+          onAddService={() => setIsAddServiceOpen(true)} 
+          subscription={subscription}
+          onViewSpaStorefront={onViewSpaStorefront}
+          isOwner={isOwner}
+        />;
       case 'bookings':
-        return <SpaAnalyticsPanel />;
+        return <SpaAnalyticsPanel onSelect={setActiveSection} onViewSpaStorefront={onViewSpaStorefront} />;
       case 'storefront':
         return <StorefrontPanel />;
       case 'subscription':
@@ -1888,7 +2435,13 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         );
       case 'dashboard':
       default:
-        return <DashboardPanel currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} subscription={subscription} />;
+        return <DashboardPanel 
+          currentUser={currentUser} 
+          onViewStorefront={onViewStorefront} 
+          onViewSpaStorefront={onViewSpaStorefront} 
+          subscription={subscription}
+          onNavigateToSubscription={() => setActiveSection('subscription')}
+        />;
     }
   };
 

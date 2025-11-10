@@ -1,6 +1,10 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'blue-ocean-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET environment variable is not set. Application cannot start.');
+  process.exit(1);
+}
 
 // Authenticate JWT token
 export const authenticateToken = (req, res, next) => {

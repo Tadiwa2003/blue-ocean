@@ -1,9 +1,9 @@
-import { getUserById, updateUser } from '../data/users.js';
+import { getUserById, updateUser } from '../db/users.js';
 
 // Get user profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = getUserById(req.user.id);
+    const user = await getUserById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
@@ -34,7 +34,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const { name } = req.body;
-    const user = getUserById(req.user.id);
+    const user = await getUserById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
@@ -43,15 +43,36 @@ export const updateUserProfile = async (req, res) => {
       });
     }
 
+    let updateData = {};
     if (name) {
-      user.name = name.trim();
+      const trimmedName = name.trim();
+      // Validate name
+      if (trimmedName.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name cannot be empty.',
+        });
+      }
+      if (trimmedName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name must be 100 characters or less.',
+        });
+      }
+      // Validate allowed characters (letters, spaces, hyphens, apostrophes)
+      if (!/^[a-zA-Z\s\-']+$/.test(trimmedName)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name can only contain letters, spaces, hyphens, and apostrophes.',
+        });
+      }
+      updateData.name = trimmedName;
     }
 
-    user.updatedAt = new Date().toISOString();
-    updateUser(user);
+    const updatedUser = await updateUser(req.user.id, updateData);
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // Password already excluded in updateUser
+    const userWithoutPassword = updatedUser;
 
     res.json({
       success: true,

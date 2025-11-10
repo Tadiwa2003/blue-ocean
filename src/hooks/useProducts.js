@@ -11,18 +11,26 @@ export function useProducts() {
       try {
         setLoading(true);
         setError(null);
-        console.log('🛍️ Fetching products from API...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🛍️ Fetching products from API...');
+        }
         const response = await api.products.getProducts();
-        console.log('🛍️ Products response:', response.success ? `✅ ${response.data?.products?.length || 0} products` : '❌ Failed');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🛍️ Products response:', response.success ? `✅ ${response.data?.products?.length || 0} products` : '❌ Failed');
+        }
         if (response.success) {
           const productsList = response.data.products || [];
           setProducts(productsList);
-          console.log('🛍️ Products loaded:', productsList.length);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🛍️ Products loaded:', productsList.length);
+          }
         } else {
           setError('Failed to load products');
         }
       } catch (err) {
-        console.error('❌ Error fetching products:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Error fetching products:', err);
+        }
         setError(err.message || 'Failed to load products');
         // Fallback to empty array on error
         setProducts([]);

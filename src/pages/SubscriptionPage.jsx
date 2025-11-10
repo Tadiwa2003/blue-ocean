@@ -106,13 +106,13 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
         transition={{ duration: 0.5 }}
         className="border-b border-white/10 bg-ocean/80 backdrop-blur-xl sticky top-0 z-50"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {onBack && (
               <Button
                 variant="ghost"
                 onClick={onBack}
-                className="text-white/80 hover:text-white"
+                className="text-white/80 hover:text-white text-sm sm:text-base"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -121,7 +121,7 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
             <Logo />
           </div>
           {user && (
-            <div className="text-sm text-white/60">
+            <div className="text-xs sm:text-sm text-white/60 truncate max-w-[150px] sm:max-w-none">
               {user.name || user.email}
             </div>
           )}
@@ -131,14 +131,14 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
       {/* Error Message */}
       {error && (
         <ContainerScrollFade opacityRange={[0, 1]} inputRange={[0, 0.2]}>
-          <div className="mx-auto max-w-7xl px-6 pt-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-8">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 mb-8"
+              className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 sm:p-5 mb-6 sm:mb-8"
             >
-              <p className="text-sm text-red-200">{error}</p>
+              <p className="text-sm sm:text-base text-red-200 leading-relaxed">{error}</p>
             </motion.div>
           </div>
         </ContainerScrollFade>
@@ -147,27 +147,27 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
       {/* Current Subscription Banner */}
       {currentSubscription && (
         <ContainerScrollFade opacityRange={[0, 1]} inputRange={[0, 0.2]}>
-          <div className="mx-auto max-w-7xl px-6 pt-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-8">
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 mb-8"
+              className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 sm:p-6 mb-6 sm:mb-8"
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <CheckCircle className="h-8 w-8 text-emerald-400 shrink-0" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                <CheckCircle className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-400 shrink-0 mt-1 sm:mt-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-1">
                     Active Subscription: {currentSubscription.planName || currentSubscription.planId}
                   </h3>
-                  <p className="text-sm text-white/70">
+                  <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
                     {currentSubscription.renewalDate 
                       ? `Renews on ${new Date(currentSubscription.renewalDate).toLocaleDateString()}`
                       : 'Active subscription'}
                   </p>
                 </div>
-                <div className="text-left sm:text-right">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-left sm:text-right w-full sm:w-auto">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     ${currentSubscription.price || 'N/A'}/{currentSubscription.period || 'month'}
                   </p>
                 </div>
@@ -180,19 +180,19 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
       {/* No Subscription Message */}
       {!loading && !currentSubscription && !error && (
         <ContainerScrollFade opacityRange={[0, 1]} inputRange={[0, 0.2]}>
-          <div className="mx-auto max-w-7xl px-6 pt-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-8">
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 mb-8"
+              className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 sm:p-6 mb-6 sm:mb-8"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-1">
                     No Active Subscription
                   </h3>
-                  <p className="text-sm text-white/70">
+                  <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
                     Subscribe to a plan below to start selling and advertising your goods on Blue Ocean Marketplace.
                   </p>
                 </div>
@@ -211,16 +211,16 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
       {/* Footer Info */}
       <ContainerScrollFade opacityRange={[0, 1]} inputRange={[0.6, 1]}>
         <ContainerScrollTranslate yRange={[50, 0]} inputRange={[0.6, 1]}>
-          <div className="mx-auto max-w-7xl px-6 pb-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-12 sm:pb-16">
             <motion.div 
               initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6 }}
-              className="rounded-2xl border border-white/10 bg-ocean/65 p-8"
+              className="rounded-2xl border border-white/10 bg-ocean/65 p-6 sm:p-8"
             >
-              <h3 className="font-display text-2xl mb-4">Why Subscribe?</h3>
-              <div className="grid md:grid-cols-3 gap-6">
+              <h3 className="font-display text-xl sm:text-2xl mb-5 sm:mb-6 text-center sm:text-left">Why Subscribe?</h3>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
                 {[
                   { icon: CreditCard, title: 'Secure Payments', desc: 'All transactions are processed securely through our payment partners.' },
                   { icon: Calendar, title: 'Flexible Billing', desc: 'Monthly or annual billing options. Cancel anytime with no hidden fees.' },
@@ -235,9 +235,9 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
-                      <Icon className="h-8 w-8 text-brand-200 mb-3" />
-                      <h4 className="font-semibold mb-2">{item.title}</h4>
-                      <p className="text-sm text-white/70">{item.desc}</p>
+                      <Icon className="h-7 w-7 sm:h-8 sm:w-8 text-brand-200 mb-3" />
+                      <h4 className="font-semibold mb-2 text-base sm:text-lg">{item.title}</h4>
+                      <p className="text-xs sm:text-sm text-white/70 leading-relaxed">{item.desc}</p>
                     </motion.div>
                   );
                 })}

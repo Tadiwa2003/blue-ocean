@@ -149,11 +149,16 @@ export function AddProductModal({ isOpen, onClose, onSuccess }) {
           : [],
       };
 
-      console.log('🛍️ Creating product:', productData);
-      console.log('🔑 Auth token present:', !!localStorage.getItem('authToken'));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🛍️ Creating product:', productData);
+        console.log('🔑 Auth token present:', !!localStorage.getItem('authToken'));
+      }
       
       const response = await api.products.createProduct(productData);
-      console.log('🛍️ Create product response:', response);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🛍️ Create product response:', response);
+      }
 
       if (response.success) {
         console.log('✅ Product created successfully:', response.data.product);

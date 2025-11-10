@@ -1,0 +1,20 @@
+═══════════════════════════════════════════════════════════════
+  IMMEDIATE FIX - Run This Command Now!
+═══════════════════════════════════════════════════════════════
+
+Run this command in your terminal:
+
+    node create-mysql-user.js
+
+It will ask for your MySQL root password, then create the user automatically.
+
+═══════════════════════════════════════════════════════════════
+
+ALTERNATIVE: If you know your root password, add it to .env:
+
+    ROOT_PASSWORD=your_root_password
+
+Then restart the server - it will auto-create the user!
+
+═══════════════════════════════════════════════════════════════
+

@@ -72,19 +72,34 @@ export function Hero() {
               textClassName="font-normal leading-relaxed m-0"
             />
             <div className="grid gap-3 sm:flex sm:flex-wrap">
-              <Button onClick={() => document.querySelector('#retail')?.scrollIntoView({ behavior: 'smooth' })}>
+              <Button onClick={() => {
+                const retailSection = document.getElementById('retail');
+                if (retailSection) {
+                  retailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}>
                 Explore Blue Ocean Capsules
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => document.querySelector('#spa')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  const spaSection = document.getElementById('spa');
+                  if (spaSection) {
+                    spaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 View Tana&apos;s Spa Menu
               </Button>
               <Button
                 variant="ghost"
                 className="px-4"
-                onClick={() => document.querySelector('#intro')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  const introSection = document.getElementById('intro');
+                  if (introSection) {
+                    introSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 How it works
               </Button>

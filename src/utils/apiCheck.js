@@ -7,7 +7,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
 export const checkApiConnection = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/health`, {
+    // Build health URL explicitly using URL constructor
+    const baseUrl = API_BASE_URL.endsWith('/api') 
+      ? API_BASE_URL.slice(0, -4) 
+      : API_BASE_URL.replace(/\/api\/?$/, '');
+    const healthUrl = new URL('/api/health', baseUrl).toString();
+    
+    const response = await fetch(healthUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -32,6 +32,7 @@ export function BookingDrawer({
   onCancelBooking,
   onClearBookings,
   onConfirmBookings,
+  isConfirming = false,
 }) {
   useEffect(() => {
     if (!isOpen) return;
@@ -196,11 +197,20 @@ export function BookingDrawer({
               Taxes and gratuity are settled in-spa. A concierge will confirm within 15 minutes.
             </div>
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={onClearBookings} className="flex-1">
+              <Button 
+                variant="secondary" 
+                onClick={onClearBookings} 
+                className="flex-1"
+                disabled={isConfirming}
+              >
                 Clear All
               </Button>
-              <Button onClick={onConfirmBookings} className="flex-1">
-                Confirm Appointments
+              <Button 
+                onClick={onConfirmBookings} 
+                className="flex-1"
+                disabled={isConfirming}
+              >
+                {isConfirming ? 'Confirming...' : 'Confirm Appointments'}
               </Button>
             </div>
           </div>

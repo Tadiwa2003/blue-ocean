@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useRef } from 'react';
 import { useInView } from 'framer-motion';
 
-export function CallToAction() {
+export function CallToAction({ onGetStarted, onTalkToTeam }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
@@ -24,8 +24,37 @@ export function CallToAction() {
           secure account. You can be live in minutes.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button>Get started</Button>
-          <Button variant="secondary">Talk to our team</Button>
+          <Button 
+            onClick={() => {
+              if (onGetStarted) {
+                onGetStarted();
+              } else {
+                // Fallback: scroll to sign-in section or open sign-up modal
+                const signInSection = document.getElementById('hero');
+                if (signInSection) {
+                  signInSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }}
+          >
+            Get started
+          </Button>
+          <Button 
+            variant="secondary"
+            onClick={() => {
+              if (onTalkToTeam) {
+                onTalkToTeam();
+              } else {
+                // Fallback: scroll to contact section
+                const contactSection = document.getElementById('cta');
+                if (contactSection) {
+                  contactSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }}
+          >
+            Talk to our team
+          </Button>
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs text-white/60">
           <a

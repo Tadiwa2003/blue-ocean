@@ -1,20 +1,31 @@
 import { saveContactMessage, getAllContactMessages } from '../data/contact.js';
+import crypto from 'crypto';
 
 // Create contact message
 export const createContactMessage = async (req, res) => {
   try {
-    const { name, email, phone, company, message } = req.body;
+    const { name, firstName, lastName, email, phone, company, message } = req.body;
 
-    if (!name || !email) {
+    // Support both formats: single 'name' field or 'firstName'/'lastName' fields
+    let fullName = '';
+    if (firstName && lastName) {
+      fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    } else if (name) {
+      fullName = name.trim();
+    }
+
+    if (!fullName || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Name and email are required',
+        message: 'Name (or first name and last name) and email are required',
       });
     }
 
     const contactMessage = {
-      id: `contact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: name.trim(),
+      id: `contact_${crypto.randomUUID()}`,
+      name: fullName,
+      firstName: firstName ? firstName.trim() : undefined,
+      lastName: lastName ? lastName.trim() : undefined,
       email: email.toLowerCase().trim(),
       phone: phone || '',
       company: company || '',
@@ -23,7 +34,7 @@ export const createContactMessage = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    saveContactMessage(contactMessage);
+    await createContactMessage(contactMessage);
 
     res.status(201).json({
       success: true,
@@ -44,7 +55,7 @@ export const createContactMessage = async (req, res) => {
 // Get all contact messages (admin only)
 export const getContactMessages = async (req, res) => {
   try {
-    const messages = getAllContactMessages();
+    const messages = await getAllContactMessages();
 
     res.json({
       success: true,

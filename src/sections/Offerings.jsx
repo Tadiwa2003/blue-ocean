@@ -2,8 +2,9 @@ import { Button } from '../components/Button.jsx';
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
 import { useInView } from 'framer-motion';
+import { downloadRitualMenu } from '../utils/generateRitualMenu.js';
 
-export function Offerings() {
+export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
@@ -45,8 +46,41 @@ export function Offerings() {
               </li>
             </ul>
             <div className="flex flex-wrap gap-3">
-              <Button variant="secondary">Learn more</Button>
-              <Button>View lookbook</Button>
+              <Button 
+                variant="secondary"
+                onClick={() => {
+                  // Scroll to retail section to show products
+                  const retailSection = document.getElementById('retail');
+                  if (retailSection) {
+                    retailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    // Fallback: scroll to intro section
+                    const introSection = document.getElementById('intro');
+                    if (introSection) {
+                      introSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }
+                }}
+              >
+                Learn more
+              </Button>
+              <Button 
+                onClick={() => {
+                  // View lookbook - scroll to retail section to see product showcase
+                  const retailSection = document.getElementById('retail');
+                  if (retailSection) {
+                    retailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    // Fallback: try to find product showcase
+                    const productShowcase = document.querySelector('[data-section="collections"]');
+                    if (productShowcase) {
+                      productShowcase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }
+                }}
+              >
+                View lookbook
+              </Button>
             </div>
           </div>
         </motion.article>
@@ -96,8 +130,34 @@ export function Offerings() {
               Guests leave with bundled keepsakes while you track conversion in real time.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button>Book spa strategy call</Button>
-              <Button variant="ghost">Download ritual menu</Button>
+              <Button 
+                onClick={() => {
+                  if (onBookStrategyCall) {
+                    onBookStrategyCall();
+                  } else {
+                    // Fallback: scroll to contact section or open contact modal
+                    const contactSection = document.getElementById('cta');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
+              >
+                Book spa strategy call
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  if (onDownloadMenu) {
+                    onDownloadMenu();
+                  } else {
+                    // Fallback: use utility function
+                    downloadRitualMenu();
+                  }
+                }}
+              >
+                Download ritual menu
+              </Button>
             </div>
           </div>
         </motion.article>

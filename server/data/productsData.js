@@ -332,5 +332,16 @@ export const products = [
     "badges": [
       "new stock"
     ]
+  },
+  {
+    "id": "snikers",
+    "name": "snikers",
+    "category": "Clothing",
+    "price": "600",
+    "image": "https://www.nike.com/?utm_source=chatgpt.com",
+    "description": "the best shooes and the best ones",
+    "badges": [
+      "new stock"
+    ]
   }
 ];

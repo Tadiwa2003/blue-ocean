@@ -1,8 +1,14 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { getUsers, saveUsers, getUserByEmail } from '../data/users.js';
+import crypto from 'crypto';
+import { getAllUsers, createUser, getUserByEmail, getUserById } from '../db/users.js';
+import { getConnectionStatus } from '../db/connection.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'blue-ocean-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET environment variable is not set. Application cannot start.');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = '7d';
 
 // Generate JWT token
@@ -24,7 +30,7 @@ export const signUp = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Check if user already exists
-    const existingUser = getUserByEmail(email);
+    const existingUser = await getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -37,19 +43,13 @@ export const signUp = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create new user
-    const users = getUsers();
-    const newUser = {
-      id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    const newUser = await createUser({
+      id: crypto.randomUUID(),
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
+      password: password, // Will be hashed in createUser
       role: 'user',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    saveUsers(users);
+    });
 
     // Generate token
     const token = generateToken(newUser);
@@ -79,8 +79,16 @@ export const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Check if database is connected
+    if (!getConnectionStatus()) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database is not available. Please ensure MongoDB is running. See DATABASE_SETUP.md for instructions.',
+      });
+    }
+
     // Find user
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -115,7 +123,8 @@ export const signIn = async (req, res) => {
     console.error('Sign in error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to sign in. Please try again.',
+      message: error.message || 'Failed to sign in. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 };
@@ -141,8 +150,7 @@ export const signOut = async (req, res) => {
 // Get current user
 export const getCurrentUser = async (req, res) => {
   try {
-    const users = getUsers();
-    const user = users.find(u => u.id === req.user.id);
+    const user = await getUserById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
@@ -151,8 +159,8 @@ export const getCurrentUser = async (req, res) => {
       });
     }
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // Password already excluded in getUserById
+    const userWithoutPassword = user;
 
     res.json({
       success: true,
@@ -174,7 +182,7 @@ export const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
       // Don't reveal if email exists for security
       return res.json({

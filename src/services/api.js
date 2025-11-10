@@ -143,19 +143,13 @@ export const api = {
     },
 
     async signOut() {
-      const token = getAuthToken();
-      if (token) {
-        try {
-          await apiFetch(`${API_BASE_URL}/auth/signout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-        } catch (error) {
-          console.error('Sign out error:', error);
-          // Continue with sign out even if API call fails
-        }
+      try {
+        await apiFetch(`${API_BASE_URL}/auth/signout`, {
+          method: 'POST',
+        });
+      } catch (error) {
+        console.error('Sign out error:', error);
+        // Continue with sign out even if API call fails
       }
       
       setAuthToken(null);
@@ -169,11 +163,7 @@ export const api = {
       }
 
       try {
-        const data = await apiFetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const data = await apiFetch(`${API_BASE_URL}/auth/me`);
         return data.success ? data.data.user : null;
       } catch (error) {
         console.error('Get current user error:', error);
@@ -188,6 +178,7 @@ export const api = {
       return await apiFetch(`${API_BASE_URL}/auth/password-reset`, {
         method: 'POST',
         body: JSON.stringify({ email }),
+        skipAuth: true,
       });
     },
 
@@ -207,32 +198,18 @@ export const api = {
   // Orders
   orders: {
     async createOrder(orderData) {
-      const token = getAuthToken();
       return await apiFetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: JSON.stringify(orderData),
       });
     },
 
     async getUserOrders() {
-      const token = getAuthToken();
-      return await apiFetch(`${API_BASE_URL}/orders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      return await apiFetch(`${API_BASE_URL}/orders`);
     },
 
     async getOrderById(orderId) {
-      const token = getAuthToken();
-      return await apiFetch(`${API_BASE_URL}/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      return await apiFetch(`${API_BASE_URL}/orders/${orderId}`);
     },
   },
 
@@ -307,6 +284,43 @@ export const api = {
         method: 'DELETE',
       });
     },
+  },
+
+  // Bookings
+  bookings: {
+    async create(bookingsArray) {
+      return await apiFetch(`${API_BASE_URL}/bookings`, {
+        method: 'POST',
+        body: JSON.stringify({ bookings: bookingsArray }),
+      });
+    },
+
+    async getMyBookings() {
+      return await apiFetch(`${API_BASE_URL}/bookings/my-bookings`);
+    },
+
+    async getAll() {
+      return await apiFetch(`${API_BASE_URL}/bookings`);
+    },
+
+    async getById(bookingId) {
+      return await apiFetch(`${API_BASE_URL}/bookings/${bookingId}`);
+    },
+
+    async updateStatus(bookingId, status) {
+      return await apiFetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+    },
+  },
+
+  // Generic GET request
+  async get(path, options = {}) {
+    return await apiFetch(`${API_BASE_URL}${path}`, {
+      method: 'GET',
+      ...options,
+    });
   },
 };
 

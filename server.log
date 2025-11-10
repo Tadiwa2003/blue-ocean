@@ -1,0 +1,156 @@
+
+> blue-ocean@0.0.1 server
+> node server/index.js
+
+[dotenv@17.2.3] injecting env (13) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"orderNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"slug":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+(node:42837) [MONGOOSE] Warning: Duplicate schema index on {"id":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
+✅ MongoDB Connected: mongodb://localhost:27017/blueocean
+🚀 Blue Ocean API server running on http://localhost:3001
+📡 Frontend URL: http://localhost:5173
+🌍 Environment: development
+💾 Database: MongoDB Connected
+
+✅ Server ready! CORS configured for: http://localhost:5173
+2025-11-10T22:35:48.370Z - GET /api/metrics
+2025-11-10T22:35:52.057Z - POST /api/auth/signin
+2025-11-10T22:35:55.247Z - GET /api/subscriptions/current
+2025-11-10T22:35:55.254Z - GET /api/subscriptions/current
+2025-11-10T22:36:05.865Z - GET /api/health
+2025-11-10T22:36:18.870Z - POST /api/auth/signin
+2025-11-10T22:36:22.211Z - GET /api/subscriptions/current
+2025-11-10T22:36:22.229Z - GET /api/subscriptions/current
+2025-11-10T22:36:30.833Z - GET /api/metrics
+2025-11-10T22:36:30.849Z - GET /api/metrics
+2025-11-10T22:36:35.687Z - GET /api/metrics
+2025-11-10T22:36:35.921Z - GET /api/subscriptions/current
+2025-11-10T22:36:35.986Z - GET /api/metrics
+2025-11-10T22:36:36.472Z - GET /api/metrics
+2025-11-10T22:36:37.998Z - GET /api/subscriptions/current
+2025-11-10T22:36:40.204Z - GET /api/metrics
+2025-11-10T22:37:01.066Z - GET /api/products
+2025-11-10T22:37:02.075Z - GET /api/products
+2025-11-10T22:37:43.149Z - GET /api/subscriptions/current
+2025-11-10T22:38:01.143Z - POST /api/auth/signin
+2025-11-10T22:38:05.828Z - GET /api/subscriptions/current
+2025-11-10T22:38:08.526Z - POST /api/subscriptions
+2025-11-10T22:38:17.657Z - GET /api/subscriptions/current
+2025-11-10T22:38:28.444Z - DELETE /api/subscriptions/sub_fdec8abe-45c5-4c1e-9f16-5a81dcdeda9a
+2025-11-10T22:38:30.073Z - PUT /api/subscriptions/sub_fdec8abe-45c5-4c1e-9f16-5a81dcdeda9a
+2025-11-10T22:38:34.701Z - POST /api/auth/signin
+2025-11-10T22:38:37.845Z - GET /api/subscriptions/current
+2025-11-10T22:38:37.851Z - GET /api/subscriptions/current
+2025-11-10T22:38:38.939Z - GET /api/subscriptions/current
+2025-11-10T22:38:38.943Z - GET /api/subscriptions/current
+2025-11-10T22:39:13.223Z - POST /api/subscriptions
+2025-11-10T22:39:15.839Z - GET /api/subscriptions/current
+2025-11-10T22:39:15.942Z - POST /api/subscriptions
+2025-11-10T22:39:27.284Z - POST /api/auth/signin
+2025-11-10T22:39:33.321Z - GET /api/subscriptions/current
+2025-11-10T22:39:33.440Z - GET /api/subscriptions/current
+2025-11-10T22:39:35.162Z - GET /api/subscriptions/current
+2025-11-10T22:39:35.246Z - GET /api/subscriptions/current
+2025-11-10T22:40:06.236Z - GET /api/subscriptions/current
+2025-11-10T22:41:20.559Z - GET /api/subscriptions/current
+2025-11-10T22:41:20.634Z - GET /api/subscriptions/current
+2025-11-10T22:42:07.669Z - POST /api/subscriptions
+2025-11-10T22:42:21.020Z - POST /api/auth/signin
+2025-11-10T22:42:42.701Z - GET /api/subscriptions/current
+2025-11-10T22:42:44.031Z - GET /api/subscriptions/current
+2025-11-10T22:42:45.397Z - GET /api/subscriptions/current
+2025-11-10T22:42:45.531Z - GET /api/subscriptions/current
+2025-11-10T22:43:01.064Z - GET /api/subscriptions/current
+2025-11-10T22:43:03.685Z - GET /api/subscriptions/current
+2025-11-10T22:43:41.845Z - GET /api/subscriptions/current
+2025-11-10T22:44:23.488Z - GET /api/subscriptions/current
+2025-11-10T22:44:33.483Z - GET /api/subscriptions/current
+2025-11-10T22:45:10.606Z - GET /api/subscriptions/current
+2025-11-10T22:45:12.581Z - GET /api/subscriptions/current
+2025-11-10T22:45:12.620Z - POST /api/subscriptions
+2025-11-10T22:45:22.544Z - POST /api/auth/signin
+2025-11-10T22:45:31.594Z - GET /api/subscriptions/current
+2025-11-10T22:45:32.146Z - GET /api/subscriptions/current
+2025-11-10T22:45:40.828Z - GET /api/subscriptions/current
+2025-11-10T22:45:41.170Z - GET /api/subscriptions/current
+2025-11-10T22:46:16.939Z - GET /api/subscriptions/current
+2025-11-10T22:46:27.838Z - GET /api/subscriptions/current
+2025-11-10T22:47:00.661Z - GET /api/subscriptions/current
+2025-11-10T22:47:24.875Z - GET /api/subscriptions/current
+2025-11-10T22:47:26.333Z - GET /api/subscriptions/current
+2025-11-10T22:55:59.216Z - POST /api/auth/signin
+2025-11-10T22:56:03.461Z - GET /api/subscriptions/current
+2025-11-10T22:56:03.485Z - GET /api/subscriptions/current
+2025-11-10T22:56:09.528Z - GET /api/products
+2025-11-10T22:56:10.847Z - GET /api/products
+2025-11-10T22:56:10.969Z - GET /api/products
+2025-11-10T22:56:11.231Z - GET /api/products
+2025-11-10T22:58:53.705Z - GET /api/health
+2025-11-10T23:02:53.762Z - GET /api/health
+2025-11-10T23:04:31.075Z - POST /api/auth/signin
+2025-11-10T23:04:40.180Z - GET /api/subscriptions/current
+2025-11-10T23:04:40.647Z - GET /api/subscriptions/current
+2025-11-10T23:04:43.551Z - GET /api/products
+2025-11-10T23:04:45.964Z - GET /api/products
+2025-11-10T23:04:46.076Z - GET /api/products
+2025-11-10T23:04:46.447Z - GET /api/products
+2025-11-10T23:05:52.962Z - GET /api/products
+2025-11-10T23:06:00.573Z - GET /api/subscriptions/current
+2025-11-10T23:06:00.974Z - GET /api/subscriptions/current
+2025-11-10T23:06:05.639Z - GET /api/products
+2025-11-10T23:06:06.741Z - GET /api/products
+2025-11-10T23:06:06.832Z - GET /api/products
+2025-11-10T23:06:06.902Z - GET /api/products
+2025-11-10T23:06:11.632Z - GET /api/subscriptions/current
+2025-11-10T23:06:12.359Z - GET /api/subscriptions/current
+2025-11-10T23:06:27.455Z - POST /api/auth/signin
+2025-11-10T23:07:05.636Z - GET /api/subscriptions/current
+2025-11-10T23:07:05.921Z - GET /api/subscriptions/current
+2025-11-10T23:07:42.627Z - POST /api/auth/signin
+2025-11-10T23:07:48.042Z - GET /api/subscriptions/current
+2025-11-10T23:07:48.450Z - GET /api/subscriptions/current
+2025-11-10T23:08:31.444Z - POST /api/auth/signin
+2025-11-10T23:08:50.944Z - GET /api/subscriptions/current
+2025-11-10T23:08:52.594Z - GET /api/subscriptions/current
+2025-11-10T23:10:20.358Z - POST /api/auth/signin
+2025-11-10T23:10:23.606Z - GET /api/subscriptions/current
+2025-11-10T23:10:23.624Z - GET /api/subscriptions/current
+2025-11-10T23:12:00.867Z - POST /api/auth/signin
+2025-11-10T23:12:04.060Z - GET /api/subscriptions/current
+2025-11-10T23:12:04.070Z - GET /api/subscriptions/current
+2025-11-10T23:12:40.159Z - POST /api/auth/signin
+2025-11-10T23:12:48.395Z - POST /api/auth/signin
+2025-11-10T23:12:53.780Z - GET /api/subscriptions/current
+2025-11-10T23:12:54.100Z - GET /api/subscriptions/current
+2025-11-10T23:13:57.597Z - POST /api/auth/signin
+2025-11-10T23:14:02.009Z - GET /api/subscriptions/current
+2025-11-10T23:14:02.163Z - GET /api/subscriptions/current
+2025-11-10T23:14:04.434Z - GET /api/subscriptions/current
+2025-11-10T23:14:05.270Z - GET /api/subscriptions/current
+2025-11-10T23:14:05.291Z - GET /api/subscriptions/current
+2025-11-10T23:20:12.228Z - POST /api/auth/signin
+2025-11-10T23:20:31.361Z - GET /api/subscriptions/current
+2025-11-10T23:20:34.065Z - GET /api/subscriptions/current
+2025-11-10T23:20:37.325Z - GET /api/subscriptions/current
+2025-11-10T23:20:37.795Z - GET /api/subscriptions/current
+2025-11-10T23:20:53.896Z - GET /api/metrics
+2025-11-10T23:20:54.465Z - GET /api/metrics
+2025-11-10T23:21:05.124Z - GET /api/subscriptions/current
+2025-11-10T23:21:06.322Z - GET /api/subscriptions/current
+2025-11-10T23:21:20.858Z - GET /api/services
+2025-11-10T23:21:21.862Z - GET /api/services
+2025-11-10T23:22:14.633Z - GET /api/subscriptions/current
+2025-11-10T23:22:18.455Z - GET /api/subscriptions/current
+2025-11-10T23:30:25.225Z - POST /api/auth/signin
+2025-11-10T23:30:37.382Z - GET /api/subscriptions/current
+2025-11-10T23:30:39.213Z - GET /api/subscriptions/current
+2025-11-10T23:30:43.233Z - GET /api/subscriptions/current
+2025-11-10T23:30:43.437Z - GET /api/subscriptions/current

@@ -5,14 +5,11 @@ import { X, Sparkles, DollarSign, Image as ImageIcon, Tag, FileText, Clock } fro
 import api from '../services/api.js';
 
 const SERVICE_CATEGORIES = [
-  'Facials',
-  'Massages',
-  'Body Treatments',
-  'Manicures & Pedicures',
-  'Hair Services',
-  'Waxing',
-  'Makeup',
-  'Other',
+  'Massage',
+  'Facial',
+  'Body Treatment',
+  'Wellness',
+  'Spa Package',
 ];
 
 export function AddServiceModal({ isOpen, onClose, onSuccess }) {
@@ -136,27 +133,71 @@ export function AddServiceModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
     setError('');
 
-    // Validation
-    if (!formData.name || !formData.serviceCategory || !formData.basePrice) {
-      setError('Name, category, and price are required.');
+    // Comprehensive validation
+    const trimmedName = formData.name ? formData.name.trim() : '';
+    if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 100) {
+      setError('Service name is required and must be between 2 and 100 characters.');
       return;
+    }
+
+    // Category validation is handled by backend, but we validate here for better UX
+    if (!formData.serviceCategory || !SERVICE_CATEGORIES.includes(formData.serviceCategory)) {
+      setError(`Service category is required and must be one of: ${SERVICE_CATEGORIES.join(', ')}`);
+      return;
+    }
+
+    const parsedPrice = parseFloat(formData.basePrice);
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      setError('Base price must be a positive number.');
+      return;
+    }
+
+    const parsedDuration = formData.duration ? parseInt(formData.duration, 10) : 60;
+    if (!Number.isInteger(parsedDuration) || parsedDuration < 1) {
+      setError('Duration must be a positive integer (minutes).');
+      return;
+    }
+
+    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+    if (formData.currency && !allowedCurrencies.includes(formData.currency)) {
+      setError(`Currency must be one of: ${allowedCurrencies.join(', ')}`);
+      return;
+    }
+
+    if (formData.image) {
+      try {
+        new URL(formData.image.trim());
+        if (!formData.image.trim().startsWith('http://') && !formData.image.trim().startsWith('https://')) {
+          setError('Image URL must use HTTP or HTTPS protocol.');
+          return;
+        }
+      } catch {
+        setError('Image must be a valid URL.');
+        return;
+      }
+    }
+
+    let validatedBadges = [];
+    if (formData.badges) {
+      const badgeArray = typeof formData.badges === 'string' 
+        ? formData.badges.split(',').map((b) => b.trim()).filter(Boolean)
+        : Array.isArray(formData.badges) ? formData.badges : [];
+      validatedBadges = badgeArray.filter(b => typeof b === 'string' && b.trim().length > 0).slice(0, 10);
     }
 
     setIsSubmitting(true);
 
     try {
       const serviceData = {
-        name: formData.name.trim(),
+        name: trimmedName,
         serviceCategory: formData.serviceCategory,
-        duration: parseInt(formData.duration) || 60,
-        basePrice: parseFloat(formData.basePrice),
-        currency: formData.currency,
-        image: formData.image.trim() || undefined,
-        headline: formData.headline.trim() || undefined,
-        description: formData.description.trim() || undefined,
-        badges: formData.badges
-          ? formData.badges.split(',').map((b) => b.trim()).filter(Boolean)
-          : [],
+        duration: parsedDuration,
+        basePrice: parsedPrice,
+        currency: formData.currency || 'USD',
+        image: formData.image ? formData.image.trim() : undefined,
+        headline: formData.headline ? formData.headline.trim() : undefined,
+        description: formData.description ? formData.description.trim() : undefined,
+        badges: validatedBadges,
       };
 
       const response = await api.services.createService(serviceData);
@@ -246,20 +287,20 @@ export function AddServiceModal({ isOpen, onClose, onSuccess }) {
             </label>
             <div className="relative">
               <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
-              <select
-                name="serviceCategory"
-                value={formData.serviceCategory}
-                onChange={handleInputChange}
-                className="w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white focus:border-brand-400/50 focus:bg-white/10 outline-none transition appearance-none cursor-pointer"
-                required
-              >
-                <option value="">Select a category</option>
-                {SERVICE_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat} className="bg-midnight">
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            <select
+              name="serviceCategory"
+              value={formData.serviceCategory}
+              onChange={handleInputChange}
+              className="w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white focus:border-brand-400/50 focus:bg-white/10 outline-none transition appearance-none cursor-pointer"
+              required
+            >
+              <option value="">Select a category</option>
+              {SERVICE_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat} className="bg-midnight text-white">
+                  {cat}
+                </option>
+              ))}
+            </select>
             </div>
           </div>
 
@@ -317,7 +358,8 @@ export function AddServiceModal({ isOpen, onClose, onSuccess }) {
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-brand-400/50 focus:bg-white/10 outline-none transition"
             >
               <option value="USD">USD ($)</option>
-              <option value="ZWG">ZWG ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
             </select>
           </div>
 

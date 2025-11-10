@@ -10,6 +10,8 @@ import { Button } from '../components/Button.jsx';
 import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
 import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
 import { motion } from 'framer-motion';
+import api from '../services/api.js';
+import { HeroDesignali } from '../components/ui/HeroDesignali.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +26,7 @@ export function BeautySpaStorefront({ onClose }) {
   const [bookings, setBookings] = useState([]);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const serviceCategories = useMemo(() => {
     const uniqueCategories = new Set((allServices || []).map((service) => service.serviceCategory));
@@ -103,10 +106,54 @@ export function BeautySpaStorefront({ onClose }) {
     setBookings([]);
   };
 
-  const handleConfirmBookings = () => {
+  const handleConfirmBookings = async () => {
     if (bookings.length === 0) return;
-    showNotification('Thank you! Our spa concierge will confirm your itinerary shortly.');
-    setIsBookingOpen(false);
+
+    setIsConfirming(true);
+    try {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showNotification('Please sign in to confirm your bookings. Your bookings have been saved locally.');
+        setIsConfirming(false);
+        return;
+      }
+
+      // Transform bookings to match backend format
+      const bookingsToSubmit = bookings.map(booking => ({
+        serviceId: booking.serviceId,
+        name: booking.name,
+        serviceCategory: booking.serviceCategory,
+        duration: booking.duration,
+        basePrice: booking.basePrice,
+        totalPrice: booking.totalPrice,
+        currency: booking.currency || 'USD',
+        date: booking.date,
+        time: booking.time,
+        therapistLevel: booking.therapistLevel,
+        addOns: booking.addOns || [],
+        addOnTotal: booking.addOnTotal || 0,
+        notes: booking.notes || '',
+        image: booking.image,
+      }));
+
+      // Call API to create bookings
+      const response = await api.bookings.create(bookingsToSubmit);
+
+      if (response.success) {
+        showNotification(`Successfully confirmed ${bookings.length} booking(s)! Our spa concierge will contact you shortly.`);
+        setBookings([]); // Clear bookings after successful confirmation
+        setIsBookingOpen(false);
+      } else {
+        showNotification(response.message || 'Failed to confirm bookings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error confirming bookings:', error);
+      const errorMessage = error.message || 'Failed to confirm bookings. Please try again.';
+      showNotification(errorMessage);
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   // Parallax effect for hero section
@@ -270,41 +317,24 @@ export function BeautySpaStorefront({ onClose }) {
       </header>
 
       <main className="pb-24">
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0" ref={heroRef}>
-            <img
-              src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85"
-              alt="Luxury spa treatment"
-              className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
-              style={{ backgroundColor: '#0b233e', objectPosition: 'center 40%', filter: 'brightness(0.9) contrast(1.1)' }}
-            />
-            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/70 via-ocean/60 to-midnight/75" />
-          </div>
-          <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <div className="mb-4 storefront-hero-text">
-              <BeautySpaLogo className="scale-90 sm:scale-100" />
-            </div>
-            <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
-              Tana's Beauty Boost Spa · Wellness 2026
-            </span>
-            <h1 className="storefront-hero-text font-display text-4xl leading-tight sm:text-5xl" style={{ animationDelay: '0.2s' }}>
-              Rejuvenate your senses with ocean-inspired luxury treatments.
-            </h1>
-            <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
-              Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
-            </p>
-            <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
-              <Button onClick={() => {
-                if (allServices && allServices.length > 0) {
-                  handleShowService(allServices[0], 'book');
-                }
-              }}>Book Treatment</Button>
-              <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
-                View Itinerary
-              </Button>
-            </div>
-          </div>
-        </section>
+        <HeroDesignali
+          title="Rejuvenate your senses with ocean-inspired luxury"
+          subtitle="Tana's Beauty Boost Spa · Wellness 2026"
+          description="Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal."
+          typeWriterStrings={['Facial Treatments', 'Body Massages', 'Wellness Rituals', 'Spa Packages', 'Luxury Services']}
+          primaryButtonText="Book Treatment"
+          primaryButtonAction={() => {
+            if (allServices && allServices.length > 0) {
+              handleShowService(allServices[0], 'book');
+            }
+          }}
+          secondaryButtonText="View Itinerary"
+          secondaryButtonAction={() => setIsBookingOpen(true)}
+          showBadge={true}
+          badgeText="Tana's Beauty Boost Spa · Wellness 2026"
+          accentColor="purple-500"
+          canvasId="spa-hero-canvas"
+        />
 
         <section className="mx-auto mt-20 max-w-7xl px-6">
           <div className="flex flex-col gap-8 text-left">
@@ -443,8 +473,26 @@ export function BeautySpaStorefront({ onClose }) {
           <p className="mt-4 text-base text-white/80">
             Contact our spa concierge to customize a treatment package tailored to your wellness needs.
           </p>
+          <div className="mt-6 mb-4 flex flex-wrap justify-center gap-3 text-sm text-white/70">
+            <a href="tel:+27788637252" className="flex items-center gap-2 hover:text-brand-200 transition-colors">
+              <span>📞</span>
+              <span>+27 788637252</span>
+            </a>
+            <span className="text-white/30">•</span>
+            <a href="mailto:Tanasbeautyboost@gmail.com" className="flex items-center gap-2 hover:text-brand-200 transition-colors">
+              <span>📧</span>
+              <span>Tana'sbeautyboost@gmail.com</span>
+            </a>
+          </div>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button onClick={() => showNotification('Concierge will reach out shortly with package details.')}>Contact Spa Concierge</Button>
+            <Button onClick={() => {
+              const email = 'Tanasbeautyboost@gmail.com';
+              const subject = encodeURIComponent('Spa Booking Inquiry');
+              const body = encodeURIComponent('Hello, I would like to inquire about booking a spa treatment package.');
+              window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            }}>
+              Contact Spa Concierge
+            </Button>
             <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
               View Packages
             </Button>
@@ -467,6 +515,7 @@ export function BeautySpaStorefront({ onClose }) {
         onCancelBooking={handleCancelBooking}
         onClearBookings={handleClearBookings}
         onConfirmBookings={handleConfirmBookings}
+        isConfirming={isConfirming}
       />
 
       <CartNotification

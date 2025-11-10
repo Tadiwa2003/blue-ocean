@@ -27,7 +27,23 @@ export function DonutChart({
 
   const radius = size / 2 - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
-  let cumulativePercentage = 0;
+  
+  // Pre-compute cumulative percentages to avoid mutation during render
+  const cumulativePercentages = React.useMemo(() => {
+    let cumulative = 0;
+    return data.map((segment) => {
+      const percentage = internalTotalValue === 0
+        ? 0
+        : (segment.value / internalTotalValue) * 100;
+      const startPercentage = cumulative;
+      cumulative += percentage;
+      return {
+        percentage,
+        startPercentage,
+        endPercentage: cumulative,
+      };
+    });
+  }, [data, internalTotalValue]);
 
   // Effect to call the onSegmentHover prop when internal state changes
   React.useEffect(() => {
@@ -66,17 +82,12 @@ export function DonutChart({
           {data.map((segment, index) => {
             if (segment.value === 0) return null;
 
-            const percentage =
-              internalTotalValue === 0
-                ? 0
-                : (segment.value / internalTotalValue) * 100;
+            const { percentage, startPercentage } = cumulativePercentages[index];
             
             const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-            const strokeDashoffset = (cumulativePercentage / 100) * circumference;
+            const strokeDashoffset = (startPercentage / 100) * circumference;
             
             const isActive = hoveredSegment?.label === segment.label;
-            
-            cumulativePercentage += percentage;
 
             return (
               <motion.circle

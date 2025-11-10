@@ -3,44 +3,49 @@
  * Run this once to populate the backend with products
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import products from frontend
-const frontendProductsPath = join(__dirname, '../../src/data/products.js');
-const frontendServicesPath = join(__dirname, '../../src/data/spaServices.js');
-
-// Read and parse the products file
-const productsContent = readFileSync(frontendProductsPath, 'utf8');
-const servicesContent = readFileSync(frontendServicesPath, 'utf8');
-
-// Extract products array (simple regex extraction - in production use proper parser)
-const productsMatch = productsContent.match(/export const highlightProducts = (\[[\s\S]*?\]);/);
-const servicesMatch = servicesContent.match(/export const spaServices = (\[[\s\S]*?\]);/);
-
-if (productsMatch) {
-  // Evaluate the products array (safe in this context)
-  const products = eval(productsMatch[1]);
-  
-  // Save to backend data file
-  const backendProductsPath = join(__dirname, '../data/products.json');
-  writeFileSync(backendProductsPath, JSON.stringify(products, null, 2), 'utf8');
-  console.log(`✅ Imported ${products.length} products`);
+// Import products from frontend using dynamic import
+async function importProducts() {
+  try {
+    // Dynamically import the frontend modules
+    const productsModule = await import('../../src/data/products.js');
+    const servicesModule = await import('../../src/data/spaServices.js');
+    
+    // Extract the exported arrays
+    const products = productsModule.highlightProducts || [];
+    const services = servicesModule.spaServices || [];
+    
+    if (products.length > 0) {
+      // Save to backend data file
+      const backendProductsPath = join(__dirname, '../data/products.json');
+      await writeFile(backendProductsPath, JSON.stringify(products, null, 2), 'utf8');
+      console.log(`✅ Imported ${products.length} products`);
+    } else {
+      console.log('⚠️  No products found to import');
+    }
+    
+    if (services.length > 0) {
+      // Save to backend data file
+      const backendServicesPath = join(__dirname, '../data/services.json');
+      await writeFile(backendServicesPath, JSON.stringify(services, null, 2), 'utf8');
+      console.log(`✅ Imported ${services.length} services`);
+    } else {
+      console.log('⚠️  No services found to import');
+    }
+    
+    console.log('✅ Import complete!');
+  } catch (error) {
+    console.error('❌ Error importing products/services:', error);
+    process.exit(1);
+  }
 }
 
-if (servicesMatch) {
-  // Evaluate the services array
-  const services = eval(servicesMatch[1]);
-  
-  // Save to backend data file
-  const backendServicesPath = join(__dirname, '../data/services.json');
-  writeFileSync(backendServicesPath, JSON.stringify(services, null, 2), 'utf8');
-  console.log(`✅ Imported ${services.length} services`);
-}
-
-console.log('✅ Import complete!');
+// Run the import
+importProducts();
 

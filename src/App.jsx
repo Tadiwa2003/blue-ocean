@@ -10,6 +10,7 @@ import { Testimonials } from './sections/Testimonials.jsx';
 import { CallToAction } from './sections/CallToAction.jsx';
 import { DashboardLayout } from './dashboard/DashboardLayout.jsx';
 import { SignInModal } from './components/SignInModal.jsx';
+import { ContactModal } from './components/ContactModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
@@ -19,6 +20,7 @@ import { ReactPlugin } from '@21st-extension/react';
 import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
 import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
+import { downloadRitualMenu } from './utils/generateRitualMenu.js';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,6 +31,7 @@ export default function App() {
   const [isStorefrontLoading, setIsStorefrontLoading] = useState(false);
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const storefrontTimeoutRef = useRef(null);
 
   const handleSignInSuccess = (userData) => {
@@ -100,6 +103,14 @@ export default function App() {
         onSuccess={handleSignInSuccess}
         initialMode={modalMode}
       />
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        onSuccess={(data) => {
+          console.log('Contact form submitted:', data);
+          setIsContactModalOpen(false);
+        }}
+      />
       {isDashboardLoading ? (
         <CounterLoader onComplete={handleCounterLoaderComplete} duration={2000} />
       ) : isViewingStorefront ? (
@@ -136,9 +147,23 @@ export default function App() {
             <FeatureTiles />
             <Intro />
             <ValueJourney />
-            <Offerings />
+            <Offerings 
+              onBookStrategyCall={() => setIsContactModalOpen(true)}
+              onDownloadMenu={() => {
+                downloadRitualMenu(() => {
+                  // Optional: Show success notification
+                  console.log('Ritual menu downloaded successfully');
+                });
+              }}
+            />
             <Testimonials />
-            <CallToAction />
+            <CallToAction 
+              onGetStarted={() => {
+                setModalMode('signup');
+                setIsModalOpen(true);
+              }}
+              onTalkToTeam={() => setIsContactModalOpen(true)}
+            />
           </main>
           <Footer />
         </ContainerScrollAnimation>

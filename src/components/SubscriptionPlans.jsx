@@ -1,13 +1,22 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from './Button.jsx';
-import { Check, Sparkles, Crown, Rocket } from 'lucide-react';
+import { Check, Sparkles, Crown, Rocket, CheckCheck } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
+import { PaymentModal } from './PaymentModal.jsx';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register GSAP plugins
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const subscriptionPlans = [
   {
     id: 'basic',
     name: 'Basic',
     price: 29,
+    yearlyPrice: 290,
     period: 'month',
     description: 'Perfect for small businesses getting started',
     icon: Sparkles,
@@ -19,16 +28,23 @@ const subscriptionPlans = [
       'Email support',
       'Mobile-responsive storefront',
     ],
+    includes: [
+      'Free includes:',
+      'Unlimited Cards',
+      'Custom background & stickers',
+      '2-factor authentication',
+    ],
     popular: false,
   },
   {
     id: 'professional',
     name: 'Professional',
     price: 79,
+    yearlyPrice: 790,
     period: 'month',
     description: 'Ideal for growing businesses',
     icon: Crown,
-    color: 'from-purple-500/30 to-purple-500/10',
+    color: 'from-purple-600/90 to-purple-500/90',
     features: [
       'Unlimited products',
       'Unlimited services',
@@ -39,12 +55,19 @@ const subscriptionPlans = [
       'Order tracking',
       'Customer management',
     ],
+    includes: [
+      'Everything in Basic, plus:',
+      'Advanced checklists',
+      'Custom fields',
+      'Serverless functions',
+    ],
     popular: true,
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     price: 199,
+    yearlyPrice: 1990,
     period: 'month',
     description: 'For large-scale operations',
     icon: Rocket,
@@ -59,152 +82,318 @@ const subscriptionPlans = [
       'Multi-user accounts',
       '24/7 phone support',
     ],
+    includes: [
+      'Everything in Professional, plus:',
+      'Multi-board management',
+      'Multi-board guest',
+      'Attachment permissions',
+    ],
     popular: false,
   },
 ];
 
+const PricingSwitch = ({ onSwitch, isYearly, className }) => {
+  const [selected, setSelected] = useState(isYearly ? "1" : "0");
+
+  const handleSwitch = (value) => {
+    setSelected(value);
+    onSwitch(value === "1");
+  };
+
+  return (
+    <div className={`flex justify-center ${className || ''}`}>
+      <div className="relative z-10 mx-auto flex w-fit rounded-full bg-white/10 border border-white/20 p-1 backdrop-blur-sm">
+        <button
+          onClick={() => handleSwitch("0")}
+          className={`relative z-10 w-fit sm:h-12 cursor-pointer h-10 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors ${
+            selected === "0"
+              ? "text-white"
+              : "text-white/60 hover:text-white"
+          }`}
+        >
+          {selected === "0" && (
+            <motion.span
+              layoutId="pricing-switch"
+              className="absolute top-0 left-0 sm:h-12 h-10 w-full rounded-full border-2 shadow-sm border-brand-400/50 bg-gradient-to-t from-brand-500/30 via-brand-400/20 to-brand-500/30"
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          )}
+          <span className="relative">Monthly</span>
+        </button>
+
+        <button
+          onClick={() => handleSwitch("1")}
+          className={`relative z-10 w-fit cursor-pointer sm:h-12 h-10 flex-shrink-0 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors ${
+            selected === "1"
+              ? "text-white"
+              : "text-white/60 hover:text-white"
+          }`}
+        >
+          {selected === "1" && (
+            <motion.span
+              layoutId="pricing-switch"
+              className="absolute top-0 left-0 sm:h-12 h-10 w-full rounded-full border-2 shadow-sm border-brand-400/50 bg-gradient-to-t from-brand-500/30 via-brand-400/20 to-brand-500/30"
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          )}
+          <span className="relative flex items-center gap-2">
+            Yearly
+            <span className="rounded-full bg-brand-500/80 px-2 py-0.5 text-xs font-medium text-white">
+              Save 20%
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export function SubscriptionPlans({ onSelectPlan, currentPlan = null }) {
-  const [selectedPlan, setSelectedPlan] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [isYearly, setIsYearly] = useState(false);
+  const containerRef = useRef(null);
   const titleRef = useRef(null);
   const plansRef = useRef(null);
   const titleInView = useInView(titleRef, { once: true, margin: "-100px" });
   const plansInView = useInView(plansRef, { once: true, margin: "-100px" });
 
-  const handleSelectPlan = async (planId) => {
-    if (isProcessing) return; // Prevent double clicks
-    
-    setSelectedPlan(planId);
+  // GSAP ScrollTrigger animations
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Animate title
+      gsap.fromTo(
+        titleRef.current,
+        {
+          y: 30,
+          opacity: 0,
+          filter: "blur(10px)",
+        },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: titleRef.current,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+
+      // Animate plan cards with stagger
+      const cards = plansRef.current?.querySelectorAll('.plan-card');
+      if (cards) {
+        gsap.fromTo(
+          cards,
+          {
+            y: 50,
+            opacity: 0,
+            scale: 0.9,
+            filter: "blur(10px)",
+          },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            duration: 0.6,
+            ease: "power3.out",
+            stagger: 0.2,
+            scrollTrigger: {
+              trigger: plansRef.current,
+              start: "top 75%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const handleSelectPlan = (planId) => {
+    if (isProcessing) return;
+    setSelectedPlanId(planId);
+    setShowPaymentModal(true);
+    setError(null);
+  };
+
+  const handlePaymentSuccess = async (planId) => {
+    setShowPaymentModal(false);
     setIsProcessing(true);
+    setError(null);
     
     try {
       if (onSelectPlan) {
         await onSelectPlan(planId);
       }
-    } catch (error) {
-      console.error('Error selecting plan:', error);
+    } catch (err) {
+      console.error('Error creating subscription:', err);
+      setError(err.message || 'Failed to subscribe. Please try again.');
     } finally {
       setIsProcessing(false);
+      setSelectedPlanId(null);
     }
   };
 
-  return (
-    <div className="mx-auto max-w-7xl px-6 py-16">
-      <motion.div 
-        ref={titleRef}
-        initial={{ y: 30, opacity: 0 }}
-        animate={titleInView ? { y: 0, opacity: 1 } : {}}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-12"
-      >
-        <h2 className="font-display text-4xl text-white mb-4">Choose Your Plan</h2>
-        <p className="text-lg text-white/70 max-w-2xl mx-auto">
-          Subscribe to start selling and advertising your goods on Blue Ocean Marketplace
-        </p>
-      </motion.div>
+  const togglePricingPeriod = (value) => {
+    setIsYearly(value);
+  };
 
-      <div ref={plansRef} className="grid gap-8 md:grid-cols-3">
+  return (
+    <div ref={containerRef} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      {/* Header Section */}
+      <div className="flex sm:flex-row flex-col sm:items-center items-start justify-between mb-10 sm:mb-12">
+        <div className="text-left mb-6 sm:mb-0">
+          <motion.h2
+        ref={titleRef}
+            className="font-display text-3xl sm:text-4xl lg:text-5xl text-white mb-4 leading-tight"
+          >
+            Plans & Pricing
+          </motion.h2>
+          <p className="text-base sm:text-lg text-white/70 max-w-2xl">
+            Trusted by millions, we help teams all around the world. Explore which option is right for you.
+          </p>
+        </div>
+        <PricingSwitch onSwitch={togglePricingPeriod} isYearly={isYearly} className="shrink-0" />
+      </div>
+
+      {/* Plans Grid */}
+      <div ref={plansRef} className="grid md:grid-cols-3 gap-4 sm:gap-6 mx-auto bg-gradient-to-b from-ocean/40 to-midnight/40 sm:p-3 rounded-2xl">
         {subscriptionPlans.map((plan, index) => {
           const Icon = plan.icon;
           const isCurrentPlan = currentPlan === plan.id;
-          const isSelected = selectedPlan === plan.id;
+          const displayPrice = isYearly ? plan.yearlyPrice : plan.price;
+          const displayPeriod = isYearly ? 'year' : 'month';
 
           return (
-            <motion.div
+            <div
               key={plan.id}
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={plansInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{ 
-                duration: 0.6, 
-                delay: index * 0.15,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className={`relative rounded-[32px] border ${
+              className={`plan-card relative flex flex-col justify-between ${
                 plan.popular
-                  ? 'border-brand-400/50 bg-gradient-to-br from-ocean/90 to-midnight/90 shadow-[0_8px_32px_rgba(29,160,230,0.3)]'
-                  : 'border-white/10 bg-ocean/65'
-              } p-8 text-white transition-shadow duration-300`}
+                  ? "scale-105 sm:scale-110 ring-2 ring-brand-400/50 bg-gradient-to-br from-ocean/95 via-brand-500/20 to-midnight/95 text-white shadow-[0_8px_32px_rgba(29,160,230,0.4)]"
+                  : "border border-white/10 shadow-none bg-gradient-to-br from-ocean/80 to-midnight/80 pt-4 text-white"
+              } rounded-2xl sm:rounded-3xl p-6 sm:p-8 transition-all duration-300`}
             >
+              <div>
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="rounded-full bg-brand-500 px-4 py-1 text-xs font-semibold text-white">
-                    Most Popular
+                  <div className="mb-4">
+                    <span className="bg-brand-500/80 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      Popular
                   </span>
                 </div>
               )}
 
-              <div className="flex items-center gap-4 mb-6">
-                <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${plan.color}`}>
-                  <Icon className="h-8 w-8 text-white" />
+                {/* Price */}
+                <div className="flex items-baseline mb-4">
+                  <span className="text-4xl sm:text-5xl font-bold">
+                    ${displayPrice}
+                  </span>
+                  <span className={`ml-2 text-sm sm:text-base ${
+                    plan.popular ? "text-white/80" : "text-white/60"
+                  }`}>
+                    /{displayPeriod}
+                  </span>
                 </div>
-                <div>
-                  <h3 className="font-display text-2xl">{plan.name}</h3>
-                  <p className="text-sm text-white/60">{plan.description}</p>
+
+                {/* Plan Name */}
+                <h3 className="text-2xl sm:text-3xl font-semibold mb-2">{plan.name}</h3>
+                <p className={`text-sm mb-6 ${
+                  plan.popular ? "text-white/80" : "text-white/70"
+                }`}>
+                  {plan.description}
+                </p>
+
+                {/* Features */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <h4 className="font-medium text-base mb-3">
+                    {plan.includes[0]}
+                  </h4>
+                  <ul className="space-y-2">
+                    {plan.includes.slice(1).map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start">
+                        <span className={`h-6 w-6 rounded-full grid place-content-center mt-0.5 mr-3 shrink-0 ${
+                          plan.popular
+                            ? "bg-white/20 border border-white/30"
+                            : "bg-white/10 border border-white/20"
+                        }`}>
+                          <CheckCheck className="h-4 w-4" />
+                        </span>
+                        <span className={`text-sm ${
+                          plan.popular ? "text-white/90" : "text-white/80"
+                        }`}>
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold">${plan.price}</span>
-                  <span className="text-white/60">/{plan.period}</span>
-                </div>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, idx) => (
-                  <motion.li 
-                    key={idx} 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={plansInView ? { opacity: 1, x: 0 } : {}}
-                    transition={{ duration: 0.4, delay: index * 0.15 + idx * 0.05 }}
-                    className="flex items-start gap-3"
+              {/* Button */}
+              <div className="mt-8">
+                {isCurrentPlan ? (
+                  <Button
+                    variant="secondary"
+                    className="w-full border-white/20 bg-white/10 cursor-not-allowed text-sm sm:text-base"
+                    disabled
                   >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={plansInView ? { scale: 1 } : {}}
-                      transition={{ duration: 0.3, delay: index * 0.15 + idx * 0.05 + 0.2 }}
-                    >
-                      <Check className="h-5 w-5 text-brand-200 mt-0.5 shrink-0" />
-                    </motion.div>
-                    <span className="text-sm text-white/80">{feature}</span>
-                  </motion.li>
-                ))}
-              </ul>
-
-              {isCurrentPlan ? (
-                <Button
-                  variant="secondary"
-                  className="w-full border-white/20 bg-white/10 cursor-not-allowed"
-                  disabled
-                >
-                  Current Plan
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => handleSelectPlan(plan.id)}
-                  disabled={isProcessing}
-                  className={`w-full ${
-                    plan.popular
-                      ? 'bg-brand-500 hover:bg-brand-400'
-                      : 'bg-white/10 hover:bg-white/20'
-                  } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isProcessing && selectedPlan === plan.id ? 'Processing...' : 'Subscribe Now'}
-                </Button>
-              )}
-            </motion.div>
+                    Current Plan
+                  </Button>
+                ) : (
+                  <button
+                    onClick={() => handleSelectPlan(plan.id)}
+                    disabled={isProcessing}
+                    className={`w-full mb-2 p-4 text-base sm:text-lg rounded-xl font-semibold transition-all duration-300 ${
+                      plan.popular
+                        ? "bg-gradient-to-t from-white/90 to-white/70 shadow-lg shadow-brand-500/50 border border-white/40 text-midnight hover:from-white hover:to-white/90"
+                        : "bg-gradient-to-t from-brand-500/90 to-brand-400/80 shadow-lg shadow-brand-500/30 border border-brand-400/50 text-white hover:from-brand-400 hover:to-brand-300"
+                    } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isProcessing && selectedPlanId === plan.id ? 'Processing...' : 'Subscribe Now'}
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-sm text-white/60">
+      {error && (
+        <div className="mt-6 mx-auto max-w-2xl px-4">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
+            <p className="text-sm text-red-200 text-center">{error}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-10 sm:mt-12 text-center px-4">
+        <p className="text-xs sm:text-sm text-white/60">
           All plans include a 14-day free trial. Cancel anytime.
         </p>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPlanId && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPlanId(null);
+          }}
+          planId={selectedPlanId}
+          isYearly={isYearly}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
-

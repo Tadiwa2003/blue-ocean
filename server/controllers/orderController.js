@@ -1,4 +1,5 @@
-import { saveOrder, getOrdersByUserId, getOrderById as getOrder, updateOrder } from '../data/orders.js';
+import { createOrder as createOrderData, getOrdersByUserId, getOrderById as getOrder, updateOrder } from '../db/orders.js';
+import crypto from 'crypto';
 
 // Create new order
 export const createOrder = async (req, res) => {
@@ -19,7 +20,8 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    if (!total || total <= 0) {
+    const parsedTotal = parseFloat(total);
+    if (!Number.isFinite(parsedTotal) || parsedTotal <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Valid total amount is required',
@@ -27,18 +29,18 @@ export const createOrder = async (req, res) => {
     }
 
     const order = {
-      id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `order_${crypto.randomUUID()}`,
       userId: req.user.id,
       orderNumber: `BO-${Date.now()}`,
       items,
       shippingInfo,
-      total: parseFloat(total),
+      total: parsedTotal,
       status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    saveOrder(order);
+    await createOrderData(order);
 
     res.status(201).json({
       success: true,
@@ -59,7 +61,7 @@ export const createOrder = async (req, res) => {
 // Get user's orders
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = getOrdersByUserId(req.user.id);
+    const orders = await getOrdersByUserId(req.user.id);
 
     res.json({
       success: true,
@@ -80,7 +82,7 @@ export const getUserOrders = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
-    const order = getOrder(id);
+    const order = await getOrder(id);
 
     if (!order) {
       return res.status(404).json({
@@ -126,7 +128,7 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = getOrder(id);
+    const order = await getOrder(id);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -134,15 +136,13 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
-    order.status = status;
-    order.updatedAt = new Date().toISOString();
-    updateOrder(order);
+    const updatedOrder = await updateOrder(order.id, { status });
 
     res.json({
       success: true,
       message: 'Order status updated successfully',
       data: {
-        order,
+        order: updatedOrder,
       },
     });
   } catch (error) {

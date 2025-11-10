@@ -4,9 +4,25 @@
 
 **Backend Server:** ✅ Running on http://localhost:3001  
 **Health Check:** ✅ Responding (HTTP 200)  
-**Authentication:** ✅ Working  
+**Authentication:** ⚠️ Requires MongoDB to be running  
 **CORS:** ✅ Configured  
 **Error Handling:** ✅ Enhanced  
+**Database:** ⚠️ MongoDB connection required for authentication
+
+### ⚠️ Important: MongoDB Required
+
+**Sign-in will not work until MongoDB is running.** See `START_MONGODB.md` for setup instructions.
+
+**Quick Start MongoDB:**
+```bash
+# macOS
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+
+# Then restart the server
+npm run server
+```  
 
 ## 🔧 Fixes Applied
 
