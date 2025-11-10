@@ -1,3 +1,7 @@
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
+
 const pillars = [
   {
     number: '01',
@@ -27,9 +31,17 @@ const pillars = [
 ];
 
 export function ValueJourney() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
   return (
-    <section id="journey" className="mx-auto mt-24 max-w-6xl px-6">
-      <div className="rounded-[40px] border border-white/10 bg-white/5 p-8 shadow-[0_28px_70px_rgba(4,11,24,0.4)] backdrop-blur">
+    <section ref={sectionRef} id="journey" className="mx-auto mt-24 max-w-6xl px-6">
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }}
+        animate={isInView ? { y: 0, opacity: 1 } : {}}
+        transition={{ duration: 0.6 }}
+        className="rounded-[40px] border border-white/10 bg-white/5 p-8 shadow-[0_28px_70px_rgba(4,11,24,0.4)] backdrop-blur"
+      >
         <div className="flex flex-col gap-6 text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Simple · Fast · Guided</p>
@@ -42,9 +54,18 @@ export function ValueJourney() {
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-5">
-          {pillars.map((pillar) => (
-            <div
+          {pillars.map((pillar, index) => (
+            <motion.div
               key={pillar.number}
+              initial={{ y: 40, opacity: 0, scale: 0.9 }}
+              animate={isInView ? { y: 0, opacity: 1, scale: 1 } : {}}
+              transition={{ 
+                duration: 0.5, 
+                delay: index * 0.1,
+                type: "spring",
+                stiffness: 100
+              }}
+              whileHover={{ y: -5, scale: 1.02 }}
               className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-white/4 p-5 text-left text-white transition hover:border-brand-400/40 hover:bg-white/8"
             >
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
@@ -52,10 +73,10 @@ export function ValueJourney() {
               </span>
               <h3 className="text-lg font-semibold">{pillar.title}</h3>
               <p className="text-xs text-white/65 leading-relaxed">{pillar.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -1,10 +1,22 @@
 import { Button } from '../components/Button.jsx';
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
 
 export function Offerings() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
   return (
-    <section id="offerings" className="mx-auto mt-24 max-w-6xl px-6">
+    <section ref={sectionRef} id="offerings" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
-        <article className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-brand-500/20 via-midnight to-brand-700/40 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur">
+        <motion.article 
+          initial={{ x: -50, opacity: 0, scale: 0.95 }}
+          animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.01 }}
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-brand-500/20 via-midnight to-brand-700/40 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur"
+        >
           <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
           <div className="absolute -left-16 bottom-12 h-32 w-32 rounded-full bg-brand-400/20 blur-3xl" />
           <div className="relative space-y-6">
@@ -37,11 +49,16 @@ export function Offerings() {
               <Button>View lookbook</Button>
             </div>
           </div>
-        </article>
+        </motion.article>
 
-        <article
+        <motion.article
           id="spa"
-          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/6 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur">
+          initial={{ x: 50, opacity: 0, scale: 0.95 }}
+          animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.01 }}
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/6 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur"
+        >
           <div className="absolute -right-12 top-6 h-32 w-32 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute -left-16 bottom-0 h-28 w-28 rounded-full bg-brand-300/15 blur-3xl" />
           <div className="relative space-y-6">
@@ -83,7 +100,7 @@ export function Offerings() {
               <Button variant="ghost">Download ritual menu</Button>
             </div>
           </div>
-        </article>
+        </motion.article>
       </div>
     </section>
   );

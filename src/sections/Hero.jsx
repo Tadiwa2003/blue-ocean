@@ -1,13 +1,19 @@
 import { BlurTextAnimation } from '../components/ui/blur-text-animation.jsx';
 import { Button } from '../components/Button.jsx';
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
 
 // Inline base64 encoded gradient as guaranteed fallback
 const FALLBACK_GRADIENT = 
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
 export function Hero() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-50px" });
+
   return (
-    <section id="hero" className="relative overflow-hidden pt-32">
+    <section ref={sectionRef} id="hero" className="relative overflow-hidden pt-32">
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"
@@ -153,24 +159,29 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative z-30 mx-auto -mt-4 grid w-full max-w-6xl gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4">
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Retail partners</dt>
-          <dd className="mt-2 text-2xl font-semibold">320+</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Spa rituals curated</dt>
-          <dd className="mt-2 text-2xl font-semibold">18</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Sell-through in 72 hrs</dt>
-          <dd className="mt-2 text-2xl font-semibold">82%</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Guest satisfaction</dt>
-          <dd className="mt-2 text-2xl font-semibold">4.9 / 5</dd>
-        </div>
-      </div>
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }}
+        animate={isInView ? { y: 0, opacity: 1 } : {}}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="relative z-30 mx-auto -mt-4 grid w-full max-w-6xl gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4"
+      >
+        {[
+          { label: 'Retail partners', value: '320+' },
+          { label: 'Spa rituals curated', value: '18' },
+          { label: 'Sell-through in 72 hrs', value: '82%' },
+          { label: 'Guest satisfaction', value: '4.9 / 5' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={isInView ? { scale: 1, opacity: 1 } : {}}
+            transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+          >
+            <dt className="text-xs uppercase tracking-[0.3em] text-white/60">{stat.label}</dt>
+            <dd className="mt-2 text-2xl font-semibold">{stat.value}</dd>
+          </motion.div>
+        ))}
+      </motion.div>
       <div className="relative z-30 mt-8 flex justify-center">
         <button
           type="button"

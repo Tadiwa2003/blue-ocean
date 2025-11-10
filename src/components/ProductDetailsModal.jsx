@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
 import { getProductVariants, findRelatedProducts } from '../utils/productVariants.js';
-import { highlightProducts } from '../data/products.js';
+import { useProducts } from '../hooks/useProducts.js';
 import { ChevronLeft, ChevronRight, Heart, Star, Check, Truck, ShieldCheck } from 'lucide-react';
 
 const fallbackImage =
@@ -23,6 +23,7 @@ const fallbackImage =
   `);
 
 export function ProductDetailsModal({ product, open, onClose, onViewProduct, onAddToCart }) {
+  const { products: allProducts } = useProducts();
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedImage, setSelectedImage] = useState(product?.image || fallbackImage);
@@ -36,7 +37,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   const imageGallery = [product?.image, product?.image, product?.image].filter(Boolean).slice(0, 3);
 
   // Get actual variants for this product
-  const productVariants = product ? getProductVariants(product.id) : { colors: [], sizes: [] };
+  const productVariants = product ? getProductVariants(product.id, allProducts || []) : { colors: [], sizes: [] };
   const colorVariants = productVariants.colors || [];
   const sizeVariants = productVariants.sizes || [];
   const requiresColorSelection = colorVariants.length > 0;
@@ -44,8 +45,8 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
   // Initialize selections
   useEffect(() => {
-    if (product && open) {
-      const variants = getProductVariants(product.id);
+    if (product && open && allProducts) {
+      const variants = getProductVariants(product.id, allProducts);
       setSelectedColor(variants.colors[0] || '');
       setSelectedSize(variants.sizes[0] || '');
       setSelectedImage(product.image || fallbackImage);
@@ -55,7 +56,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
       setQuantity(1);
       setActiveTab('description');
     }
-  }, [product, open]);
+  }, [product, open, allProducts]);
 
   // GSAP animations
   useEffect(() => {
@@ -110,13 +111,13 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
   // Find related products when size is selected
   useEffect(() => {
-    if (product && selectedSize) {
-      const related = findRelatedProducts(product, selectedSize, highlightProducts);
+    if (product && selectedSize && allProducts) {
+      const related = findRelatedProducts(product, selectedSize, allProducts);
       setRelatedProducts(related);
     } else {
       setRelatedProducts([]);
     }
-  }, [product, selectedSize]);
+  }, [product, selectedSize, allProducts]);
 
   // Handle Escape key
   useEffect(() => {

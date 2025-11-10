@@ -18,6 +18,7 @@ import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
 import { ReactPlugin } from '@21st-extension/react';
 import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
 import { ShaderAnimation } from './components/ShaderAnimation.jsx';
+import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -117,7 +118,7 @@ export default function App() {
           onViewSpaStorefront={() => openStorefront('spa')}
         />
       ) : (
-        <>
+        <ContainerScrollAnimation>
           <Header
             onSignInClick={() => {
               setModalMode('signin');
@@ -132,15 +133,15 @@ export default function App() {
           />
           <main className="flex flex-col gap-20 pb-24">
             <Hero />
-              <FeatureTiles />
+            <FeatureTiles />
             <Intro />
-              <ValueJourney />
+            <ValueJourney />
             <Offerings />
             <Testimonials />
             <CallToAction />
           </main>
           <Footer />
-        </>
+        </ContainerScrollAnimation>
       )}
     </div>
     </GradientBackground>

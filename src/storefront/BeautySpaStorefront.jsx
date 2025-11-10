@@ -1,17 +1,22 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { spaServices } from '../data/spaServices.js';
+import { useServices } from '../hooks/useServices.js';
 import { ServiceCard } from '../components/ServiceCard.jsx';
 import { ServiceDetailsModal } from '../components/ServiceDetailsModal.jsx';
 import { BookingDrawer } from '../components/BookingDrawer.jsx';
 import { CartNotification } from '../components/CartNotification.jsx';
 import { Button } from '../components/Button.jsx';
 import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
+import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
+import { motion } from 'framer-motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function BeautySpaStorefront({ onClose }) {
+  // Fetch services from backend
+  const { services: allServices, loading: servicesLoading, error: servicesError } = useServices();
+  
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedService, setSelectedService] = useState(null);
   const [bookingIntent, setBookingIntent] = useState('view');
@@ -21,16 +26,17 @@ export function BeautySpaStorefront({ onClose }) {
   const [notification, setNotification] = useState({ message: '', isVisible: false });
 
   const serviceCategories = useMemo(() => {
-    const uniqueCategories = new Set(spaServices.map((service) => service.serviceCategory));
+    const uniqueCategories = new Set((allServices || []).map((service) => service.serviceCategory));
     return ['All', ...uniqueCategories];
-  }, []);
+  }, [allServices]);
 
   const filteredServices = useMemo(() => {
+    if (!allServices || allServices.length === 0) return [];
     if (activeCategory === 'All') {
-      return spaServices;
+      return allServices;
     }
-    return spaServices.filter((service) => service.serviceCategory === activeCategory);
-  }, [activeCategory]);
+    return allServices.filter((service) => service.serviceCategory === activeCategory);
+  }, [activeCategory, allServices]);
 
   const handleCategoryChange = (category) => {
     setActiveCategory(category);
@@ -209,7 +215,7 @@ export function BeautySpaStorefront({ onClose }) {
   }, [filteredServices]);
 
   return (
-    <div className="min-h-screen bg-midnight text-white">
+    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-4">
@@ -288,7 +294,11 @@ export function BeautySpaStorefront({ onClose }) {
               Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
             </p>
             <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
-              <Button onClick={() => handleShowService(spaServices[0], 'book')}>Book Treatment</Button>
+              <Button onClick={() => {
+                if (allServices && allServices.length > 0) {
+                  handleShowService(allServices[0], 'book');
+                }
+              }}>Book Treatment</Button>
               <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
                 View Itinerary
               </Button>
@@ -329,8 +339,8 @@ export function BeautySpaStorefront({ onClose }) {
                   const isActive = activeCategory === category;
                   const categoryCount =
                     category === 'All'
-                      ? spaServices.length
-                      : spaServices.filter((service) => service.serviceCategory === category).length;
+                      ? (allServices || []).length
+                      : (allServices || []).filter((service) => service.serviceCategory === category).length;
 
                   return (
                     <button
@@ -381,21 +391,47 @@ export function BeautySpaStorefront({ onClose }) {
           </div>
 
           <div ref={servicesGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
-            {filteredServices.map((service, index) => (
-              <div
-                key={service.id}
-                className="storefront-card"
-                style={{
-                  animationDelay: `${index * 0.1}s`,
-                }}
-              >
-                <ServiceCard
-                  service={service}
-                  onViewDetails={(selected) => handleShowService(selected, 'view')}
-                  onBook={(selected) => handleShowService(selected, 'book')}
-                />
+            {servicesLoading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
+                <p className="text-white/60">Loading spa services...</p>
               </div>
-            ))}
+            ) : servicesError ? (
+              <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+                <p className="text-red-200 font-semibold">Error loading services</p>
+                <p className="mt-2 text-sm text-red-200/70">{servicesError}</p>
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                <p className="text-white/60">No services found in this category.</p>
+              </div>
+            ) : (
+              filteredServices.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="storefront-card"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                  }}
+                >
+                  <ServiceCard
+                    service={service}
+                    onViewDetails={(selected) => handleShowService(selected, 'view')}
+                    onBook={(selected) => handleShowService(selected, 'book')}
+                  />
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -438,7 +474,7 @@ export function BeautySpaStorefront({ onClose }) {
         isVisible={notification.isVisible}
         onClose={() => setNotification({ message: '', isVisible: false })}
       />
-    </div>
+    </ContainerScrollAnimation>
   );
 }
 

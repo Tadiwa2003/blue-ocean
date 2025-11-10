@@ -1,4 +1,4 @@
-import { highlightProducts } from '../data/products.js';
+// Products will be passed as parameter to functions that need them
 
 // Product-specific color and size variants
 const productVariants = {
@@ -156,16 +156,16 @@ const productVariants = {
 };
 
 // Get variants for a specific product
-export const getProductVariants = (productId) => {
+export const getProductVariants = (productId, allProducts = []) => {
   return productVariants[productId] || {
-    colors: getDefaultColors(productId),
-    sizes: getDefaultSizes(productId),
+    colors: getDefaultColors(productId, allProducts),
+    sizes: getDefaultSizes(productId, allProducts),
   };
 };
 
 // Get default colors based on category
-const getDefaultColors = (productId) => {
-  const product = highlightProducts.find((p) => p.id === productId);
+const getDefaultColors = (productId, allProducts = []) => {
+  const product = allProducts.find((p) => p.id === productId);
   if (!product) return ['Black', 'Navy', 'Cream'];
   
   const categoryColors = {
@@ -182,8 +182,8 @@ const getDefaultColors = (productId) => {
 };
 
 // Get default sizes based on category
-const getDefaultSizes = (productId) => {
-  const product = highlightProducts.find((p) => p.id === productId);
+const getDefaultSizes = (productId, allProducts = []) => {
+  const product = allProducts.find((p) => p.id === productId);
   if (!product) return ['Standard'];
   
   if (product.category === 'Slides & Sandals' || product.category === 'Nike & Jordan') {

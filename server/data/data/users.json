@@ -1,0 +1,29 @@
+[
+  {
+    "id": "user_owner_001",
+    "name": "Kim Moyo",
+    "email": "founder@blueocean.co",
+    "password": "$2b$10$M7OSqLkzQnSXVGJL2NjKWOo/adgqSBtfow.GpGOM0wbMb9FIqLnJ2",
+    "role": "owner",
+    "createdAt": "2025-11-10T14:44:11.560Z",
+    "updatedAt": "2025-11-10T14:44:11.570Z"
+  },
+  {
+    "id": "user_admin_001",
+    "name": "Admin User",
+    "email": "admin@blueocean.co",
+    "password": "$2b$10$A.Vh9ABeBYAC5xcTu1bwXe1u5JyVtVCm8ENNBH1u1Xdmvcz3WBXhm",
+    "role": "admin",
+    "createdAt": "2025-11-10T14:44:11.988Z",
+    "updatedAt": "2025-11-10T14:44:11.988Z"
+  },
+  {
+    "id": "user_user_001",
+    "name": "Test User",
+    "email": "user@blueocean.co",
+    "password": "$2b$10$zYZSfoX8vg3LjxJWSGXOB.E5LLwTY7out0/Y7HVjjGTqKWfV9qOPq",
+    "role": "user",
+    "createdAt": "2025-11-10T14:44:13.198Z",
+    "updatedAt": "2025-11-10T14:44:13.198Z"
+  }
+]

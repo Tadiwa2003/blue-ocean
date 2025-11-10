@@ -1,32 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from './Button.jsx';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-
-// Mock user database for demonstration
-const VALID_CREDENTIALS = [
-  { email: 'founder@blueocean.co', password: 'blueocean2024', name: 'Kim Moyo', role: 'owner' },
-  { email: 'admin@blueocean.co', password: 'admin123', name: 'Admin User', role: 'admin' },
-  { email: 'user@blueocean.co', password: 'user123', name: 'Test User', role: 'user' },
-];
-
-// Get users from localStorage or use default
-const getStoredUsers = () => {
-  try {
-    const stored = localStorage.getItem('blueOceanUsers');
-    return stored ? JSON.parse(stored) : VALID_CREDENTIALS;
-  } catch {
-    return VALID_CREDENTIALS;
-  }
-};
-
-// Save users to localStorage
-const saveUsers = (users) => {
-  try {
-    localStorage.setItem('blueOceanUsers', JSON.stringify(users));
-  } catch (err) {
-    console.error('Failed to save users:', err);
-  }
-};
+import api from '../services/api.js';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,53 +117,35 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Check if user already exists
-      const allUsers = getStoredUsers();
-      const existingUser = allUsers.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase().trim()
-      );
-
-      if (existingUser) {
-        setError('An account with this email already exists. Please sign in instead.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Create new user
-      const newUser = {
+      // Call backend API
+      const response = await api.auth.signUp({
+        name: name.trim(),
         email: email.toLowerCase().trim(),
         password: password,
-        name: name.trim(),
-        role: 'user', // Default role for new sign-ups
-      };
-
-      // Save to localStorage
-      const updatedUsers = [...allUsers, newUser];
-      saveUsers(updatedUsers);
-
-      // Success - pass user data to onSuccess callback
-      // Show success message briefly before calling onSuccess
-      setError('');
-      setIsSubmitting(false);
-      
-      // Small delay to show success state
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      onSuccess({
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
       });
 
-      // Reset form
-      setName('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+      if (response.success) {
+        // Success - pass user data to onSuccess callback
+        setError('');
+        setIsSubmitting(false);
+        
+        // Small delay to show success state
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        
+        onSuccess({
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+        });
+
+        // Reset form
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+      }
     } catch (err) {
-      setError('An error occurred during sign-up. Please try again.');
+      setError(err.message || 'An error occurred during sign-up. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -222,35 +179,25 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
     setIsSubmitting(true);
     setError('');
 
-    // Simulate API call with authentication check
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Call backend API
+      const response = await api.auth.signIn(email.toLowerCase().trim(), password);
 
-      // Check credentials against stored users
-      const allUsers = getStoredUsers();
-      const user = allUsers.find(
-        (cred) => cred.email.toLowerCase() === email.toLowerCase().trim() && cred.password === password
-      );
+      if (response.success) {
+        // Success - pass user data to onSuccess callback
+        onSuccess({
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+        });
 
-      if (!user) {
-        setError('Invalid email or password. Please try again.');
+        // Reset form
+        setEmail('');
+        setPassword('');
         setIsSubmitting(false);
-        return;
       }
-
-      // Success - pass user data to onSuccess callback
-      onSuccess({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      });
-
-      // Reset form
-      setEmail('');
-      setPassword('');
-      setIsSubmitting(false);
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'Invalid email or password. Please try again.');
       setIsSubmitting(false);
     }
   };

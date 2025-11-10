@@ -1,4 +1,7 @@
 import { SectionTitle } from '../components/SectionTitle.jsx';
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
 
 const stats = [
   { label: 'Boutiques Merchandised', value: '320+' },
@@ -8,25 +11,45 @@ const stats = [
 ];
 
 export function Intro() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
   return (
-    <section id="intro" className="mx-auto mt-24 max-w-6xl px-6">
+    <section ref={sectionRef} id="intro" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="grid gap-12 lg:grid-cols-[0.6fr,1fr] lg:items-center">
-        <SectionTitle
-          eyebrow="One platform, two experiences"
-          title="Blue Ocean stocks the shelves while Tana’s Beauty Boost Spa fills the treatment rooms."
-          description="Merchandise your boutique with coastal-luxury capsules and pair them with restorative spa itineraries. We supply the assets, scripts, and operations so retail and wellness launch in sync."
-        />
-        <div className="rounded-[32px] border border-brand-500/30 bg-ocean/40 p-8 backdrop-blur">
+        <motion.div
+          initial={{ x: -50, opacity: 0 }}
+          animate={isInView ? { x: 0, opacity: 1 } : {}}
+          transition={{ duration: 0.6 }}
+        >
+          <SectionTitle
+            eyebrow="One platform, two experiences"
+            title="Blue Ocean stocks the shelves while Tana's Beauty Boost Spa fills the treatment rooms."
+            description="Merchandise your boutique with coastal-luxury capsules and pair them with restorative spa itineraries. We supply the assets, scripts, and operations so retail and wellness launch in sync."
+          />
+        </motion.div>
+        <motion.div 
+          initial={{ x: 50, opacity: 0 }}
+          animate={isInView ? { x: 0, opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="rounded-[32px] border border-brand-500/30 bg-ocean/40 p-8 backdrop-blur"
+        >
           <p className="text-sm text-white/70">
             Introduce guests to the world of Blue Ocean and Tana’s Beauty Boost Spa with immersive assets, ready-to-style
             merchandising kits, and ritual training that make every touchpoint feel coastal, curated, and profitable.
           </p>
           <ul className="mt-8 grid grid-cols-2 gap-6 text-white">
-            {stats.map((stat) => (
-              <li key={stat.label} className="space-y-1">
+            {stats.map((stat, index) => (
+              <motion.li 
+                key={stat.label}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={isInView ? { scale: 1, opacity: 1 } : {}}
+                transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
+                className="space-y-1"
+              >
                 <p className="text-2xl font-semibold">{stat.value}</p>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/50">{stat.label}</p>
-              </li>
+              </motion.li>
             ))}
           </ul>
           <div className="mt-10 grid gap-4 text-sm text-white/80 md:grid-cols-2">
@@ -73,7 +96,7 @@ export function Intro() {
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

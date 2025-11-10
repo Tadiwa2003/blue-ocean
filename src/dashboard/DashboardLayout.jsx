@@ -1,8 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '../components/Button.jsx';
 import { Logo } from '../components/Logo.jsx';
-import { highlightProducts } from '../data/products.js';
+import { useProducts } from '../hooks/useProducts.js';
+import { useServices } from '../hooks/useServices.js';
 import { analyticsBreakdown } from '../data/analytics.js';
+import { AddProductModal } from '../components/AddProductModal.jsx';
+import { AddServiceModal } from '../components/AddServiceModal.jsx';
+import { AnimatedRadialChart } from '../components/ui/AnimatedRadialChart.jsx';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components/ui/AreaChart.jsx';
+import { Area, AreaChart as RechartsAreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { TrendingUp, TrendingDown } from 'lucide-react';
+import { DonutChart } from '../components/ui/DonutChart.jsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -10,6 +19,7 @@ const navItems = [
   { id: 'spaServices', label: 'Beauty Spa', icon: '💆' },
   { id: 'bookings', label: 'Bookings', icon: '📅' },
   { id: 'storefront', label: 'Storefront', icon: '🛍️' },
+  { id: 'subscription', label: 'Subscription', icon: '💳' },
   { id: 'reports', label: 'Reports', icon: '📑' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'orders', label: 'Orders', icon: '📦' },
@@ -289,7 +299,7 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   );
 }
 
-function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront }) {
+function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, subscription }) {
   return (
     <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/90 via-ocean to-midnight/90 px-6 py-6 text-white shadow-glow">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -299,6 +309,23 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront }) {
           <p className="mt-2 text-sm text-white/70">
             Review capsule performance, publish storefront changes, and monitor guest experience all in one tide dashboard.
           </p>
+          {!subscription && (
+            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+              <p className="text-sm text-amber-200">
+                ⚠️ <strong>Subscription Required:</strong> Subscribe to start selling and advertising your goods on Blue Ocean Marketplace.
+              </p>
+            </div>
+          )}
+          {subscription && (
+            <div className="mt-4 flex items-center gap-2 text-sm text-white/80">
+              <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200">
+                ✓ {subscription.planName} Plan Active
+              </span>
+              <span className="text-white/60">
+                Renews {new Date(subscription.renewalDate).toLocaleDateString()}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-3">
           <div className="relative group">
@@ -393,29 +420,40 @@ function AnalyticsSummary() {
 
 function SalesTrend() {
   const [timeframe, setTimeframe] = useState('Week');
-  const [chartType, setChartType] = useState('line');
-  const [hoveredPoint, setHoveredPoint] = useState(null);
   
   const currentData = salesTrendData[timeframe];
-  const chartWidth = 600;
-  const chartHeight = 240;
-  const maxMetric = Math.max(...currentData.map((d) => Math.max(d.sales, d.profit)));
-  const step = chartWidth / (currentData.length - 1);
-
-  const buildPath = (key) =>
-    currentData
-      .map((point, index) => {
-        const x = index * step;
-        const y = chartHeight - (point[key] / maxMetric) * (chartHeight - 20) - 10;
-        return `${x},${y}`;
-      })
-      .join(' ');
-
-  const profitPath = `${buildPath('profit')} ${chartWidth},${chartHeight} 0,${chartHeight}`;
 
   const totalSales = currentData.reduce((sum, item) => sum + item.sales, 0);
   const totalProfit = currentData.reduce((sum, item) => sum + item.profit, 0);
   const totalOrders = currentData.reduce((sum, item) => sum + item.orders, 0);
+
+  // Calculate percentage changes (simulated based on timeframe)
+  const getChangeForMetric = (metric) => {
+    const changes = {
+      Week: { sales: 12, profit: 8, orders: 15 },
+      Month: { sales: -5, profit: 3, orders: -8 },
+      Quarter: { sales: 18, profit: 22, orders: 12 },
+    };
+    return changes[timeframe]?.[metric] || 0;
+  };
+
+  const chartConfig = {
+    sales: {
+      label: 'Sales',
+      color: '#1da0e6',
+    },
+    profit: {
+      label: 'Profit',
+      color: '#3ed598',
+    },
+    orders: {
+      label: 'Orders',
+      color: '#facc15',
+    },
+  };
+
+  // Latest data point for stats
+  const latestData = currentData[currentData.length - 1];
 
   return (
     <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/80 to-ocean/60 p-8 text-white shadow-xl">
@@ -444,462 +482,162 @@ function SalesTrend() {
               </button>
             ))}
           </div>
-          <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/5 p-1">
-            {[
-              { type: 'line', icon: '📈', label: 'Line' },
-              { type: 'bar', icon: '📊', label: 'Bar' },
-              { type: 'area', icon: '🌊', label: 'Area' },
-            ].map((chart) => (
-              <button
-                key={chart.type}
-                onClick={() => setChartType(chart.type)}
-                className={[
-                  'flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-300',
-                  chartType === chart.type
-                    ? 'bg-brand-500/30 text-white shadow-[0_4px_20px_rgba(29,160,230,0.3)]'
-                    : 'text-white/60 hover:bg-white/10 hover:text-white/80',
-                ].join(' ')}
-                title={chart.label}
-              >
-                <span>{chart.icon}</span>
-                <span className="hidden sm:inline">{chart.label}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       
-      <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 bg-midnight/40 p-6 backdrop-blur-sm">
-        {/* Tooltip */}
-        {hoveredPoint !== null && (
-          <div 
-            className="absolute z-50 rounded-2xl border border-brand-400/40 bg-midnight/95 px-4 py-3 shadow-2xl backdrop-blur-xl"
-            style={{
-              left: `${60 + (chartType === 'bar' 
-                ? hoveredPoint * (chartWidth / currentData.length) + (chartWidth / currentData.length) / 2 
-                : hoveredPoint * step) * (100 / (chartWidth + 80))}%`,
-              top: '20px',
-              transform: 'translateX(-50%)',
-              animation: 'chartFadeIn 0.2s ease-out',
-            }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-300">
-              {currentData[hoveredPoint].period}
-            </p>
-            <div className="mt-2 space-y-1.5">
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-2 text-xs text-white/70">
-                  <span className="h-2 w-2 rounded-full bg-brand-400" />
-                  Sales
-                </span>
-                <span className="text-sm font-bold text-white">
-                  ${currentData[hoveredPoint].sales.toLocaleString()}
+      {/* Stats Section */}
+      <div className="mt-8 grid gap-6 md:grid-cols-3">
+        {[
+          { key: 'sales', label: 'Sales', value: latestData.sales, total: totalSales, icon: '💠' },
+          { key: 'profit', label: 'Profit', value: latestData.profit, total: totalProfit, icon: '💚' },
+          { key: 'orders', label: 'Orders', value: latestData.orders, total: totalOrders, icon: '📦' },
+        ].map((metric) => {
+          const change = getChangeForMetric(metric.key);
+          return (
+            <div key={metric.key} className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-0.5 h-12 rounded-full bg-white/10"></div>
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-medium text-white/60">{metric.label}</div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl font-semibold leading-none">{metric.value.toLocaleString()}</span>
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs font-medium ${
+                        change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      {Math.abs(change)}%
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-2 text-xs text-white/70">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Profit
-                </span>
-                <span className="text-sm font-bold text-white">
-                  ${currentData[hoveredPoint].profit.toLocaleString()}
-                </span>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-2 text-xs text-white/70">
-                  <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  Orders
-                </span>
-                <span className="text-sm font-bold text-white">
-                  {currentData[hoveredPoint].orders}
-                </span>
               </div>
             </div>
+          );
+        })}
           </div>
-        )}
       
-        <style>{`
-          @keyframes chartFadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes pathDraw {
-            from {
-              stroke-dashoffset: 1000;
-            }
-            to {
-              stroke-dashoffset: 0;
-            }
-          }
-          @keyframes barGrow {
-            from {
-              transform: scaleY(0);
-              opacity: 0;
-            }
-            to {
-              transform: scaleY(1);
-              opacity: 1;
-            }
-          }
-          .chart-container {
-            animation: chartFadeIn 0.5s ease-out;
-          }
-          .chart-line {
-            stroke-dasharray: 1000;
-            animation: pathDraw 1.2s ease-out forwards;
-          }
-          .chart-bar {
-            transform-origin: bottom;
-            animation: barGrow 0.6s ease-out forwards;
-          }
-          .chart-point {
-            animation: chartFadeIn 0.8s ease-out forwards;
-          }
-        `}</style>
-        <svg viewBox={`0 0 ${chartWidth + 80} ${chartHeight + 60}`} className="chart-container h-64 w-full">
+      {/* Chart */}
+      <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 bg-midnight/40 p-6 backdrop-blur-sm">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[400px] w-full"
+        >
+          <RechartsAreaChart
+            accessibilityLayer
+            data={currentData}
+            margin={{
+              top: 10,
+              bottom: 10,
+              left: 20,
+              right: 20,
+            }}
+          >
           <defs>
-            <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(62,213,152,0.5)" />
-              <stop offset="100%" stopColor="rgba(62,213,152,0.05)" />
+              {/* Modern Abstract Background Pattern */}
+              <pattern id="modernPattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <path
+                  d="M0,16 L32,16 M16,0 L16,32"
+                  stroke="rgba(255,255,255,0.03)"
+                  strokeWidth="0.5"
+                />
+                <path
+                  d="M0,0 L32,32 M0,32 L32,0"
+                  stroke="rgba(255,255,255,0.02)"
+                  strokeWidth="0.3"
+                />
+                <circle cx="8" cy="8" r="1.5" fill="rgba(255,255,255,0.04)" />
+                <circle cx="24" cy="24" r="1.5" fill="rgba(255,255,255,0.04)" />
+              </pattern>
+
+              <linearGradient id="fillSales" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#1da0e6" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#1da0e6" stopOpacity={0.1} />
             </linearGradient>
-            <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(29,160,230,0.5)" />
-              <stop offset="100%" stopColor="rgba(29,160,230,0.05)" />
-            </linearGradient>
-            <linearGradient id="salesStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#1da0e6" />
-              <stop offset="100%" stopColor="#45c4fb" />
-            </linearGradient>
-            <linearGradient id="profitStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#3ed598" />
-              <stop offset="100%" stopColor="#8df7d1" />
+              <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3ed598" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#3ed598" stopOpacity={0.1} />
             </linearGradient>
           </defs>
           
-          <g transform="translate(60, 10)">
-            {/* Y-axis labels (money in thousands) */}
-            {[0, 1, 2, 3, 4].map((i) => {
-              const value = Math.round((maxMetric * (4 - i)) / 4 / 1000);
-              const y = i * (chartHeight / 4);
-              return (
-                <g key={i}>
-                  <line
-                    x1="0"
-                    y1={y}
-                    x2={chartWidth}
-                    y2={y}
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="1"
-                  />
-                  <text
-                    x="-10"
-                    y={y + 4}
-                    textAnchor="end"
-                    fill="rgba(255,255,255,0.5)"
-                    fontSize="11"
-                    fontWeight="500"
-                  >
-                    ${value}k
-                  </text>
-                </g>
-              );
-            })}
-            
-            {/* Y-axis label */}
-            <text
-              x="-45"
-              y={chartHeight / 2}
-              textAnchor="middle"
-              fill="rgba(255,255,255,0.6)"
-              fontSize="12"
-              fontWeight="600"
-              transform={`rotate(-90, -45, ${chartHeight / 2})`}
-            >
-              Revenue (Thousands)
-            </text>
-          
-          {/* Chart Type: Line */}
-          {chartType === 'line' && (
-            <>
-              <polyline
-                points={buildPath('profit')}
-                fill="none"
-                stroke="url(#profitStroke)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="chart-line"
-              />
-              <polyline
-                points={buildPath('sales')}
-                fill="none"
-                stroke="url(#salesStroke)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="chart-line"
-                style={{ animationDelay: '0.2s' }}
-              />
-              {/* Data points with hover areas */}
-              {currentData.map((point, index) => {
-                const x = index * step;
-                const profitY = chartHeight - (point.profit / maxMetric) * (chartHeight - 20) - 10;
-                const salesY = chartHeight - (point.sales / maxMetric) * (chartHeight - 20) - 10;
-                const isHovered = hoveredPoint === index;
-                return (
-                  <g key={index} className="chart-point" style={{ animationDelay: `${0.8 + index * 0.1}s` }}>
-                    {/* Invisible hover area */}
-                    <rect
-                      x={x - 20}
-                      y={0}
-                      width={40}
-                      height={chartHeight}
-                      fill="transparent"
-                      style={{ cursor: 'pointer' }}
-                      onMouseEnter={() => setHoveredPoint(index)}
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    />
-                    {/* Profit point */}
-                    <circle 
-                      cx={x} 
-                      cy={profitY} 
-                      r={isHovered ? "8" : "5"} 
-                      fill="#3ed598" 
-                      opacity="0.9"
-                      className="transition-all duration-200"
-                    >
-                      <animate attributeName="r" from="0" to={isHovered ? "8" : "5"} dur="0.4s" fill="freeze" />
-                    </circle>
-                    {isHovered && (
-                      <circle cx={x} cy={profitY} r="12" fill="#3ed598" opacity="0.2" />
-                    )}
-                    {/* Sales point */}
-                    <circle 
-                      cx={x} 
-                      cy={salesY} 
-                      r={isHovered ? "8" : "5"} 
-                      fill="#1da0e6" 
-                      opacity="0.9"
-                      className="transition-all duration-200"
-                    >
-                      <animate attributeName="r" from="0" to={isHovered ? "8" : "5"} dur="0.4s" fill="freeze" />
-                    </circle>
-                    {isHovered && (
-                      <circle cx={x} cy={salesY} r="12" fill="#1da0e6" opacity="0.2" />
-                    )}
-                  </g>
-                );
-              })}
-            </>
-          )}
-          
-          {/* Chart Type: Area */}
-          {chartType === 'area' && (
-            <>
-              <polygon points={profitPath} fill="url(#profitGradient)" className="chart-point" style={{ animationDelay: '0.2s' }}>
-                <animate attributeName="opacity" from="0" to="1" dur="0.8s" fill="freeze" />
-              </polygon>
-              <polygon 
-                points={`${buildPath('sales')} ${chartWidth},${chartHeight} 0,${chartHeight}`} 
-                fill="url(#salesGradient)"
-                className="chart-point"
-                style={{ animationDelay: '0.1s' }}
-              >
-                <animate attributeName="opacity" from="0" to="1" dur="0.8s" fill="freeze" />
-              </polygon>
-              <polyline
-                points={buildPath('profit')}
-                fill="none"
-                stroke="url(#profitStroke)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="chart-line"
-              />
-              <polyline
-                points={buildPath('sales')}
-                fill="none"
-                stroke="url(#salesStroke)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="chart-line"
-                style={{ animationDelay: '0.2s' }}
-              />
-            </>
-          )}
-          
-          {/* Chart Type: Bar */}
-          {chartType === 'bar' && (
-            <>
-              {currentData.map((point, index) => {
-                const barWidth = (chartWidth / currentData.length) * 0.7;
-                const x = index * (chartWidth / currentData.length) + (chartWidth / currentData.length - barWidth) / 2;
-                const salesHeight = (point.sales / maxMetric) * (chartHeight - 30);
-                const profitHeight = (point.profit / maxMetric) * (chartHeight - 30);
-                const salesY = chartHeight - salesHeight - 10;
-                const profitY = chartHeight - profitHeight - 10;
-                const isHovered = hoveredPoint === index;
-                
-                return (
-                  <g key={index}>
-                    {/* Hover area */}
-                    <rect
-                      x={x - 10}
-                      y={0}
-                      width={barWidth + 20}
-                      height={chartHeight}
-                      fill="transparent"
-                      style={{ cursor: 'pointer' }}
-                      onMouseEnter={() => setHoveredPoint(index)}
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    />
-                    {/* Sales bar */}
-                    <rect
-                      x={x}
-                      y={salesY}
-                      width={barWidth * 0.45}
-                      height={salesHeight}
-                      fill="url(#salesStroke)"
-                      rx="6"
-                      opacity={isHovered ? "1" : "0.8"}
-                      className="chart-bar transition-all duration-200"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    />
-                    {isHovered && (
-                      <rect
-                        x={x - 2}
-                        y={salesY - 2}
-                        width={barWidth * 0.45 + 4}
-                        height={salesHeight + 4}
-                        fill="none"
+            <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="rgba(255,255,255,0.1)" />
+
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+              interval={0}
+            />
+
+            <YAxis hide />
+
+            <ChartTooltip
+              cursor={{
+                strokeDasharray: '4 4',
+                stroke: 'rgba(29,160,230,0.6)',
+                strokeWidth: 1,
+              }}
+              content={<ChartTooltipContent />}
+              offset={20}
+            />
+
+            {/* Background Pattern Areas */}
+            <Area
+              dataKey="sales"
+              type="natural"
+              fill="url(#modernPattern)"
+              fillOpacity={1}
+              stroke="transparent"
+              stackId="pattern"
+              dot={false}
+              activeDot={false}
+            />
+            <Area
+              dataKey="profit"
+              type="natural"
+              fill="url(#modernPattern)"
+              fillOpacity={1}
+              stroke="transparent"
+              stackId="pattern"
+              dot={false}
+              activeDot={false}
+            />
+
+            {/* Stacked Areas */}
+            <Area
+              dataKey="profit"
+              type="natural"
+              fill="url(#fillProfit)"
+              fillOpacity={0.5}
+              stroke="#3ed598"
+              stackId="a"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: '#3ed598',
+                stroke: 'white',
+                strokeWidth: 1.5,
+              }}
+            />
+            <Area
+              dataKey="sales"
+              type="natural"
+              fill="url(#fillSales)"
+              fillOpacity={0.4}
                         stroke="#1da0e6"
-                        strokeWidth="2"
-                        rx="6"
-                        opacity="0.6"
-                      />
-                    )}
-                    {/* Profit bar */}
-                    <rect
-                      x={x + barWidth * 0.5}
-                      y={profitY}
-                      width={barWidth * 0.45}
-                      height={profitHeight}
-                      fill="url(#profitStroke)"
-                      rx="6"
-                      opacity={isHovered ? "1" : "0.8"}
-                      className="chart-bar transition-all duration-200"
-                      style={{ animationDelay: `${index * 0.1 + 0.05}s` }}
-                    />
-                    {isHovered && (
-                      <rect
-                        x={x + barWidth * 0.5 - 2}
-                        y={profitY - 2}
-                        width={barWidth * 0.45 + 4}
-                        height={profitHeight + 4}
-                        fill="none"
-                        stroke="#3ed598"
-                        strokeWidth="2"
-                        rx="6"
-                        opacity="0.6"
-                      />
-                    )}
-                  </g>
-                );
-              })}
-            </>
-          )}
-          
-          {/* X-axis labels (days/periods) */}
-          {currentData.map((point, index) => {
-            const x = chartType === 'bar' 
-              ? index * (chartWidth / currentData.length) + (chartWidth / currentData.length) / 2
-              : index * step;
-            return (
-              <text
-                key={index}
-                x={x}
-                y={chartHeight + 20}
-                textAnchor="middle"
-                fill="rgba(255,255,255,0.5)"
-                fontSize="11"
-                fontWeight="500"
-                className="chart-point"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                {point.period}
-              </text>
-            );
-          })}
-          
-          {/* X-axis label */}
-          <text
-            x={chartWidth / 2}
-            y={chartHeight + 45}
-            textAnchor="middle"
-            fill="rgba(255,255,255,0.6)"
-            fontSize="12"
-            fontWeight="600"
-          >
-            {timeframe === 'Week' ? 'Days of the Week' : timeframe === 'Month' ? 'Weeks of the Month' : 'Months of the Quarter'}
-          </text>
-          </g>
-        </svg>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-400/20">
-                <span className="text-lg">💠</span>
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-300">Sales</p>
-                <p className="text-xl font-bold text-white">${totalSales.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-400/20">
-                <span className="text-lg">💚</span>
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Profit</p>
-                <p className="text-xl font-bold text-white">${totalProfit.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/20 to-amber-600/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400/20">
-                <span className="text-lg">📦</span>
-              </span>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Orders</p>
-                <p className="text-xl font-bold text-white">{totalOrders}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Legend */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-gradient-to-r from-brand-400 to-brand-500" />
-            <span className="text-white/70">Sales</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500" />
-            <span className="text-white/70">Profit</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-white/50">•</span>
-            <span className="text-xs text-white/50">Showing {timeframe.toLowerCase()} data</span>
-          </div>
-        </div>
+              stackId="a"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: '#1da0e6',
+                stroke: 'white',
+                strokeWidth: 1.5,
+              }}
+            />
+          </RechartsAreaChart>
+        </ChartContainer>
       </div>
     </div>
   );
@@ -1024,10 +762,13 @@ function OrdersPanel() {
   );
 }
 
-function ProductsTable({ isOwner }) {
+function ProductsTable({ isOwner, onAddProduct }) {
+  const { products: allProducts, loading } = useProducts();
+  
   const productRows = useMemo(
-    () =>
-      highlightProducts.slice(0, 10).map((product, index) => ({
+    () => {
+      if (!allProducts || allProducts.length === 0) return [];
+      return allProducts.filter((p) => p.category !== 'Beauty Spa Services').slice(0, 10).map((product, index) => ({
         ...product,
         status:
           index % 6 === 0
@@ -1038,8 +779,9 @@ function ProductsTable({ isOwner }) {
             ? 'Out of stock'
             : 'Published',
         stock: index % 4 === 0 ? 0 : (product.stock || 23),
-      })),
-    []
+      }));
+    },
+    [allProducts]
   );
 
   return (
@@ -1054,9 +796,16 @@ function ProductsTable({ isOwner }) {
             Export
           </Button>
           <Button
-            disabled={!isOwner}
-            className={!isOwner ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
-            title={isOwner ? 'Create a new Blue Ocean product' : 'Only the Blue Ocean owner can add products'}
+            onClick={onAddProduct}
+            disabled={!isOwner || !hasSubscription}
+            className={!isOwner || !hasSubscription ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
+            title={
+              !isOwner 
+                ? 'Only the Blue Ocean owner can add products'
+                : !hasSubscription
+                ? 'Subscription required to add products. Please subscribe first.'
+                : 'Create a new Blue Ocean product'
+            }
           >
             Add Product
           </Button>
@@ -1123,10 +872,13 @@ function StorefrontPanel() {
   );
 }
 
-function SpaServicesPanel() {
+function SpaServicesPanel({ onAddService, subscription }) {
+  const { services: allServices, loading: servicesLoading } = useServices();
+  const hasSubscription = !!subscription;
+  
   const services = useMemo(
-    () => highlightProducts.filter((product) => product.category === 'Beauty Spa Services'),
-    [],
+    () => allServices || [],
+    [allServices]
   );
 
   const summary = useMemo(() => {
@@ -1187,7 +939,13 @@ function SpaServicesPanel() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" className="border-white/20">
+            <Button 
+              variant="secondary" 
+              className="border-white/20" 
+              onClick={onAddService}
+              disabled={!hasSubscription}
+              title={hasSubscription ? 'Add a new beauty spa service' : 'Subscription required to add services. Please subscribe first.'}
+            >
               Add New Service
             </Button>
             <Button>Sync to Storefront</Button>
@@ -1356,13 +1114,82 @@ function ReportsPanel() {
 function AnalyticsPanel() {
   const { summary, daily, weekly, monthly } = analyticsBreakdown;
 
+  // Calculate percentages for radial charts (normalized to 0-100)
+  const dailyProfitPercent = useMemo(() => {
+    const maxDaily = Math.max(...daily.map(d => d.profit));
+    const avgDaily = daily.reduce((sum, d) => sum + d.profit, 0) / daily.length;
+    return Math.round((avgDaily / maxDaily) * 100);
+  }, [daily]);
+
+  const weeklyProfitPercent = useMemo(() => {
+    const maxWeekly = Math.max(...weekly.map(w => w.profit));
+    const avgWeekly = weekly.reduce((sum, w) => sum + w.profit, 0) / weekly.length;
+    return Math.round((avgWeekly / maxWeekly) * 100);
+  }, [weekly]);
+
+  const monthlyProfitPercent = useMemo(() => {
+    const maxMonthly = Math.max(...monthly.map(m => m.profit));
+    const avgMonthly = monthly.reduce((sum, m) => sum + m.profit, 0) / monthly.length;
+    return Math.round((avgMonthly / maxMonthly) * 100);
+  }, [monthly]);
+
   return (
     <div className="space-y-6 text-white">
+      {/* Animated Radial Charts */}
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
+        <h2 className="font-display text-2xl">Profit Performance</h2>
+        <p className="mt-2 text-sm text-white/70">Visual representation of profit metrics across different time periods.</p>
+        <div className="mt-8 grid gap-8 md:grid-cols-3">
+          <div className="flex flex-col items-center">
+            <AnimatedRadialChart 
+              value={dailyProfitPercent} 
+              size={200} 
+              duration={2}
+              showLabels={true}
+            />
+            <div className="mt-4 text-center">
+              <p className="text-sm font-semibold text-white">Daily Profit</p>
+              <p className="text-xs text-white/60 mt-1">Average past 7 days</p>
+              <p className="text-lg font-bold text-brand-200 mt-2">${summary.dailyProfit}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center">
+            <AnimatedRadialChart 
+              value={weeklyProfitPercent} 
+              size={200} 
+              duration={2.2}
+              showLabels={true}
+            />
+            <div className="mt-4 text-center">
+              <p className="text-sm font-semibold text-white">Weekly Profit</p>
+              <p className="text-xs text-white/60 mt-1">Trailing 4 weeks</p>
+              <p className="text-lg font-bold text-brand-200 mt-2">${summary.weeklyProfit}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center">
+            <AnimatedRadialChart 
+              value={monthlyProfitPercent} 
+              size={200} 
+              duration={2.4}
+              showLabels={true}
+            />
+            <div className="mt-4 text-center">
+              <p className="text-sm font-semibold text-white">Monthly Profit</p>
+              <p className="text-xs text-white/60 mt-1">Trailing 6 months</p>
+              <p className="text-lg font-bold text-brand-200 mt-2">${summary.monthlyProfit}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard title="Daily Profit" value={`$${summary.dailyProfit}`} subtitle="Average past 7 days" />
         <StatCard title="Weekly Profit" value={`$${summary.weeklyProfit}`} subtitle="Trailing 4 weeks" />
         <StatCard title="Monthly Profit" value={`$${summary.monthlyProfit}`} subtitle="Trailing 6 months" />
       </div>
+
+      {/* Sales & Profit Breakdown Tables */}
       <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
         <h2 className="font-display text-2xl">Sales & Profit Breakdown</h2>
         <p className="mt-3 text-sm text-white/70">Track performance cadence to forecast capsule drops with confidence.</p>
@@ -1413,8 +1240,71 @@ function AnalyticsTable({ title, data }) {
 }
 
 function SpaAnalyticsSummary() {
+  const [hoveredRevenueSegment, setHoveredRevenueSegment] = useState(null);
+  const [hoveredBookingSegment, setHoveredBookingSegment] = useState(null);
+
+  // Calculate revenue distribution from spaSalesBreakdown
+  const totalRevenue = spaSalesBreakdown.reduce((sum, service) => sum + service.revenue, 0);
+  const revenueChartData = spaSalesBreakdown.map((service, index) => {
+    const colors = [
+      '#a855f7', // Purple
+      '#38bdf8', // Sky blue
+      '#facc15', // Yellow
+      '#3ed598', // Emerald
+      '#f97316', // Orange
+    ];
+    return {
+      value: service.revenue,
+      color: colors[index % colors.length],
+      label: service.service,
+    };
+  });
+
+  // Calculate booking status distribution
+  const bookingStatusCounts = beautySpaBookings.reduce((acc, booking) => {
+    acc[booking.status] = (acc[booking.status] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const bookingChartData = Object.entries(bookingStatusCounts).map(([status, count], index) => {
+    const statusColors = {
+      'Confirmed': '#3ed598',
+      'Pending': '#facc15',
+      'Awaiting Payment': '#38bdf8',
+      'Cancelled': '#f97316',
+    };
+    return {
+      value: count,
+      color: statusColors[status] || '#6b7280',
+      label: status,
+    };
+  });
+
+  const totalBookings = beautySpaBookings.length;
+
+  // Get active segment for revenue chart
+  const activeRevenueSegment = revenueChartData.find(
+    (segment) => segment.label === hoveredRevenueSegment?.label
+  );
+  const displayRevenueValue = activeRevenueSegment?.value ?? totalRevenue;
+  const displayRevenueLabel = activeRevenueSegment?.label ?? 'Total Revenue';
+  const displayRevenuePercentage = activeRevenueSegment 
+    ? ((activeRevenueSegment.value / totalRevenue) * 100).toFixed(0) 
+    : null;
+
+  // Get active segment for booking chart
+  const activeBookingSegment = bookingChartData.find(
+    (segment) => segment.label === hoveredBookingSegment?.label
+  );
+  const displayBookingValue = activeBookingSegment?.value ?? totalBookings;
+  const displayBookingLabel = activeBookingSegment?.label ?? 'Total Bookings';
+  const displayBookingPercentage = activeBookingSegment 
+    ? ((activeBookingSegment.value / totalBookings) * 100).toFixed(0) 
+    : null;
+
   return (
-    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+    <div className="space-y-6 text-white">
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h2 className="font-display text-2xl">Beauty Spa Performance</h2>
@@ -1442,6 +1332,148 @@ function SpaAnalyticsSummary() {
         <StatCard title="Week" value={`$${spaTrendData.Week.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`} subtitle="Week-to-date revenue" />
         <StatCard title="Bookings" value={spaTrendData.Week.reduce((sum, item) => sum + item.bookings, 0)} subtitle="Spa guests this week" />
         <StatCard title="Repeat Guests" value={`${Math.round(spaTrendData.Week.reduce((sum, item) => sum + item.repeat, 0) / spaTrendData.Week.length * 100)}%`} subtitle="Return spa clients" />
+        </div>
+      </div>
+
+      {/* Donut Charts Section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Revenue Distribution Chart */}
+        <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
+          <h3 className="font-display text-xl mb-2">Revenue by Service</h3>
+          <p className="text-sm text-white/70 mb-6">Distribution of revenue across spa services</p>
+          <div className="flex flex-col items-center gap-6">
+            <DonutChart
+              data={revenueChartData}
+              size={250}
+              strokeWidth={30}
+              animationDuration={1.2}
+              animationDelayPerSegment={0.05}
+              highlightOnHover={true}
+              onSegmentHover={setHoveredRevenueSegment}
+              centerContent={
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={displayRevenueLabel}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2, ease: "circOut" }}
+                    className="flex flex-col items-center justify-center text-center"
+                  >
+                    <p className="text-white/60 text-sm font-medium truncate max-w-[180px]">
+                      {displayRevenueLabel}
+                    </p>
+                    <p className="text-4xl font-bold text-white">
+                      ${displayRevenueValue.toLocaleString()}
+                    </p>
+                    {displayRevenuePercentage && (
+                      <p className="text-lg font-medium text-white/60">
+                        [{displayRevenuePercentage}%]
+                      </p>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              }
+            />
+            <div className="flex flex-col space-y-2 w-full pt-4 border-t border-white/10">
+              {revenueChartData.map((segment, index) => (
+                <motion.div
+                  key={segment.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
+                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                    hoveredRevenueSegment?.label === segment.label ? 'bg-white/10' : ''
+                  }`}
+                  onMouseEnter={() => setHoveredRevenueSegment(segment)}
+                  onMouseLeave={() => setHoveredRevenueSegment(null)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: segment.color }}
+                    ></span>
+                    <span className="text-sm font-medium text-white/80 truncate max-w-[200px]">
+                      {segment.label}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">
+                    ${segment.value.toLocaleString()}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Booking Status Distribution Chart */}
+        <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
+          <h3 className="font-display text-xl mb-2">Booking Status</h3>
+          <p className="text-sm text-white/70 mb-6">Current booking status breakdown</p>
+          <div className="flex flex-col items-center gap-6">
+            <DonutChart
+              data={bookingChartData}
+              size={250}
+              strokeWidth={30}
+              animationDuration={1.2}
+              animationDelayPerSegment={0.05}
+              highlightOnHover={true}
+              onSegmentHover={setHoveredBookingSegment}
+              centerContent={
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={displayBookingLabel}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2, ease: "circOut" }}
+                    className="flex flex-col items-center justify-center text-center"
+                  >
+                    <p className="text-white/60 text-sm font-medium truncate max-w-[180px]">
+                      {displayBookingLabel}
+                    </p>
+                    <p className="text-4xl font-bold text-white">
+                      {displayBookingValue}
+                    </p>
+                    {displayBookingPercentage && (
+                      <p className="text-lg font-medium text-white/60">
+                        [{displayBookingPercentage}%]
+                      </p>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              }
+            />
+            <div className="flex flex-col space-y-2 w-full pt-4 border-t border-white/10">
+              {bookingChartData.map((segment, index) => (
+                <motion.div
+                  key={segment.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
+                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                    hoveredBookingSegment?.label === segment.label ? 'bg-white/10' : ''
+                  }`}
+                  onMouseEnter={() => setHoveredBookingSegment(segment)}
+                  onMouseLeave={() => setHoveredBookingSegment(null)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: segment.color }}
+                    ></span>
+                    <span className="text-sm font-medium text-white/80">
+                      {segment.label}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">
+                    {segment.value}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1450,70 +1482,69 @@ function SpaAnalyticsSummary() {
 function SpaTrendChart() {
   const [timeframe, setTimeframe] = useState('Week');
   const trendData = spaTrendData[timeframe];
-  const chartWidth = 640;
-  const chartHeight = 220;
-  const verticalPadding = 30;
-  const horizontalPadding = 20;
 
-  const revenueMax = Math.max(...trendData.map((item) => item.revenue));
-  const bookingsMax = Math.max(...trendData.map((item) => item.bookings));
-  const profitMax = Math.max(...trendData.map((item) => item.profit));
+  // Calculate percentage changes (simulated based on timeframe)
+  const getChangeForMetric = (metric) => {
+    const changes = {
+      Week: { revenue: 12, bookings: 8, profit: 15 },
+      Month: { revenue: -5, bookings: 3, profit: -8 },
+      Quarter: { revenue: 18, bookings: 22, profit: 12 },
+    };
+    return changes[timeframe]?.[metric] || 0;
+  };
 
-  const revenuePoints = trendData.map((item, index) => {
-    const x =
-      horizontalPadding +
-      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
-    const valueScale = (chartHeight - verticalPadding * 2) / (revenueMax || 1);
-    const y =
-      chartHeight - verticalPadding - item.revenue * valueScale;
-    return { x, y };
-  });
+  const chartConfig = {
+    revenue: {
+      label: 'Revenue',
+      color: '#a855f7',
+    },
+    bookings: {
+      label: 'Bookings',
+      color: '#38bdf8',
+    },
+    profit: {
+      label: 'Profit',
+      color: '#facc15',
+    },
+  };
 
-  const bookingsPoints = trendData.map((item, index) => {
-    const x =
-      horizontalPadding +
-      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
-    const valueScale = (chartHeight - verticalPadding * 2) / (bookingsMax || 1);
-    const y =
-      chartHeight - verticalPadding - item.bookings * valueScale;
-    return { x, y };
-  });
+  // Latest data point for stats
+  const latestData = trendData[trendData.length - 1];
+  const totalRevenue = trendData.reduce((sum, item) => sum + item.revenue, 0);
+  const totalBookings = trendData.reduce((sum, item) => sum + item.bookings, 0);
+  const totalProfit = trendData.reduce((sum, item) => sum + item.profit, 0);
 
-  const profitPoints = trendData.map((item, index) => {
-    const x =
-      horizontalPadding +
-      (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
-    const valueScale = (chartHeight - verticalPadding * 2) / (profitMax || 1);
-    const y =
-      chartHeight - verticalPadding - item.profit * valueScale;
-    return { x, y };
-  });
-
-  const revenueAreaPath = revenuePoints.reduce((path, point, index) => {
-    if (index === 0) {
-      return `M ${point.x} ${chartHeight - verticalPadding} L ${point.x} ${point.y}`;
+  // Custom Tooltip Component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="rounded-lg border border-white/20 bg-ocean/95 backdrop-blur-sm p-4 shadow-lg min-w-[200px]">
+          <div className="text-sm font-semibold text-white mb-3.5 pb-2 border-b border-white/10">
+            {label}
+          </div>
+          <div className="space-y-1.5">
+            {payload.map((item) => {
+              const config = chartConfig[item.dataKey];
+              return (
+                <div key={item.dataKey} className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="size-2.5 rounded-sm" style={{ backgroundColor: config?.color || item.color }} />
+                    <span className="text-xs font-medium text-white/70">{config?.label || item.dataKey}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">
+                    {item.dataKey === 'revenue' || item.dataKey === 'profit' 
+                      ? `$${item.value.toLocaleString()}` 
+                      : item.value.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
     }
-    return `${path} L ${point.x} ${point.y}`;
-  }, '');
-
-  const revenueAreaClosed =
-    `${revenueAreaPath} L ${
-      revenuePoints[revenuePoints.length - 1]?.x ?? horizontalPadding
-    } ${chartHeight - verticalPadding} Z`;
-
-  const bookingsLinePath = bookingsPoints.reduce((path, point, index) => {
-    if (index === 0) {
-      return `M ${point.x} ${point.y}`;
-    }
-    return `${path} L ${point.x} ${point.y}`;
-  }, '');
-
-  const profitLinePath = profitPoints.reduce((path, point, index) => {
-    if (index === 0) {
-      return `M ${point.x} ${point.y}`;
-    }
-    return `${path} L ${point.x} ${point.y}`;
-  }, '');
+    return null;
+  };
 
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
@@ -1539,234 +1570,199 @@ function SpaTrendChart() {
           ))}
         </div>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-white">Revenue trend</h3>
-              <p className="text-xs text-white/50">Stacked view of revenue (area) and bookings (line)</p>
-            </div>
-            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/60">
-              {timeframe}
+
+      {/* Stats Section */}
+      <div className="mt-8 grid gap-6 md:grid-cols-3">
+        {[
+          { key: 'revenue', label: 'Revenue', value: latestData.revenue, total: totalRevenue, icon: '💳' },
+          { key: 'bookings', label: 'Bookings', value: latestData.bookings, total: totalBookings, icon: '🗓️' },
+          { key: 'profit', label: 'Profit', value: latestData.profit, total: totalProfit, icon: '💰' },
+        ].map((metric) => {
+          const change = getChangeForMetric(metric.key);
+          return (
+            <div key={metric.key} className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-0.5 h-12 rounded-full bg-white/10"></div>
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm font-medium text-white/60">{metric.label}</div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl font-semibold leading-none">
+                      {metric.key === 'revenue' || metric.key === 'profit' 
+                        ? `$${metric.value.toLocaleString()}` 
+                        : metric.value.toLocaleString()}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs font-medium ${
+                        change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      {Math.abs(change)}%
             </span>
           </div>
-          <div className="relative mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-midnight/60">
-            <svg
-              width="100%"
-              height={chartHeight}
-              viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-              preserveAspectRatio="none"
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Chart */}
+      <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 bg-midnight/40 p-6 backdrop-blur-sm">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[400px] w-full"
+        >
+          <RechartsAreaChart
+            accessibilityLayer
+            data={trendData}
+            margin={{
+              top: 10,
+              bottom: 10,
+              left: 20,
+              right: 20,
+            }}
             >
               <defs>
-                <linearGradient id="spaRevenueGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.05" />
+              {/* Modern Abstract Background Pattern */}
+              <pattern id="spaModernPattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <path
+                  d="M0,16 L32,16 M16,0 L16,32"
+                  stroke="rgba(255,255,255,0.03)"
+                  strokeWidth="0.5"
+                />
+                <path
+                  d="M0,0 L32,32 M0,32 L32,0"
+                  stroke="rgba(255,255,255,0.02)"
+                  strokeWidth="0.3"
+                />
+                <circle cx="8" cy="8" r="1.5" fill="rgba(255,255,255,0.04)" />
+                <circle cx="24" cy="24" r="1.5" fill="rgba(255,255,255,0.04)" />
+                <rect x="12" y="4" width="8" height="2" rx="1" fill="rgba(255,255,255,0.02)" />
+                <rect x="4" y="26" width="8" height="2" rx="1" fill="rgba(255,255,255,0.02)" />
+                <rect x="20" y="12" width="2" height="8" rx="1" fill="rgba(255,255,255,0.02)" />
+                <circle cx="6" cy="20" r="0.5" fill="rgba(255,255,255,0.06)" />
+                <circle cx="26" cy="10" r="0.5" fill="rgba(255,255,255,0.06)" />
+                <circle cx="14" cy="28" r="0.5" fill="rgba(255,255,255,0.06)" />
+              </pattern>
+
+              <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
                 </linearGradient>
-                <linearGradient id="spaBookingLine" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#22d3ee" />
+              <linearGradient id="fillBookings" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.1} />
                 </linearGradient>
-                <linearGradient id="spaProfitLine" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0%" stopColor="#facc15" />
-                  <stop offset="100%" stopColor="#f97316" />
-                </linearGradient>
-                <linearGradient id="chartBG" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
+              <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#facc15" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#facc15" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
-              <rect
-                x="0"
-                y="0"
-                width={chartWidth}
-                height={chartHeight}
-                fill="url(#chartBG)"
-                opacity="0.02"
-              />
-              <path
-                d={revenueAreaClosed}
-                fill="url(#spaRevenueGradient)"
-                stroke="none"
-              />
-              <path
-                d={bookingsLinePath}
-                fill="none"
-                stroke="url(#spaBookingLine)"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d={profitLinePath}
-                fill="none"
-                stroke="url(#spaProfitLine)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray="6 6"
-              />
-              {bookingsPoints.map((point, index) => (
-                <circle
-                  key={point.x}
-                  cx={point.x}
-                  cy={point.y}
-                  r="5"
-                  fill="#0ea5e9"
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth="2"
-                >
-                  <title>
-                    {trendData[index].period}: {trendData[index].bookings} bookings
-                  </title>
-                </circle>
-              ))}
-              {profitPoints.map((point, index) => (
-                <circle
-                  key={`profit-${point.x}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r="4"
-                  fill="#facc15"
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth="1.5"
-                >
-                  <title>
-                    {trendData[index].period}: ${trendData[index].profit.toLocaleString()} profit
-                  </title>
-                </circle>
-              ))}
 
-              <g>
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-                  const value = Math.round(revenueMax * ratio);
-                  const y =
-                    chartHeight - verticalPadding - ratio * (chartHeight - verticalPadding * 2);
-                  return (
-                    <g key={ratio}>
-                      <line
-                        x1={horizontalPadding - 6}
-                        y1={y}
-                        x2={chartWidth - horizontalPadding + 6}
-                        y2={y}
-                        stroke="rgba(255,255,255,0.08)"
-                      />
-                      <text
-                        x={horizontalPadding - 14}
-                        y={y + 4}
-                        textAnchor="end"
-                        fontSize="11"
-                        fill="rgba(255,255,255,0.5)"
-                      >
-                        ${value.toLocaleString()}
-                      </text>
-                    </g>
-                  );
-                })}
-                <text
-                  x={horizontalPadding - 46}
-                  y={chartHeight / 2}
-                  transform={`rotate(-90 ${horizontalPadding - 46} ${chartHeight / 2})`}
-                  fontSize="11"
-                  fill="rgba(255,255,255,0.55)"
-                  letterSpacing="0.2em"
-                >
-                  REVENUE ($)
-                </text>
-              </g>
-              <g className="text-white/50">
-                {trendData.map((point, index) => {
-                  const x =
-                    horizontalPadding +
-                    (index / (trendData.length - 1 || 1)) * (chartWidth - horizontalPadding * 2);
-                  return (
-                    <g key={point.period}>
-                      <line
-                        x1={x}
-                        y1={chartHeight - verticalPadding + 6}
-                        x2={x}
-                        y2={chartHeight - verticalPadding + 14}
-                        stroke="rgba(255,255,255,0.2)"
-                      />
-                      <text
-                        x={x}
-                        y={chartHeight - verticalPadding + 28}
-                        textAnchor="middle"
-                        fontSize="12"
-                        fill="rgba(255,255,255,0.6)"
-                      >
-                        {point.period}
-                      </text>
-                    </g>
-                  );
-                })}
-              </g>
-            </svg>
-            <div className="absolute right-5 top-5 flex items-center gap-4 rounded-full border border-white/10 bg-midnight/60 px-3 py-2 text-xs text-white/60 backdrop-blur">
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-purple-400 to-purple-600" />
-                Revenue
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-sky-400 to-cyan-300" />
-                Bookings
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-2 w-4 rounded-full bg-gradient-to-r from-yellow-300 to-orange-400" />
-                Profit
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h3 className="text-sm font-semibold text-white">Quick metrics</h3>
-          <div className="mt-5 space-y-4">
-            {[
-              {
-                label: 'Total bookings',
-                value: trendData.reduce((sum, item) => sum + item.bookings, 0),
-                icon: '🗓️',
-              },
-              {
-                label: 'Revenue',
-                value: `$${trendData.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`,
-                icon: '💳',
-              },
-              {
-                label: 'Profit',
-                value: `$${trendData.reduce((sum, item) => sum + item.profit, 0).toLocaleString()}`,
-                icon: '💰',
-              },
-              {
-                label: 'Repeat rate',
-                value: `${Math.round(
-                  (trendData.reduce((sum, item) => sum + item.repeat, 0) / trendData.length) * 100,
-                )}%`,
-                icon: '🔁',
-              },
-              {
-                label: 'Peak day',
-                value: trendData.reduce(
-                  (max, item) => (item.revenue > max.revenue ? item : max),
-                  trendData[0],
-                ).period,
-                icon: '⭐',
-              },
-            ].map((metric) => (
-              <div
-                key={metric.label}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-              >
-                <div className="flex items-center gap-3 text-sm text-white/70">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-500/10 text-lg text-white">
-                    {metric.icon}
-                  </span>
-                  <span>{metric.label}</span>
-                </div>
-                <span className="text-white font-semibold">{metric.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+            <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="rgba(255,255,255,0.1)" />
+
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+              interval={0}
+            />
+
+            <YAxis hide />
+
+            <ChartTooltip
+              cursor={{
+                strokeDasharray: '4 4',
+                stroke: 'rgba(168,85,247,0.6)',
+                strokeWidth: 1,
+              }}
+              content={<CustomTooltip />}
+              offset={20}
+            />
+
+            {/* Background Pattern Areas */}
+            <Area
+              dataKey="revenue"
+              type="natural"
+              fill="url(#spaModernPattern)"
+              fillOpacity={1}
+              stroke="transparent"
+              stackId="pattern"
+              dot={false}
+              activeDot={false}
+            />
+            <Area
+              dataKey="bookings"
+              type="natural"
+              fill="url(#spaModernPattern)"
+              fillOpacity={1}
+              stroke="transparent"
+              stackId="pattern"
+              dot={false}
+              activeDot={false}
+            />
+            <Area
+              dataKey="profit"
+              type="natural"
+              fill="url(#spaModernPattern)"
+              fillOpacity={1}
+              stroke="transparent"
+              stackId="pattern"
+              dot={false}
+              activeDot={false}
+            />
+
+            {/* Stacked Areas */}
+            <Area
+              dataKey="profit"
+              type="natural"
+              fill="url(#fillProfit)"
+              fillOpacity={0.5}
+              stroke="#facc15"
+              stackId="a"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: '#facc15',
+                stroke: 'white',
+                strokeWidth: 1.5,
+              }}
+            />
+            <Area
+              dataKey="bookings"
+              type="natural"
+              fill="url(#fillBookings)"
+              fillOpacity={0.4}
+              stroke="#38bdf8"
+              stackId="a"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: '#38bdf8',
+                stroke: 'white',
+                strokeWidth: 1.5,
+              }}
+            />
+            <Area
+              dataKey="revenue"
+              type="natural"
+              fill="url(#fillRevenue)"
+              fillOpacity={0.3}
+              stroke="#a855f7"
+              stackId="a"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: '#a855f7',
+                stroke: 'white',
+                strokeWidth: 1.5,
+              }}
+            />
+          </RechartsAreaChart>
+        </ChartContainer>
       </div>
     </div>
   );
@@ -1817,10 +1813,10 @@ function SpaSalesTable() {
   );
 }
 
-function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront }) {
+function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription }) {
   return (
     <div className="space-y-6">
-      <DashboardHero currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} />
+      <DashboardHero currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} subscription={subscription} />
       <MetricRow />
       <AnalyticsSummary />
       <SalesTrend />
@@ -1831,18 +1827,51 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront }) 
 
 export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onViewSpaStorefront }) {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const isOwner = currentUser?.role === 'owner';
+
+  // Fetch subscription status
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const response = await api.subscriptions.getCurrent();
+        if (response.success) {
+          setSubscription(response.data.subscription);
+        }
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    };
+
+    if (currentUser) {
+      fetchSubscription();
+    }
+  }, [currentUser]);
+
+  const handleSubscribeSuccess = async (newSubscription) => {
+    setSubscription(newSubscription);
+    setActiveSection('dashboard');
+    // Refresh the page to update all data
+    window.location.reload();
+  };
 
   const renderSection = () => {
     switch (activeSection) {
       case 'products':
-        return <ProductsTable isOwner={isOwner} />;
+        return <ProductsTable isOwner={isOwner} onAddProduct={() => setIsAddProductOpen(true)} subscription={subscription} />;
       case 'spaServices':
-        return <SpaServicesPanel />;
+        return <SpaServicesPanel onAddService={() => setIsAddServiceOpen(true)} subscription={subscription} />;
       case 'bookings':
         return <SpaAnalyticsPanel />;
       case 'storefront':
         return <StorefrontPanel />;
+      case 'subscription':
+        return <SubscriptionPage onBack={() => setActiveSection('dashboard')} onSubscribeSuccess={handleSubscribeSuccess} />;
       case 'reports':
         return <ReportsPanel />;
       case 'analytics':
@@ -1859,11 +1888,12 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         );
       case 'dashboard':
       default:
-        return <DashboardPanel currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} />;
+        return <DashboardPanel currentUser={currentUser} onViewStorefront={onViewStorefront} onViewSpaStorefront={onViewSpaStorefront} subscription={subscription} />;
     }
   };
 
   return (
+    <>
     <div className="relative z-10 mx-auto flex min-h-screen max-w-[1200px] gap-6 px-6 py-10">
       <Sidebar
         activeSection={activeSection}
@@ -1873,5 +1903,32 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
       />
       <main className="flex-1 space-y-6 pb-16">{renderSection()}</main>
     </div>
+      <AddProductModal
+        isOpen={isAddProductOpen}
+        onClose={() => setIsAddProductOpen(false)}
+        onSuccess={(product) => {
+          setIsAddProductOpen(false);
+          // Trigger a refresh by changing a key or using a refresh function
+          // The hooks will automatically refetch when the component remounts
+          // For now, we'll use a simple page reload to ensure data is fresh
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }}
+      />
+      <AddServiceModal
+        isOpen={isAddServiceOpen}
+        onClose={() => setIsAddServiceOpen(false)}
+        onSuccess={(service) => {
+          setIsAddServiceOpen(false);
+          // Trigger a refresh by changing a key or using a refresh function
+          // The hooks will automatically refetch when the component remounts
+          // For now, we'll use a simple page reload to ensure data is fresh
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }}
+      />
+    </>
   );
 }
