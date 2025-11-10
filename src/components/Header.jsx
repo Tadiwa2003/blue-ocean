@@ -27,7 +27,7 @@ const navSections = [
   },
 ];
 
-export function Header({ onSignInClick, onViewStorefront, onViewSpaStorefront }) {
+export function Header({ onSignInClick, onSignUpClick, onViewStorefront, onViewSpaStorefront }) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-ocean/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -91,7 +91,7 @@ export function Header({ onSignInClick, onViewStorefront, onViewSpaStorefront })
           <Button variant="ghost" onClick={onSignInClick}>
             Log in
           </Button>
-          <Button>Sign up</Button>
+          <Button onClick={onSignUpClick || onSignInClick}>Sign up</Button>
         </div>
         <button
           type="button"

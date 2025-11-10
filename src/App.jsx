@@ -13,6 +13,7 @@ import { SignInModal } from './components/SignInModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
+import { CounterLoader } from './components/CounterLoader.jsx';
 import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
 import { ReactPlugin } from '@21st-extension/react';
 import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
@@ -21,9 +22,11 @@ import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('signin'); // 'signin' or 'signup'
   const [isViewingStorefront, setIsViewingStorefront] = useState(false);
   const [storefrontType, setStorefrontType] = useState('products'); // 'products' or 'spa'
   const [isStorefrontLoading, setIsStorefrontLoading] = useState(false);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const storefrontTimeoutRef = useRef(null);
 
@@ -44,6 +47,11 @@ export default function App() {
     });
     }
     setIsModalOpen(false);
+    setIsDashboardLoading(true);
+  };
+
+  const handleCounterLoaderComplete = () => {
+    setIsDashboardLoading(false);
     setIsAuthenticated(true);
   };
 
@@ -84,10 +92,16 @@ export default function App() {
         <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
       <SignInModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setModalMode('signin'); // Reset to sign-in mode when closing
+        }}
         onSuccess={handleSignInSuccess}
+        initialMode={modalMode}
       />
-      {isViewingStorefront ? (
+      {isDashboardLoading ? (
+        <CounterLoader onComplete={handleCounterLoaderComplete} duration={2000} />
+      ) : isViewingStorefront ? (
         isStorefrontLoading ? (
           <StorefrontLoading />
         ) : storefrontType === 'spa' ? (
@@ -105,7 +119,14 @@ export default function App() {
       ) : (
         <>
           <Header
-            onSignInClick={() => setIsModalOpen(true)}
+            onSignInClick={() => {
+              setModalMode('signin');
+              setIsModalOpen(true);
+            }}
+            onSignUpClick={() => {
+              setModalMode('signup');
+              setIsModalOpen(true);
+            }}
             onViewStorefront={() => openStorefront('products')}
             onViewSpaStorefront={() => openStorefront('spa')}
           />

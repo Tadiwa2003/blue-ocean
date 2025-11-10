@@ -39,12 +39,12 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
   };
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl bg-ocean/50 border border-white/8 backdrop-blur-sm transition hover:-translate-y-1 hover:border-brand-400/40">
+    <article className="group relative overflow-hidden rounded-3xl bg-ocean/50 border border-white/8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-brand-400/40 hover:shadow-[0_20px_60px_rgba(29,160,230,0.3)]">
       <div className="relative h-56 overflow-hidden cursor-pointer" onClick={handleViewDetails}>
         <img
           src={imageSrc}
           alt={product.name}
-          className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           loading="lazy"
           decoding="async"
           sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
@@ -72,9 +72,9 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
       </div>
       <div className="flex flex-col gap-4 p-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-brand-300">{product.category}</p>
-          <h3 className="mt-2 font-display text-xl text-white">{product.name}</h3>
-          <p className="mt-2 text-sm text-white/70 leading-relaxed">{product.description}</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-brand-300 transition-colors group-hover:text-brand-200">{product.category}</p>
+          <h3 className="mt-2 font-display text-xl text-white transition-all group-hover:text-brand-100">{product.name}</h3>
+          <p className="mt-2 text-sm text-white/70 leading-relaxed transition-colors group-hover:text-white/80">{product.description}</p>
         </div>
         <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

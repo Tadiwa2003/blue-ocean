@@ -44,12 +44,12 @@ export function ServiceCard({ service, onViewDetails, onBook }) {
   };
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm transition hover:-translate-y-1 hover:border-brand-400/40">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-brand-400/40 hover:shadow-[0_20px_60px_rgba(29,160,230,0.3)]">
       <div className="relative h-56 cursor-pointer overflow-hidden" onClick={handleViewDetails}>
         <img
           src={imageSrc}
           alt={service.name}
-          className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${
+          className={`h-full w-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110 ${
             isImageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           loading="lazy"
@@ -81,12 +81,12 @@ export function ServiceCard({ service, onViewDetails, onBook }) {
 
       <div className="flex flex-1 flex-col gap-5 p-6">
         <div className="mt-auto space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.28em] text-brand-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.28em] text-brand-300 transition-colors group-hover:text-brand-200">
             <span>{service.serviceCategory}</span>
-            <span className="text-white/60">{service.duration} min</span>
+            <span className="text-white/60 transition-colors group-hover:text-white/80">{service.duration} min</span>
           </div>
-          <h3 className="font-display text-xl text-white">{service.name}</h3>
-          <p className="text-sm leading-relaxed text-white/70">
+          <h3 className="font-display text-xl text-white transition-all group-hover:text-brand-100">{service.name}</h3>
+          <p className="text-sm leading-relaxed text-white/70 transition-colors group-hover:text-white/80">
             {service.headline || service.description}
           </p>
           <div className="flex flex-wrap gap-3 text-xs text-white/60">

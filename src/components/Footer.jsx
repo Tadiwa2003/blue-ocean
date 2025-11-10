@@ -1,4 +1,9 @@
+import { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Logo } from './Logo.jsx';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const columns = [
   {
@@ -54,11 +59,143 @@ const badges = [
 ];
 
 export function Footer() {
+  const footerRef = useRef(null);
+  const logoRef = useRef(null);
+  const columnsRef = useRef(null);
+  const badgesRef = useRef(null);
+  const copyrightRef = useRef(null);
+
+  useEffect(() => {
+    if (!footerRef.current) return;
+
+    // Animate footer entrance
+    const footer = footerRef.current;
+
+    // Logo animation
+    if (logoRef.current) {
+      gsap.fromTo(
+        logoRef.current,
+        {
+          opacity: 0,
+          y: 30,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: logoRef.current,
+            start: 'top 90%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
+    }
+
+    // Columns animation
+    if (columnsRef.current) {
+      const columnItems = columnsRef.current.querySelectorAll('div');
+      gsap.fromTo(
+        columnItems,
+        {
+          opacity: 0,
+          y: 40,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: columnsRef.current,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
+    }
+
+    // Badges animation
+    if (badgesRef.current) {
+      const badgeItems = badgesRef.current.querySelectorAll('span');
+      gsap.fromTo(
+        badgeItems,
+        {
+          opacity: 0,
+          scale: 0.8,
+        },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.5,
+          ease: 'back.out(1.7)',
+          stagger: 0.08,
+          scrollTrigger: {
+            trigger: badgesRef.current,
+            start: 'top 90%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
+    }
+
+    // Copyright animation
+    if (copyrightRef.current) {
+      gsap.fromTo(
+        copyrightRef.current,
+        {
+          opacity: 0,
+          y: 20,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: copyrightRef.current,
+            start: 'top 95%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
+    }
+
+    // Link hover animations
+    const links = footer.querySelectorAll('a');
+    links.forEach((link) => {
+      link.addEventListener('mouseenter', () => {
+        gsap.to(link, {
+          x: 4,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      });
+      link.addEventListener('mouseleave', () => {
+        gsap.to(link, {
+          x: 0,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      });
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.vars?.trigger === footer) {
+          trigger.kill();
+        }
+      });
+    };
+  }, []);
+
   return (
-    <footer className="border-t border-white/5 bg-midnight pt-16 pb-12">
+    <footer ref={footerRef} className="border-t border-white/5 bg-midnight pt-16 pb-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-sm space-y-4">
+          <div ref={logoRef} className="max-w-sm space-y-4">
             <a href="#hero" className="inline-flex hover:opacity-90">
               <Logo />
             </a>
@@ -72,7 +209,7 @@ export function Footer() {
               <span>USD · ZWG</span>
             </div>
           </div>
-          <div className="grid flex-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          <div ref={columnsRef} className="grid flex-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
             {columns.map((column) => (
               <div key={column.title} className="space-y-4">
                 <h4 className="text-xs font-semibold uppercase tracking-[0.35em] text-white/55">{column.title}</h4>
@@ -92,11 +229,11 @@ export function Footer() {
 
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 text-xs text-white/55 backdrop-blur">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-5">
+            <div ref={badgesRef} className="grid gap-3 sm:grid-cols-3 md:grid-cols-5">
               {badges.map((badge) => (
                 <span
                   key={badge}
-                  className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-white/70"
+                  className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-white/70 transition-all hover:border-brand-400/40 hover:bg-brand-500/10 hover:text-brand-200"
                 >
                   {badge}
                 </span>
@@ -109,7 +246,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/5 pt-6 text-xs text-white/40">
+        <div ref={copyrightRef} className="border-t border-white/5 pt-6 text-xs text-white/40">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} Blue Ocean &amp; Tana&apos;s Beauty Boost Spa. All rights reserved.</p>
             <div className="flex gap-4">

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 
 export function GradientBackground({ children, className = '' }) {
   return (
-    <div className={clsx('gradient-background relative min-h-screen w-full overflow-hidden', className)}>
+    <div className={clsx('gradient-background relative min-h-screen w-full', className)}>
       <div className="gradient-background__layer gradient-background__layer--base" />
       <div className="gradient-background__layer gradient-background__layer--texture" />
       <div className="gradient-background__layer gradient-background__layer--grid" />

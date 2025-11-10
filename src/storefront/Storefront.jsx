@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { highlightProducts } from '../data/products.js';
 import { ProductCard } from '../components/ProductCard.jsx';
 import { ProductDetailsModal } from '../components/ProductDetailsModal.jsx';
 import { Cart } from '../components/Cart.jsx';
+import { Checkout } from '../components/Checkout.jsx';
 import { CartNotification } from '../components/CartNotification.jsx';
+import { ContactModal } from '../components/ContactModal.jsx';
 import { Button } from '../components/Button.jsx';
 import { Logo } from '../components/Logo.jsx';
+import { Phone } from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const FALLBACK_GRADIENT =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
@@ -107,6 +114,8 @@ export function Storefront({ onClose }) {
   // Cart state
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
 
   const handleViewProductDetails = (product) => {
@@ -162,11 +171,298 @@ export function Storefront({ onClose }) {
     showNotification('Cart cleared');
   };
 
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleOrderComplete = (orderData) => {
+    setCartItems([]);
+    setIsCheckoutOpen(false);
+    showNotification(`Order ${orderData.orderId} placed successfully!`);
+  };
+
   const showNotification = (message) => {
     setNotification({ message, isVisible: true });
     setTimeout(() => {
       setNotification((prev) => ({ ...prev, isVisible: false }));
     }, 3000);
+  };
+
+  const handleContactBlueOcean = () => {
+    setIsContactOpen(true);
+  };
+
+  const handleCallOwner = () => {
+    const phoneNumber = '+263710465531';
+    window.location.href = `tel:${phoneNumber}`;
+  };
+
+  const handleContactSuccess = (contactData) => {
+    showNotification(`Thank you ${contactData.name}! Your message has been sent to our team via WhatsApp. We'll contact you shortly.`);
+  };
+
+  const handleDownloadLineSheet = () => {
+    showNotification('Preparing line sheet download...');
+    
+    setTimeout(() => {
+      // Helper function to escape HTML
+      const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
+
+      // Group products by category
+      const productsByCategory = productItems.reduce((acc, product) => {
+        if (!acc[product.category]) {
+          acc[product.category] = [];
+        }
+        acc[product.category].push(product);
+        return acc;
+      }, {});
+
+      // Create beautifully designed HTML line sheet
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Ocean Capsule - Line Sheet 2026</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: A4;
+      margin: 1cm;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #0b233e;
+      background: #ffffff;
+      padding: 40px;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #0b233e 0%, #1da0e6 100%);
+      color: white;
+      padding: 40px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 40px rgba(11, 35, 62, 0.2);
+    }
+    
+    .header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+    
+    .header .subtitle {
+      margin-top: 12px;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    
+    .contact-info {
+      background: #f8f9fa;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 40px;
+      border-left: 4px solid #1da0e6;
+    }
+    
+    .contact-info h3 {
+      color: #0b233e;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    
+    .contact-info p {
+      color: #4a5568;
+      font-size: 14px;
+      margin: 4px 0;
+    }
+    
+    .category-section {
+      margin-bottom: 50px;
+      page-break-inside: avoid;
+    }
+    
+    .category-header {
+      background: linear-gradient(135deg, #1da0e6 0%, #0b233e 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px 8px 0 0;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 24px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+    
+    .product-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      page-break-inside: avoid;
+    }
+    
+    .product-card:hover {
+      box-shadow: 0 8px 24px rgba(29, 160, 230, 0.15);
+      border-color: #1da0e6;
+    }
+    
+    .product-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0b233e;
+      margin-bottom: 8px;
+    }
+    
+    .product-price {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1da0e6;
+      margin-bottom: 12px;
+    }
+    
+    .product-description {
+      font-size: 14px;
+      color: #4a5568;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    .product-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .badge {
+      background: #e6f7ff;
+      color: #1da0e6;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .footer {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 2px solid #e2e8f0;
+      text-align: center;
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .footer p {
+      margin: 8px 0;
+    }
+    
+    @media print {
+      body {
+        padding: 20px;
+      }
+      
+      .header {
+        page-break-after: avoid;
+      }
+      
+      .category-section {
+        page-break-inside: avoid;
+      }
+      
+      .product-card {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Blue Ocean Capsule</h1>
+    <p>Resort 2026 Collection</p>
+    <p class="subtitle">Curated coastal luxury for people who live and shop by the tides</p>
+  </div>
+  
+  <div class="contact-info">
+    <h3>Partnership & Ordering Information</h3>
+    <p><strong>Email:</strong> partnerships@blueocean.co</p>
+    <p><strong>Website:</strong> www.blueocean.co</p>
+    <p><strong>Collection:</strong> Resort 2026</p>
+    <p><strong>Date:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  </div>
+
+  ${Object.entries(productsByCategory).map(([category, products]) => `
+    <div class="category-section">
+      <div class="category-header">${escapeHtml(category)}</div>
+      <div class="products-grid">
+        ${products.map(product => `
+          <div class="product-card">
+            <div class="product-name">${escapeHtml(product.name)}</div>
+            <div class="product-price">${escapeHtml(product.price)}</div>
+            <div class="product-description">${escapeHtml(product.description || '')}</div>
+            ${product.badges && product.badges.length > 0 ? `
+              <div class="product-badges">
+                ${product.badges.map(badge => `<span class="badge">${escapeHtml(badge)}</span>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('')}
+
+  <div class="footer">
+    <p><strong>Blue Ocean Capsule</strong></p>
+    <p>Curated coastal-luxury products and spa services for resort retailers and boutique partners.</p>
+    <p>© ${new Date().getFullYear()} Blue Ocean. All rights reserved.</p>
+  </div>
+</body>
+</html>`;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Blue-Ocean-Line-Sheet-2026.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showNotification('Line sheet downloaded successfully!');
+    }, 500);
   };
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -181,6 +477,112 @@ export function Storefront({ onClose }) {
     ],
     [paymentLogos],
   );
+
+  // Parallax effect for hero section
+  const heroRef = useRef(null);
+  const productsGridRef = useRef(null);
+  const productsSectionRef = useRef(null);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const rect = heroRef.current.getBoundingClientRect();
+        const scrolled = window.pageYOffset;
+        const heroTop = rect.top + scrolled;
+        const heroHeight = rect.height;
+        const windowHeight = window.innerHeight;
+        
+        // Only apply parallax when hero is in viewport
+        if (scrolled < heroTop + heroHeight && scrolled + windowHeight > heroTop) {
+          const parallax = (scrolled - heroTop) * 0.3;
+          heroRef.current.style.transform = `translateY(${parallax}px)`;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // GSAP animations for products grid
+  useEffect(() => {
+    if (!productsGridRef.current) return;
+
+    const cards = productsGridRef.current.querySelectorAll('.storefront-card');
+    if (cards.length === 0) return;
+
+    // Store event listeners for cleanup
+    const hoverHandlers = [];
+
+    // Set initial state
+    gsap.set(cards, {
+      opacity: 0,
+      y: 80,
+      scale: 0.85,
+      rotationX: -15,
+    });
+
+    // Create scroll-triggered animation
+    const scrollTrigger = ScrollTrigger.create({
+      trigger: productsGridRef.current,
+      start: 'top 75%',
+      toggleActions: 'play none none reverse',
+      onEnter: () => {
+        gsap.to(cards, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          duration: 1,
+          ease: 'power3.out',
+          stagger: {
+            amount: 0.8,
+            from: 'start',
+          },
+        });
+      },
+    });
+
+    // Add hover effects with GSAP
+    cards.forEach((card) => {
+      const handleMouseEnter = () => {
+        gsap.to(card, {
+          y: -12,
+          scale: 1.03,
+          rotationX: 5,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+      };
+
+      const handleMouseLeave = () => {
+        gsap.to(card, {
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+      };
+
+      card.addEventListener('mouseenter', handleMouseEnter);
+      card.addEventListener('mouseleave', handleMouseLeave);
+      
+      hoverHandlers.push({ card, handleMouseEnter, handleMouseLeave });
+    });
+
+    return () => {
+      // Cleanup ScrollTrigger
+      if (scrollTrigger) {
+        scrollTrigger.kill();
+      }
+      
+      // Cleanup event listeners
+      hoverHandlers.forEach(({ card, handleMouseEnter, handleMouseLeave }) => {
+        card.removeEventListener('mouseenter', handleMouseEnter);
+        card.removeEventListener('mouseleave', handleMouseLeave);
+      });
+    };
+  }, [paginatedProducts]);
 
   return (
     <div className="min-h-screen bg-midnight text-white">
@@ -218,12 +620,12 @@ export function Storefront({ onClose }) {
 
       <main className="pb-24">
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0">
+          <div className="absolute inset-0" ref={heroRef}>
             <img
               src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85"
               data-fallback-index="0"
               alt="Luxury retail store with products on display"
-              className="h-full w-full object-cover"
+              className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
               loading="eager"
               decoding="async"
               fetchpriority="high"
@@ -243,27 +645,37 @@ export function Storefront({ onClose }) {
                 e.currentTarget.src = sources[nextIndex];
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
+            <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
               Blue Ocean Capsule · Resort 2026
             </span>
-            <h1 className="font-display text-4xl leading-tight sm:text-5xl">
+            <h1 className="storefront-hero-text font-display text-4xl leading-tight sm:text-5xl" style={{ animationDelay: '0.2s' }}>
               Curated coastal luxury for people who live and shop by the tides.
             </h1>
-            <p className="max-w-2xl text-sm text-white/75 sm:text-base">
+            <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
               Discover limited-edition totes, resort slides, and ocean-sourced skincare crafted with our artisan partners.
               Each piece ships with merchandising stories and sensory rituals for your guests.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button>Explore Products</Button>
-              <Button variant="secondary">Book Styling Session</Button>
+            <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
+              <Button 
+                onClick={() => {
+                  if (productsSectionRef.current) {
+                    productsSectionRef.current.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'start' 
+                    });
+                  }
+                }}
+              >
+                Explore Products
+              </Button>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto mt-20 max-w-7xl px-6">
+        <section ref={productsSectionRef} className="mx-auto mt-20 max-w-7xl px-6">
           <div className="flex flex-col gap-8 text-left">
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -334,14 +746,21 @@ export function Storefront({ onClose }) {
           </div>
 
           {/* Filtered Grid */}
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {paginatedProducts.map((product) => (
-              <ProductCard
+          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
+            {paginatedProducts.map((product, index) => (
+              <div
                 key={product.id}
-                product={product}
-                onViewDetails={handleViewProductDetails}
-                onAddToCart={(product) => addToCart(product)}
-              />
+                className="storefront-card"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                }}
+              >
+                <ProductCard
+                  product={product}
+                  onViewDetails={handleViewProductDetails}
+                  onAddToCart={(product) => addToCart(product)}
+                />
+              </div>
             ))}
           </div>
 
@@ -426,8 +845,11 @@ export function Storefront({ onClose }) {
             and launch strategy tailored to your retail needs.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button>Contact Blue Ocean</Button>
-            <Button variant="secondary">Download Line Sheet</Button>
+            <Button onClick={handleContactBlueOcean}>Contact Blue Ocean</Button>
+            <Button variant="secondary" onClick={handleCallOwner} icon={Phone}>
+              Call Owner: +263 71 046 5531
+            </Button>
+            <Button variant="secondary" onClick={handleDownloadLineSheet}>Download Line Sheet</Button>
           </div>
         </section>
 
@@ -563,36 +985,30 @@ export function Storefront({ onClose }) {
                 {paymentChips.map((p, idx) => (
                   <span
                     key={p.name}
-                    className={`payment-chip inline-flex items-center justify-center gap-3 rounded-2xl border border-white/10 ${p.bgColor} px-4 py-2.5 backdrop-blur transition-all duration-300 hover:border-brand-400/40 hover:shadow-lg hover:scale-105 whitespace-nowrap`}
+                    className={`payment-chip inline-flex items-center justify-center rounded-2xl border border-white/10 ${p.bgColor} px-4 py-2.5 backdrop-blur transition-all duration-300 hover:border-brand-400/40 hover:shadow-lg hover:scale-105`}
                     style={{
                       animationDelay: `${idx * 0.1}s`,
                     }}
+                    title={p.name}
                   >
                     <img
                       src={p.logo}
                       alt={`${p.name} logo`}
-                      className="h-6 w-auto object-contain"
+                      className="h-8 w-auto object-contain"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         const parent = e.currentTarget.parentElement;
                         const fallback = parent?.querySelector('[data-fallback]');
-                        const label = parent?.querySelector('[data-label]');
                         if (fallback) {
                           fallback.classList.remove('hidden');
                           fallback.classList.add('inline-flex');
-                        }
-                        if (label) {
-                          label.classList.add('hidden');
                         }
                       }}
                     />
                     <span className="hidden items-center gap-2 text-base text-ocean/80" data-fallback>
                       {p.fallback ? `${p.fallback} ${p.name}` : p.name}
-                    </span>
-                    <span className="text-sm font-semibold text-ocean/80" data-label>
-                      {p.name}
                     </span>
                   </span>
                 ))}
@@ -619,6 +1035,22 @@ export function Storefront({ onClose }) {
         onRemoveItem={removeFromCart}
         onUpdateQuantity={updateQuantity}
         onClearCart={clearCart}
+        onCheckout={handleCheckout}
+      />
+
+      {/* Checkout */}
+      <Checkout
+        cartItems={cartItems}
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onOrderComplete={handleOrderComplete}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+        onSuccess={handleContactSuccess}
       />
 
       {/* Cart Notification */}
