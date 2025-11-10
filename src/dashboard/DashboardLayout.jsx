@@ -2376,7 +2376,25 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
       try {
         const response = await api.subscriptions.getCurrent();
         if (response.success) {
-          setSubscription(response.data.subscription);
+          const subData = response.data;
+          if (subData.subscription) {
+            // Check if trial has expired
+            const sub = subData.subscription;
+            if (sub.isTrial && sub.trialEndDate) {
+              const trialEnd = new Date(sub.trialEndDate);
+              const now = new Date();
+              if (trialEnd < now) {
+                // Trial expired - don't set subscription
+                setSubscription(null);
+              } else {
+                setSubscription(sub);
+              }
+            } else {
+              setSubscription(sub);
+            }
+          } else {
+            setSubscription(null);
+          }
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
@@ -2387,6 +2405,10 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
 
     if (currentUser) {
       fetchSubscription();
+      
+      // Check subscription status every 5 minutes
+      const interval = setInterval(fetchSubscription, 5 * 60 * 1000);
+      return () => clearInterval(interval);
     }
   }, [currentUser]);
 

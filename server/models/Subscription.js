@@ -27,6 +27,17 @@ const subscriptionSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  trialStartDate: {
+    type: Date,
+    default: Date.now,
+  },
+  trialEndDate: {
+    type: Date,
+  },
+  isTrial: {
+    type: Boolean,
+    default: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

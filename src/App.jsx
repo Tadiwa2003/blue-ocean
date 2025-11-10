@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Header } from './components/Header.jsx';
 import { Footer } from './components/Footer.jsx';
 import { Hero } from './sections/Hero.jsx';
@@ -11,6 +11,7 @@ import { CallToAction } from './sections/CallToAction.jsx';
 import { DashboardLayout } from './dashboard/DashboardLayout.jsx';
 import { SignInModal } from './components/SignInModal.jsx';
 import { ContactModal } from './components/ContactModal.jsx';
+import { SubscriptionRequiredModal } from './components/SubscriptionRequiredModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
@@ -21,6 +22,7 @@ import { GradientBackground } from './components/ui/dark-gradient-background.jsx
 import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
 import { downloadRitualMenu } from './utils/generateRitualMenu.js';
+import api from './services/api.js';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -32,9 +34,56 @@ export default function App() {
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [subscriptionRequired, setSubscriptionRequired] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false);
+  const [subscription, setSubscription] = useState(null);
   const storefrontTimeoutRef = useRef(null);
 
-  const handleSignInSuccess = (userData) => {
+  const checkSubscriptionStatus = async () => {
+    try {
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        setSubscriptionRequired(false);
+        return;
+      }
+
+      const response = await api.subscriptions.getCurrent();
+      if (response.success) {
+        const subData = response.data;
+        if (!subData.subscription) {
+          // No subscription or expired
+          setSubscriptionRequired(true);
+          setTrialExpired(subData.trialExpired || false);
+          setSubscription(null);
+        } else {
+          // Check if trial has expired
+          const sub = subData.subscription;
+          if (sub.isTrial && sub.trialEndDate) {
+            const trialEnd = new Date(sub.trialEndDate);
+            const now = new Date();
+            if (trialEnd < now) {
+              setSubscriptionRequired(true);
+              setTrialExpired(true);
+              setSubscription(null);
+            } else {
+              setSubscription(sub);
+              setSubscriptionRequired(false);
+              setTrialExpired(false);
+            }
+          } else {
+            setSubscription(sub);
+            setSubscriptionRequired(false);
+            setTrialExpired(false);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      // On error, don't block access (graceful degradation)
+    }
+  };
+
+  const handleSignInSuccess = async (userData) => {
     // userData is passed from SignInModal after successful authentication
     if (userData) {
       setCurrentUser({
@@ -44,14 +93,17 @@ export default function App() {
       });
     } else {
       // Fallback for backward compatibility
-    setCurrentUser({
-      name: 'Kim Moyo',
-      email: 'founder@blueocean.co',
-      role: 'owner',
-    });
+      setCurrentUser({
+        name: 'Kim Moyo',
+        email: 'founder@blueocean.co',
+        role: 'owner',
+      });
     }
     setIsModalOpen(false);
     setIsDashboardLoading(true);
+    
+    // Check subscription status after sign in
+    await checkSubscriptionStatus();
   };
 
   const handleCounterLoaderComplete = () => {
@@ -62,8 +114,30 @@ export default function App() {
   const handleSignOut = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setSubscriptionRequired(false);
+    setSubscription(null);
+    setTrialExpired(false);
     closeStorefront();
   };
+
+  const handleSubscribeSuccess = async (newSubscription) => {
+    setSubscription(newSubscription);
+    setSubscriptionRequired(false);
+    setTrialExpired(false);
+    // Refresh subscription status
+    await checkSubscriptionStatus();
+  };
+
+  // Check subscription status periodically and on mount
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      checkSubscriptionStatus();
+      
+      // Check every 5 minutes
+      const interval = setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, currentUser]);
 
   const openStorefront = (type = 'products') => {
     setStorefrontType(type);
@@ -122,12 +196,21 @@ export default function App() {
           <Storefront onClose={closeStorefront} />
         )
       ) : isAuthenticated ? (
-        <DashboardLayout
-          currentUser={currentUser}
-          onSignOut={handleSignOut}
-          onViewStorefront={openStorefront}
-          onViewSpaStorefront={() => openStorefront('spa')}
-        />
+        <>
+          <SubscriptionRequiredModal
+            isOpen={subscriptionRequired && currentUser?.role !== 'owner'}
+            trialExpired={trialExpired}
+            onSubscribeSuccess={handleSubscribeSuccess}
+          />
+          {(!subscriptionRequired || currentUser?.role === 'owner') && (
+            <DashboardLayout
+              currentUser={currentUser}
+              onSignOut={handleSignOut}
+              onViewStorefront={openStorefront}
+              onViewSpaStorefront={() => openStorefront('spa')}
+            />
+          )}
+        </>
       ) : (
         <ContainerScrollAnimation>
           <Header

@@ -65,14 +65,26 @@ export async function getCurrentSubscription(req, res) {
       });
     }
 
-    // Check if subscription has expired
+    // Check if trial has expired
     const now = new Date();
+    if (subscription.isTrial && subscription.trialEndDate) {
+      const trialEndDate = new Date(subscription.trialEndDate);
+      if (trialEndDate < now) {
+        // Trial has expired, return null
+        return res.json({
+          success: true,
+          data: { subscription: null, trialExpired: true },
+        });
+      }
+    }
+
+    // Check if subscription has expired
     const renewalDate = new Date(subscription.renewalDate);
     if (renewalDate < now) {
       // Subscription has expired, return null
       return res.json({
         success: true,
-        data: { subscription: null },
+        data: { subscription: null, subscriptionExpired: true },
       });
     }
 
@@ -132,7 +144,10 @@ export async function createSubscription(req, res) {
 
     // Create new subscription
     const plan = SUBSCRIPTION_PLANS[planId];
-    const renewalDate = new Date();
+    const now = new Date();
+    const trialEndDate = new Date(now);
+    trialEndDate.setDate(trialEndDate.getDate() + 14); // 14-day trial
+    const renewalDate = new Date(now);
     renewalDate.setMonth(renewalDate.getMonth() + 1);
 
     const newSubscription = await createSubscriptionDB({
@@ -142,6 +157,9 @@ export async function createSubscription(req, res) {
       planName: plan.name,
       status: 'active',
       renewalDate: renewalDate.toISOString(),
+      trialStartDate: now.toISOString(),
+      trialEndDate: trialEndDate.toISOString(),
+      isTrial: true,
     });
 
     res.status(201).json({
