@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { spaServices } from '../data/spaServices.js';
 import { ServiceCard } from '../components/ServiceCard.jsx';
 import { ServiceDetailsModal } from '../components/ServiceDetailsModal.jsx';
@@ -6,6 +8,8 @@ import { BookingDrawer } from '../components/BookingDrawer.jsx';
 import { CartNotification } from '../components/CartNotification.jsx';
 import { Button } from '../components/Button.jsx';
 import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function BeautySpaStorefront({ onClose }) {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -99,6 +103,111 @@ export function BeautySpaStorefront({ onClose }) {
     setIsBookingOpen(false);
   };
 
+  // Parallax effect for hero section
+  const heroRef = useRef(null);
+  const servicesGridRef = useRef(null);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const rect = heroRef.current.getBoundingClientRect();
+        const scrolled = window.pageYOffset;
+        const heroTop = rect.top + scrolled;
+        const heroHeight = rect.height;
+        const windowHeight = window.innerHeight;
+        
+        // Only apply parallax when hero is in viewport
+        if (scrolled < heroTop + heroHeight && scrolled + windowHeight > heroTop) {
+          const parallax = (scrolled - heroTop) * 0.3;
+          heroRef.current.style.transform = `translateY(${parallax}px)`;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // GSAP animations for services grid
+  useEffect(() => {
+    if (!servicesGridRef.current) return;
+
+    const cards = servicesGridRef.current.querySelectorAll('.storefront-card');
+    if (cards.length === 0) return;
+
+    // Store event listeners for cleanup
+    const hoverHandlers = [];
+
+    // Set initial state
+    gsap.set(cards, {
+      opacity: 0,
+      y: 80,
+      scale: 0.85,
+      rotationX: -15,
+    });
+
+    // Create scroll-triggered animation
+    const scrollTrigger = ScrollTrigger.create({
+      trigger: servicesGridRef.current,
+      start: 'top 75%',
+      toggleActions: 'play none none reverse',
+      onEnter: () => {
+        gsap.to(cards, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          duration: 1,
+          ease: 'power3.out',
+          stagger: {
+            amount: 0.8,
+            from: 'start',
+          },
+        });
+      },
+    });
+
+    // Add hover effects with GSAP
+    cards.forEach((card) => {
+      const handleMouseEnter = () => {
+        gsap.to(card, {
+          y: -12,
+          scale: 1.03,
+          rotationX: 5,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+      };
+
+      const handleMouseLeave = () => {
+        gsap.to(card, {
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+        });
+      };
+
+      card.addEventListener('mouseenter', handleMouseEnter);
+      card.addEventListener('mouseleave', handleMouseLeave);
+      
+      hoverHandlers.push({ card, handleMouseEnter, handleMouseLeave });
+    });
+
+    return () => {
+      // Cleanup ScrollTrigger
+      if (scrollTrigger) {
+        scrollTrigger.kill();
+      }
+      
+      // Cleanup event listeners
+      hoverHandlers.forEach(({ card, handleMouseEnter, handleMouseLeave }) => {
+        card.removeEventListener('mouseenter', handleMouseEnter);
+        card.removeEventListener('mouseleave', handleMouseLeave);
+      });
+    };
+  }, [filteredServices]);
+
   return (
     <div className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
@@ -156,29 +265,29 @@ export function BeautySpaStorefront({ onClose }) {
 
       <main className="pb-24">
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0">
+          <div className="absolute inset-0" ref={heroRef}>
             <img
               src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85"
               alt="Luxury spa treatment"
-              className="h-full w-full object-cover"
+              className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
               style={{ backgroundColor: '#0b233e', objectPosition: 'center 40%', filter: 'brightness(0.9) contrast(1.1)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-midnight/70 via-ocean/60 to-midnight/75" />
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/70 via-ocean/60 to-midnight/75" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <div className="mb-4">
+            <div className="mb-4 storefront-hero-text">
               <BeautySpaLogo className="scale-90 sm:scale-100" />
             </div>
-            <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
+            <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
               Tana's Beauty Boost Spa · Wellness 2026
             </span>
-            <h1 className="font-display text-4xl leading-tight sm:text-5xl">
+            <h1 className="storefront-hero-text font-display text-4xl leading-tight sm:text-5xl" style={{ animationDelay: '0.2s' }}>
               Rejuvenate your senses with ocean-inspired luxury treatments.
             </h1>
-            <p className="max-w-2xl text-sm text-white/75 sm:text-base">
+            <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
               Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
               <Button onClick={() => handleShowService(spaServices[0], 'book')}>Book Treatment</Button>
               <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
                 View Itinerary
@@ -271,14 +380,21 @@ export function BeautySpaStorefront({ onClose }) {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredServices.map((service) => (
-              <ServiceCard
+          <div ref={servicesGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
+            {filteredServices.map((service, index) => (
+              <div
                 key={service.id}
-                service={service}
-                onViewDetails={(selected) => handleShowService(selected, 'view')}
-                onBook={(selected) => handleShowService(selected, 'book')}
-              />
+                className="storefront-card"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                }}
+              >
+                <ServiceCard
+                  service={service}
+                  onViewDetails={(selected) => handleShowService(selected, 'view')}
+                  onBook={(selected) => handleShowService(selected, 'book')}
+                />
+              </div>
             ))}
           </div>
         </section>

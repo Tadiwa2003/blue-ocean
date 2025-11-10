@@ -18,7 +18,7 @@ const fallbackImage =
     </svg>
   `);
 
-export function Cart({ cartItems, isOpen, onClose, onRemoveItem, onUpdateQuantity, onClearCart }) {
+export function Cart({ cartItems, isOpen, onClose, onRemoveItem, onUpdateQuantity, onClearCart, onCheckout }) {
   // Calculate total
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
@@ -185,7 +185,7 @@ export function Cart({ cartItems, isOpen, onClose, onRemoveItem, onUpdateQuantit
               <Button variant="secondary" onClick={onClearCart} className="flex-1">
                 Clear Cart
               </Button>
-              <Button className="flex-1">
+              <Button onClick={onCheckout || onClose} className="flex-1">
                 Checkout
               </Button>
             </div>

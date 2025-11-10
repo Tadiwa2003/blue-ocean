@@ -41,8 +41,7 @@ export function Offerings() {
 
         <article
           id="spa"
-          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/6 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur"
-              >
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/6 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur">
           <div className="absolute -right-12 top-6 h-32 w-32 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute -left-16 bottom-0 h-28 w-28 rounded-full bg-brand-300/15 blur-3xl" />
           <div className="relative space-y-6">

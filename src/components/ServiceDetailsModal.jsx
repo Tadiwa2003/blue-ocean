@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
 import {
   buildYouTubeEmbedUrl,
   getYouTubeThumbnailUrl,
   getYouTubeVideoId,
 } from '../utils/youtube.js';
+import { ChevronLeft, ChevronRight, Star, Check, Clock, Sparkles } from 'lucide-react';
 
 const fallbackImage =
   'data:image/svg+xml;utf8,' +
@@ -32,6 +34,7 @@ const formatCurrency = (value, currency = 'USD') =>
 
 export function ServiceDetailsModal({ service, open, onClose, onBook, intent = 'view' }) {
   const [selectedImage, setSelectedImage] = useState(service?.image || fallbackImage);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -40,6 +43,8 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   const [videoError, setVideoError] = useState(false);
   const [videoEmbedUrl, setVideoEmbedUrl] = useState(null);
   const [videoThumbnail, setVideoThumbnail] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const containerRef = useRef(null);
 
   const imageGallery = useMemo(() => {
     if (!service) return [fallbackImage];
@@ -53,12 +58,14 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   useEffect(() => {
     if (service && open) {
       setSelectedImage(imageGallery[0] || fallbackImage);
+      setCurrentImageIndex(0);
       setImageError(false);
       setSelectedDate(service.bookableDates?.[0]?.value || '');
       setSelectedTime(service.timeSlots?.[0] || '');
       setSelectedAddOns(new Set());
       setGuestNote('');
       setVideoError(false);
+      setActiveTab('overview');
 
       if (service.videoUrl) {
         const origin =
@@ -73,6 +80,47 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
       }
     }
   }, [service, open, imageGallery]);
+
+  // GSAP animations
+  useEffect(() => {
+    if (!open || !containerRef.current) return;
+
+    const container = containerRef.current;
+    gsap.fromTo(
+      container,
+      { opacity: 0, scale: 0.95 },
+      { opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out' }
+    );
+
+    return () => {
+      gsap.killTweensOf(container);
+    };
+  }, [open]);
+
+  const nextImage = () => {
+    const nextIndex = currentImageIndex === imageGallery.length - 1 ? 0 : currentImageIndex + 1;
+    setCurrentImageIndex(nextIndex);
+    setSelectedImage(imageGallery[nextIndex] || fallbackImage);
+  };
+
+  const prevImage = () => {
+    const prevIndex = currentImageIndex === 0 ? imageGallery.length - 1 : currentImageIndex - 1;
+    setCurrentImageIndex(prevIndex);
+    setSelectedImage(imageGallery[prevIndex] || fallbackImage);
+  };
+
+  const renderStars = (rating = 4.9) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Star
+          key={i}
+          className={`w-4 h-4 ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-white/30'}`}
+        />
+      );
+    }
+    return stars;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -282,23 +330,26 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
 
       <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
 
-      <div className="relative w-full max-w-6xl overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-ocean/95 to-midnight/98 shadow-2xl modal-content">
+      <div ref={containerRef} className="relative w-full max-w-6xl overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-ocean/95 to-midnight/98 shadow-2xl modal-content">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-6 top-6 z-10 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition hover:bg-white/20 hover:text-white backdrop-blur-sm"
+          className="absolute right-6 top-6 z-20 rounded-full border border-white/20 bg-white/10 p-3 text-white/80 transition hover:bg-white/20 hover:text-white backdrop-blur-sm"
+          aria-label="Close modal"
         >
-          Close
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         <div className="grid gap-0 lg:grid-cols-[1.1fr_1fr]">
           <div className="relative bg-gradient-to-br from-ocean/60 to-midnight/90 p-6 sm:p-8 lg:p-10">
             <div className="space-y-8 lg:sticky lg:top-10">
-              <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/5 shadow-[0_35px_90px_rgba(7,45,72,0.45)]">
+              <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/5 shadow-[0_35px_90px_rgba(7,45,72,0.45)] group">
                 <img
                   src={selectedImage}
                   alt={service.name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform duration-500"
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
                   onError={() => {
@@ -308,6 +359,28 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                     }
                   }}
                 />
+                
+                {/* Navigation Arrows */}
+                {imageGallery.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-700" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-700" />
+                    </button>
+                  </>
+                )}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-midnight/85 via-transparent to-transparent" />
                 {service.tags && service.tags.length > 0 && (
                   <div className="absolute left-6 top-6 flex flex-wrap gap-2">
@@ -332,43 +405,41 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
               </div>
 
               {imageGallery.length > 1 && (
-                <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                <div className="grid grid-cols-4 gap-3">
                   {imageGallery.map((img, idx) => {
-                    const isActive = selectedImage === img;
+                    const isActive = currentImageIndex === idx;
                     return (
-                  <button
-                    key={`${service?.id || 'service'}-thumb-${idx}`}
-                    type="button"
-                    onClick={() => setSelectedImage(img || fallbackImage)}
-                        className={[
-                          'relative flex-shrink-0 overflow-hidden rounded-2xl border-2 transition',
-                          'h-20 w-24 sm:h-24 sm:w-28',
+                      <button
+                        key={`${service?.id || 'service'}-thumb-${idx}`}
+                        type="button"
+                        onClick={() => {
+                          setCurrentImageIndex(idx);
+                          setSelectedImage(img || fallbackImage);
+                        }}
+                        className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${
                           isActive
-                        ? 'border-brand-400 shadow-lg shadow-brand-400/30'
-                            : 'border-white/10 hover:border-white/25',
-                        ].join(' ')}
+                            ? 'border-brand-400 shadow-lg shadow-brand-400/30 ring-2 ring-brand-400/50'
+                            : 'border-white/10 hover:border-white/30'
+                        }`}
                         aria-label={`View gallery image ${idx + 1}`}
-                  >
-                    <img
-                      src={img || fallbackImage}
-                      alt={`View ${idx + 1}`}
-                      className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        e.currentTarget.src = fallbackImage;
-                      }}
-                    />
-                        <span
-                          className={[
-                            'pointer-events-none absolute inset-0 border-2 border-transparent transition',
-                            isActive ? 'border-brand-400/80' : '',
-                          ].join(' ')}
+                      >
+                        <img
+                          src={img || fallbackImage}
+                          alt={`Thumbnail ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            e.currentTarget.src = fallbackImage;
+                          }}
                         />
-                  </button>
+                        {isActive && (
+                          <div className="absolute inset-0 border-2 border-brand-400 rounded-xl" />
+                        )}
+                      </button>
                     );
                   })}
-              </div>
+                </div>
               )}
 
               {hasVideo && (
@@ -409,11 +480,19 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
           <div className="flex flex-col gap-8 bg-gradient-to-bl from-midnight/95 to-ocean/60 p-6 sm:p-8 lg:p-10">
             <section className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_28px_70px_rgba(7,45,72,0.35)] backdrop-blur">
               <div className="flex flex-wrap items-start justify-between gap-6">
-              <div className="space-y-3">
+                <div className="space-y-3 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.4em] text-brand-300">
-                  {service.serviceCategory}
-                </p>
+                    {service.serviceCategory}
+                  </p>
                   <h1 className="font-display text-3xl text-white sm:text-4xl lg:text-5xl">{service.name}</h1>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      {renderStars(4.9)}
+                    </div>
+                    <span className="text-sm text-white/60">
+                      4.9 (89 reviews)
+                    </span>
+                  </div>
                   {service.headline && (
                     <p className="text-base font-semibold text-brand-100/90">{service.headline}</p>
                   )}
