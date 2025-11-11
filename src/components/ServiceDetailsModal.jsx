@@ -304,7 +304,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   if (!open || !service) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-midnight/95 px-4 py-6 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -326,11 +326,30 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
         .modal-content {
           animation: slideUp 0.3s ease-out;
         }
+        /* Smooth scrolling for modal content */
+        .service-modal-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .service-modal-container::-webkit-scrollbar {
+          width: 8px;
+        }
+        .service-modal-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .service-modal-container::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.3);
+          border-radius: 4px;
+        }
+        .service-modal-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.5);
+        }
       `}</style>
 
       <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
 
-      <div ref={containerRef} className="relative w-full max-w-6xl overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-ocean/95 to-midnight/98 shadow-2xl modal-content">
+      <div ref={containerRef} className="service-modal-container relative w-full max-w-7xl my-6 mx-4 rounded-[40px] border border-white/10 bg-gradient-to-br from-ocean/95 to-midnight/98 shadow-2xl modal-content">
         <button
           type="button"
           onClick={onClose}
@@ -342,23 +361,25 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
           </svg>
         </button>
 
-        <div className="grid gap-0 lg:grid-cols-[1.1fr_1fr]">
-          <div className="relative bg-gradient-to-br from-ocean/60 to-midnight/90 p-6 sm:p-8 lg:p-10">
-            <div className="space-y-8 lg:sticky lg:top-10">
+        <div className="grid gap-0 lg:grid-cols-[1.1fr_1fr] min-h-0">
+          <article className="relative bg-gradient-to-br from-ocean/60 to-midnight/90 p-6 sm:p-8 lg:p-10">
+            <div className="space-y-8 lg:sticky lg:top-6">
               <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/5 shadow-[0_35px_90px_rgba(7,45,72,0.45)] group">
-                <img
-                  src={selectedImage}
-                  alt={service.name}
-                  className="h-full w-full object-cover transition-transform duration-500"
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
-                  onError={() => {
-                    if (!imageError) {
-                      setImageError(true);
-                      setSelectedImage(fallbackImage);
-                    }
-                  }}
-                />
+                <div className="aspect-[4/5] lg:aspect-[3/4]">
+                  <img
+                    src={selectedImage}
+                    alt={service.name}
+                    className="h-full w-full object-cover transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    onError={() => {
+                      if (!imageError) {
+                        setImageError(true);
+                        setSelectedImage(fallbackImage);
+                      }
+                    }}
+                  />
+                </div>
                 
                 {/* Navigation Arrows */}
                 {imageGallery.length > 1 && (
@@ -475,9 +496,9 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                 )}
               </div>
             </div>
-          </div>
+          </article>
 
-          <div className="flex flex-col gap-8 bg-gradient-to-bl from-midnight/95 to-ocean/60 p-6 sm:p-8 lg:p-10">
+          <div className="flex flex-col gap-8 bg-gradient-to-bl from-midnight/95 to-ocean/60 p-6 sm:p-8 lg:p-10 overflow-y-auto max-h-[calc(100vh-3rem)] lg:max-h-none">
             <section className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_28px_70px_rgba(7,45,72,0.35)] backdrop-blur">
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div className="space-y-3 flex-1">
@@ -630,15 +651,15 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
               </section>
             )}
 
-            <section className="rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-white">
+            <section className="treatment-booking rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
+              <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <h2 className="text-lg font-semibold uppercase tracking-[0.25em] text-white">
                   Reserve Your Session
-                </h3>
+                </h2>
                 <span className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
                   {intent === 'book' ? 'Booking Mode' : 'Preview Mode'}
                 </span>
-              </div>
+              </header>
 
                 {service.bookableDates?.length > 0 && (
                 <div className="mt-5 space-y-2">
@@ -723,17 +744,23 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
               </div>
 
               <div className="mt-6 space-y-3">
-              <Button
-                onClick={handleBook}
-                className="w-full justify-center py-4 text-base"
-                disabled={!selectedDate || !selectedTime}
-              >
-                {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
-              </Button>
-                <Button variant="secondary" onClick={onClose} className="w-full justify-center py-4 text-base">
-                Decide Later
-              </Button>
-            </div>
+                <Button
+                  onClick={handleBook}
+                  className="w-full justify-center py-4 text-base font-semibold"
+                  disabled={!selectedDate || !selectedTime}
+                  aria-label={intent === 'book' ? 'Confirm your booking' : 'Reserve this service'}
+                >
+                  {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  onClick={onClose} 
+                  className="w-full justify-center py-4 text-base font-semibold"
+                  aria-label="Close and decide later"
+                >
+                  Decide Later
+                </Button>
+              </div>
             </section>
           </div>
         </div>

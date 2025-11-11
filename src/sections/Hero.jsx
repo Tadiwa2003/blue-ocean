@@ -1,13 +1,19 @@
 import { BlurTextAnimation } from '../components/ui/blur-text-animation.jsx';
 import { Button } from '../components/Button.jsx';
+import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useInView } from 'framer-motion';
 
 // Inline base64 encoded gradient as guaranteed fallback
 const FALLBACK_GRADIENT = 
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
 export function Hero() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-50px" });
+
   return (
-    <section id="hero" className="relative overflow-hidden pt-32">
+    <section ref={sectionRef} id="hero" className="relative overflow-hidden pt-32">
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"
@@ -51,14 +57,14 @@ export function Hero() {
             />
             <BlurTextAnimation
               className="text-left max-w-3xl"
-              text="Two coastal brands, one elevated guest journey."
+              text="Your Complete Marketplace Platform: Beauty Spa Services & Product Store"
               fontSize="font-display text-[2.75rem] leading-tight sm:text-[3.1rem]"
               animationDelay={6000}
               textClassName="font-semibold sm:font-medium tracking-tight m-0"
             />
             <BlurTextAnimation
               className="max-w-2xl text-left"
-              text="Launch capsule drops, layer in spa itineraries, and orchestrate every guest touchpoint with data-backed storytelling, concierge fulfilment, and sensory brand kits."
+              text="Blue Ocean Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace."
               fontSize="text-base md:text-lg"
               fontFamily="font-sans"
               textColor="text-white/80"
@@ -66,19 +72,34 @@ export function Hero() {
               textClassName="font-normal leading-relaxed m-0"
             />
             <div className="grid gap-3 sm:flex sm:flex-wrap">
-              <Button onClick={() => document.querySelector('#retail')?.scrollIntoView({ behavior: 'smooth' })}>
+              <Button onClick={() => {
+                const retailSection = document.getElementById('retail');
+                if (retailSection) {
+                  retailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}>
                 Explore Blue Ocean Capsules
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => document.querySelector('#spa')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  const spaSection = document.getElementById('spa');
+                  if (spaSection) {
+                    spaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 View Tana&apos;s Spa Menu
               </Button>
               <Button
                 variant="ghost"
                 className="px-4"
-                onClick={() => document.querySelector('#intro')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  const introSection = document.getElementById('intro');
+                  if (introSection) {
+                    introSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 How it works
               </Button>
@@ -108,19 +129,22 @@ export function Hero() {
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Blue Ocean Marketplace
                 </span>
-                <h2 className="font-display text-2xl">Retail capsules that ship ready-to-sell.</h2>
+                <h2 className="font-display text-2xl">Merchant Store: Sell Your Products</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
-                  Seasonal assortments, lookbooks, and fulfilment handled end-to-end. Launch coastal-luxury stories in
-                  days, not months.
+                  Our merchant store platform lets you showcase and sell your products online. Manage inventory, track sales, and reach customers through our integrated marketplace. Perfect for businesses looking to expand their digital presence.
               </p>
                 <ul className="space-y-2 text-xs text-white/65">
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Merchandising playbooks for every drop
+                    Easy product management and inventory tracking
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Logistics + packaging with shoreline flair
+                    Integrated payment processing and order management
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                    Rent our platform to other merchants
                   </li>
                 </ul>
                   </div>
@@ -132,19 +156,22 @@ export function Hero() {
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Tana&apos;s Beauty Boost Spa
                   </span>
-                <h2 className="font-display text-2xl">Signature rituals, concierge booking built in.</h2>
+                <h2 className="font-display text-2xl">Tana's Beauty Boost Spa: Premium Wellness Services</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
-                  Oceanstone facials, tidal massages, and curated add-ons that lift spa revenue while deepening guest
-                  loyalty.
+                  Experience luxury beauty and spa treatments at Tana's Beauty Boost Spa. From facials and massages to complete wellness packages, we offer a full range of services designed to rejuvenate and restore.
                 </p>
                 <ul className="space-y-2 text-xs text-white/65">
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Bookable itineraries with guest communications
+                    Online booking system for all spa services
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Ritual training, scent design, and therapist scripts
+                    Professional treatments and wellness packages
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
+                    Gift cards and membership options available
                   </li>
                 </ul>
               </div>
@@ -153,24 +180,29 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative z-30 mx-auto -mt-4 grid w-full max-w-6xl gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4">
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Retail partners</dt>
-          <dd className="mt-2 text-2xl font-semibold">320+</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Spa rituals curated</dt>
-          <dd className="mt-2 text-2xl font-semibold">18</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Sell-through in 72 hrs</dt>
-          <dd className="mt-2 text-2xl font-semibold">82%</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-[0.3em] text-white/60">Guest satisfaction</dt>
-          <dd className="mt-2 text-2xl font-semibold">4.9 / 5</dd>
-        </div>
-      </div>
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }}
+        animate={isInView ? { y: 0, opacity: 1 } : {}}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="relative z-30 mx-auto -mt-4 grid w-full max-w-6xl gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_25px_50px_rgba(4,11,24,0.35)] backdrop-blur sm:grid-cols-4"
+      >
+        {[
+          { label: 'Retail partners', value: '320+' },
+          { label: 'Spa rituals curated', value: '18' },
+          { label: 'Sell-through in 72 hrs', value: '82%' },
+          { label: 'Guest satisfaction', value: '4.9 / 5' },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={isInView ? { scale: 1, opacity: 1 } : {}}
+            transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+          >
+            <dt className="text-xs uppercase tracking-[0.3em] text-white/60">{stat.label}</dt>
+            <dd className="mt-2 text-2xl font-semibold">{stat.value}</dd>
+          </motion.div>
+        ))}
+      </motion.div>
       <div className="relative z-30 mt-8 flex justify-center">
         <button
           type="button"

@@ -8,7 +8,8 @@ const CONTACT_PHONE = '+263 71 046 5531';
 
 export function ContactModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     company: '',
@@ -23,7 +24,8 @@ export function ContactModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phone: '',
         company: '',
@@ -117,8 +119,12 @@ export function ContactModal({ isOpen, onClose, onSuccess }) {
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Please enter your name.');
+    if (!formData.firstName.trim()) {
+      setError('Please enter your first name.');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      setError('Please enter your last name.');
       return false;
     }
     if (!formData.email.trim()) {
@@ -137,11 +143,12 @@ export function ContactModal({ isOpen, onClose, onSuccess }) {
   };
 
   const formatWhatsAppMessage = () => {
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
     return `Hello Blue Ocean Team,
 
 I'm interested in partnering with Blue Ocean Capsule. Here are my details:
 
-👤 Name: ${formData.name}
+👤 Name: ${fullName}
 📧 Email: ${formData.email}
 📱 Phone: ${formData.phone}
 ${formData.company ? `🏢 Company: ${formData.company}` : ''}
@@ -246,21 +253,38 @@ Looking forward to hearing from you!`;
               </div>
             )}
 
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-white/80">
-                <User className="inline h-4 w-4 mr-2" />
-                Full Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full h-11 pl-4 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                placeholder="John Doe"
-                required
-              />
+            {/* Name - Split into First and Last */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-white/80">
+                  <User className="inline h-4 w-4 mr-2" />
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className="w-full h-11 pl-4 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-white/80">
+                  <User className="inline h-4 w-4 mr-2" />
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className="w-full h-11 pl-4 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
+                  placeholder="Doe"
+                  required
+                />
+              </div>
             </div>
 
             {/* Email */}

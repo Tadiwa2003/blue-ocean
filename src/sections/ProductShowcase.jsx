@@ -1,17 +1,33 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { highlightProducts, categories } from '../data/products.js';
+import { useProducts } from '../hooks/useProducts.js';
 import { ProductCard } from '../components/ProductCard.jsx';
 import { SectionTitle } from '../components/SectionTitle.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function ProductShowcase() {
+  const { products: allProducts, loading } = useProducts();
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const categoriesRef = useRef(null);
   const gridRef = useRef(null);
+  
+  // Get featured products (limit to 6 for showcase)
+  const highlightProducts = useMemo(() => {
+    if (!allProducts || allProducts.length === 0) return [];
+    return allProducts.filter((p) => p.category !== 'Beauty Spa Services').slice(0, 6);
+  }, [allProducts]);
+  
+  // Extract categories from products
+  const categories = useMemo(() => {
+    const cats = new Set();
+    highlightProducts.forEach((p) => {
+      if (p.category) cats.add(p.category);
+    });
+    return ['All Capsules', ...Array.from(cats)];
+  }, [highlightProducts]);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -93,7 +109,7 @@ export function ProductShowcase() {
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
-  }, []);
+  }, [highlightProducts]);
 
   return (
     <section ref={sectionRef} id="retail" data-section="collections" className="mx-auto mt-24 max-w-6xl px-6">
@@ -114,11 +130,17 @@ export function ProductShowcase() {
         </div>
       </div>
       <div ref={gridRef} className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3" style={{ perspective: '1000px' }}>
-        {highlightProducts.map((product) => (
-          <div key={product.id} data-product-card>
-            <ProductCard product={product} />
-          </div>
-        ))}
+        {loading ? (
+          <div className="col-span-full text-center text-white/60 py-12">Loading products...</div>
+        ) : highlightProducts.length === 0 ? (
+          <div className="col-span-full text-center text-white/60 py-12">No products available</div>
+        ) : (
+          highlightProducts.map((product) => (
+            <div key={product.id} data-product-card>
+              <ProductCard product={product} />
+            </div>
+          ))
+        )}
       </div>
     </section>
   );

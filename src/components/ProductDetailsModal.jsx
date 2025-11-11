@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
 import { getProductVariants, findRelatedProducts } from '../utils/productVariants.js';
-import { highlightProducts } from '../data/products.js';
+import { useProducts } from '../hooks/useProducts.js';
 import { ChevronLeft, ChevronRight, Heart, Star, Check, Truck, ShieldCheck } from 'lucide-react';
 
 const fallbackImage =
@@ -23,6 +23,7 @@ const fallbackImage =
   `);
 
 export function ProductDetailsModal({ product, open, onClose, onViewProduct, onAddToCart }) {
+  const { products: allProducts } = useProducts();
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedImage, setSelectedImage] = useState(product?.image || fallbackImage);
@@ -36,7 +37,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   const imageGallery = [product?.image, product?.image, product?.image].filter(Boolean).slice(0, 3);
 
   // Get actual variants for this product
-  const productVariants = product ? getProductVariants(product.id) : { colors: [], sizes: [] };
+  const productVariants = product ? getProductVariants(product.id, allProducts || []) : { colors: [], sizes: [] };
   const colorVariants = productVariants.colors || [];
   const sizeVariants = productVariants.sizes || [];
   const requiresColorSelection = colorVariants.length > 0;
@@ -44,8 +45,8 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
   // Initialize selections
   useEffect(() => {
-    if (product && open) {
-      const variants = getProductVariants(product.id);
+    if (product && open && allProducts) {
+      const variants = getProductVariants(product.id, allProducts);
       setSelectedColor(variants.colors[0] || '');
       setSelectedSize(variants.sizes[0] || '');
       setSelectedImage(product.image || fallbackImage);
@@ -55,7 +56,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
       setQuantity(1);
       setActiveTab('description');
     }
-  }, [product, open]);
+  }, [product, open, allProducts]);
 
   // GSAP animations
   useEffect(() => {
@@ -110,13 +111,13 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
 
   // Find related products when size is selected
   useEffect(() => {
-    if (product && selectedSize) {
-      const related = findRelatedProducts(product, selectedSize, highlightProducts);
+    if (product && selectedSize && allProducts) {
+      const related = findRelatedProducts(product, selectedSize, allProducts);
       setRelatedProducts(related);
     } else {
       setRelatedProducts([]);
     }
-  }, [product, selectedSize]);
+  }, [product, selectedSize, allProducts]);
 
   // Handle Escape key
   useEffect(() => {
@@ -161,7 +162,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-midnight/95 px-4 py-6 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -183,12 +184,31 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
         .modal-content {
           animation: slideUp 0.3s ease-out;
         }
+        /* Smooth scrolling for modal content */
+        .product-modal-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .product-modal-container::-webkit-scrollbar {
+          width: 8px;
+        }
+        .product-modal-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .product-modal-container::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.3);
+          border-radius: 4px;
+        }
+        .product-modal-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.5);
+        }
       `}</style>
       {/* Backdrop */}
       <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
 
       {/* Modal Content */}
-      <div ref={containerRef} className="relative w-full max-w-6xl bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl overflow-hidden modal-content">
+      <div ref={containerRef} className="product-modal-container relative w-full max-w-7xl my-6 mx-4 bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl modal-content">
         {/* Close Button */}
         <button
           type="button"
@@ -201,10 +221,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           </svg>
         </button>
 
-        <div className="grid lg:grid-cols-2 gap-0">
+        <div className="grid lg:grid-cols-2 gap-0 min-h-0">
           {/* Left: Image Gallery */}
-          <div className="relative bg-gradient-to-br from-ocean/50 to-midnight/80 p-6 sm:p-8 lg:p-12">
-            <div className="lg:sticky lg:top-8">
+          <article className="relative bg-gradient-to-br from-ocean/50 to-midnight/80 p-6 sm:p-8 lg:p-12">
+            <div className="lg:sticky lg:top-6">
               <div className="relative aspect-square w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 group">
                 <img
                   src={selectedImage}
@@ -288,13 +308,13 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                 </div>
               )}
             </div>
-          </div>
+          </article>
 
           {/* Right: Product Details */}
-          <div className="flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50">
+          <div className="flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50 overflow-y-auto max-h-[calc(100vh-3rem)] lg:max-h-none">
             <div className="flex-1 space-y-6">
               {/* Category, Name, Rating & Wishlist */}
-              <div className="flex justify-between items-start gap-4">
+              <header className="flex justify-between items-start gap-4">
                 <div className="flex-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.4em] text-brand-300 mb-2">
                     {product.category}
@@ -323,7 +343,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                 >
                   <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
                 </button>
-              </div>
+              </header>
 
               {/* Tabs */}
               <div className="border-b border-white/10">
@@ -514,9 +534,9 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
             </div>
 
             {/* Quantity and Add to Cart */}
-            <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+            <section className="product-purchase mt-8 pt-6 border-t border-white/10 space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex items-center border border-white/20 rounded-xl overflow-hidden">
+                <div className="flex items-center border border-white/20 rounded-xl overflow-hidden bg-white/5">
                   <button
                     type="button"
                     onClick={decreaseQuantity}
@@ -533,6 +553,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                     value={quantity}
                     readOnly
                     className="w-12 text-center border-0 bg-transparent text-white focus:ring-0 text-base font-semibold"
+                    aria-label="Quantity"
                   />
                   <button
                     type="button"
@@ -547,20 +568,31 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                 </div>
                 <Button 
                   onClick={() => {
-                    for (let i = 0; i < quantity; i++) {
-                      handleAddToCart();
+                    if (onAddToCart) {
+                      for (let i = 0; i < quantity; i++) {
+                        onAddToCart(product, selectedColor, selectedSize);
+                      }
+                      // Show success feedback
+                      setTimeout(() => {
+                        // Optionally close modal or show notification
+                      }, 500);
                     }
                   }}
-                  className="flex-1 justify-center text-base py-3"
+                  className="flex-1 justify-center text-base py-3 font-semibold"
                   disabled={(requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)}
+                  aria-label={`Add ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart`}
                 >
                   Add to Cart ({quantity})
                 </Button>
               </div>
-              <Button variant="secondary" className="w-full justify-center text-base py-3">
+              <Button 
+                variant="secondary" 
+                className="w-full justify-center text-base py-3 font-semibold"
+                aria-label="Buy now"
+              >
                 Buy Now
               </Button>
-            </div>
+            </section>
           </div>
         </div>
       </div>

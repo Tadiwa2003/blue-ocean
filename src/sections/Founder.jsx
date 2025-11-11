@@ -4,7 +4,7 @@ const founderImage = '/assets/images/founder.jpeg';
 const founderFallback =
   'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80';
 
-export function Founder() {
+export function Founder({ onBookStrategySession, onReadJournal }) {
   return (
     <section id="founder" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="grid gap-10 rounded-[36px] border border-white/10 bg-ocean/70 px-8 py-12 text-white lg:grid-cols-[0.9fr,1.1fr] lg:items-center">
@@ -32,8 +32,37 @@ export function Founder() {
             launch builds relationships that last beyond the tide.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary">Read Kim’s journal</Button>
-            <Button>Book a strategy session</Button>
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                if (onReadJournal) {
+                  onReadJournal();
+                } else {
+                  // Fallback: scroll to journal section or open external link
+                  const journalSection = document.getElementById('journal');
+                  if (journalSection) {
+                    journalSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
+            >
+              Read Kim's journal
+            </Button>
+            <Button 
+              onClick={() => {
+                if (onBookStrategySession) {
+                  onBookStrategySession();
+                } else {
+                  // Fallback: scroll to contact section
+                  const contactSection = document.getElementById('cta');
+                  if (contactSection) {
+                    contactSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
+            >
+              Book a strategy session
+            </Button>
           </div>
         </div>
       </div>

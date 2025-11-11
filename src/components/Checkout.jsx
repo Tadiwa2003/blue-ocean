@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
+import api from '../services/api.js';
 
 const fallbackImage =
   'data:image/svg+xml;utf8,' +
@@ -27,6 +28,7 @@ const fallbackImage =
 export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Review
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     // Shipping
     firstName: '',
@@ -158,20 +160,59 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
+    setError('');
 
-    // Simulate order processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsProcessing(false);
-    if (onOrderComplete) {
-      onOrderComplete({
-        orderId: `BO-${Date.now()}`,
-        items: cartItems,
+    try {
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.id,
+          name: item.name,
+          price: parseFloat(item.price.replace('$', '')),
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        shippingInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        },
+        paymentInfo: {
+          method: formData.paymentMethod,
+          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber : undefined,
+          cardName: formData.paymentMethod === 'card' ? formData.cardName : undefined,
+        },
         total,
-        shipping: formData,
-      });
+      };
+
+      // Create order via API
+      const response = await api.orders.createOrder(orderData);
+
+      if (response.success) {
+        setIsProcessing(false);
+        if (onOrderComplete) {
+          onOrderComplete({
+            orderId: response.data.order.orderNumber || `BO-${Date.now()}`,
+            items: cartItems,
+            total,
+            shipping: formData,
+          });
+        }
+        onClose();
+      } else {
+        setError(response.message || 'Failed to create order. Please try again.');
+        setIsProcessing(false);
+      }
+    } catch (err) {
+      console.error('Order creation error:', err);
+      setError(err.message || 'Failed to create order. Please try again.');
+      setIsProcessing(false);
     }
-    onClose();
   };
 
   const formatCardNumber = (value) => {
@@ -306,6 +347,11 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Form Section */}
             <div ref={formRef} className="lg:col-span-2 space-y-6">
+              {error && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
+                  {error}
+                </div>
+              )}
               {step === 1 && (
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 mb-2">

@@ -1,17 +1,26 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { spaServices } from '../data/spaServices.js';
+import { useServices } from '../hooks/useServices.js';
 import { ServiceCard } from '../components/ServiceCard.jsx';
 import { ServiceDetailsModal } from '../components/ServiceDetailsModal.jsx';
 import { BookingDrawer } from '../components/BookingDrawer.jsx';
 import { CartNotification } from '../components/CartNotification.jsx';
 import { Button } from '../components/Button.jsx';
 import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
+import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
+import { motion } from 'framer-motion';
+import api from '../services/api.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const FALLBACK_GRADIENT =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
+
 export function BeautySpaStorefront({ onClose }) {
+  // Fetch services from backend
+  const { services: allServices, loading: servicesLoading, error: servicesError } = useServices();
+  
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedService, setSelectedService] = useState(null);
   const [bookingIntent, setBookingIntent] = useState('view');
@@ -19,18 +28,20 @@ export function BeautySpaStorefront({ onClose }) {
   const [bookings, setBookings] = useState([]);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const serviceCategories = useMemo(() => {
-    const uniqueCategories = new Set(spaServices.map((service) => service.serviceCategory));
+    const uniqueCategories = new Set((allServices || []).map((service) => service.serviceCategory));
     return ['All', ...uniqueCategories];
-  }, []);
+  }, [allServices]);
 
   const filteredServices = useMemo(() => {
+    if (!allServices || allServices.length === 0) return [];
     if (activeCategory === 'All') {
-      return spaServices;
+      return allServices;
     }
-    return spaServices.filter((service) => service.serviceCategory === activeCategory);
-  }, [activeCategory]);
+    return allServices.filter((service) => service.serviceCategory === activeCategory);
+  }, [activeCategory, allServices]);
 
   const handleCategoryChange = (category) => {
     setActiveCategory(category);
@@ -97,10 +108,54 @@ export function BeautySpaStorefront({ onClose }) {
     setBookings([]);
   };
 
-  const handleConfirmBookings = () => {
+  const handleConfirmBookings = async () => {
     if (bookings.length === 0) return;
-    showNotification('Thank you! Our spa concierge will confirm your itinerary shortly.');
-    setIsBookingOpen(false);
+
+    setIsConfirming(true);
+    try {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showNotification('Please sign in to confirm your bookings. Your bookings have been saved locally.');
+        setIsConfirming(false);
+        return;
+      }
+
+      // Transform bookings to match backend format
+      const bookingsToSubmit = bookings.map(booking => ({
+        serviceId: booking.serviceId,
+        name: booking.name,
+        serviceCategory: booking.serviceCategory,
+        duration: booking.duration,
+        basePrice: booking.basePrice,
+        totalPrice: booking.totalPrice,
+        currency: booking.currency || 'USD',
+        date: booking.date,
+        time: booking.time,
+        therapistLevel: booking.therapistLevel,
+        addOns: booking.addOns || [],
+        addOnTotal: booking.addOnTotal || 0,
+        notes: booking.notes || '',
+        image: booking.image,
+      }));
+
+      // Call API to create bookings
+      const response = await api.bookings.create(bookingsToSubmit);
+
+      if (response.success) {
+        showNotification(`Successfully confirmed ${bookings.length} booking(s)! Our spa concierge will contact you shortly.`);
+        setBookings([]); // Clear bookings after successful confirmation
+        setIsBookingOpen(false);
+      } else {
+        showNotification(response.message || 'Failed to confirm bookings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error confirming bookings:', error);
+      const errorMessage = error.message || 'Failed to confirm bookings. Please try again.';
+      showNotification(errorMessage);
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   // Parallax effect for hero section
@@ -209,7 +264,7 @@ export function BeautySpaStorefront({ onClose }) {
   }, [filteredServices]);
 
   return (
-    <div className="min-h-screen bg-midnight text-white">
+    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-4">
@@ -267,29 +322,76 @@ export function BeautySpaStorefront({ onClose }) {
         <section className="relative overflow-hidden">
           <div className="absolute inset-0" ref={heroRef}>
             <img
-              src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85"
-              alt="Luxury spa treatment"
+              src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85"
+              data-fallback-index="0"
+              alt="Luxury spa treatment room with ocean view"
               className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
-              style={{ backgroundColor: '#0b233e', objectPosition: 'center 40%', filter: 'brightness(0.9) contrast(1.1)' }}
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              style={{ backgroundColor: '#0b233e', objectPosition: 'center 50%', filter: 'brightness(0.85) contrast(1.1)' }}
+              onError={(e) => {
+                const sources = [
+                  'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85', // spa treatment room
+                  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85', // luxury spa interior
+                  'https://images.unsplash.com/photo-1600334125308-73316e67749a?auto=format&fit=crop&w=1600&q=85', // spa relaxation area
+                  'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85', // wellness spa
+                  '/assets/images/hero-bg.jpg',
+                  FALLBACK_GRADIENT,
+                ];
+                const currentIndex = Number(e.currentTarget.getAttribute('data-fallback-index') || '0');
+                const nextIndex = Math.min(currentIndex, sources.length - 1);
+                e.currentTarget.setAttribute('data-fallback-index', String(nextIndex + 1));
+                e.currentTarget.src = sources[nextIndex];
+              }}
             />
-            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/70 via-ocean/60 to-midnight/75" />
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-r from-amber-900/40 via-orange-800/30 to-amber-800/40" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <div className="mb-4 storefront-hero-text">
-              <BeautySpaLogo className="scale-90 sm:scale-100" />
+            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+              <BeautySpaLogo className="h-24 w-auto sm:h-32 md:h-40" size={180} showText={false} />
             </div>
-            <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
-              Tana's Beauty Boost Spa · Wellness 2026
-            </span>
-            <h1 className="storefront-hero-text font-display text-4xl leading-tight sm:text-5xl" style={{ animationDelay: '0.2s' }}>
-              Rejuvenate your senses with ocean-inspired luxury treatments.
+            <div className="storefront-hero-text mb-6 w-full max-w-4xl mx-auto" style={{ animationDelay: '0.1s' }}>
+              <div className="rounded-xl border border-white/30 bg-white/10 backdrop-blur-md px-6 py-3 flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+                  TANA'S BEAUTY BOOST SPA
+                </span>
+                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+                  WELLNESS 2026
+                </span>
+              </div>
+            </div>
+            <h1 
+              className="storefront-hero-text font-serif text-5xl sm:text-6xl md:text-7xl font-bold leading-tight" 
+              style={{ 
+                animationDelay: '0.2s',
+                background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 4px 8px rgba(217, 119, 6, 0.4))',
+                textShadow: '0 2px 4px rgba(217, 119, 6, 0.3)',
+              }}
+            >
+              Tana's Beauty Boost Spa
             </h1>
             <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
               Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
             </p>
             <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
-              <Button onClick={() => handleShowService(spaServices[0], 'book')}>Book Treatment</Button>
-              <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
+              <Button 
+                onClick={() => {
+                  if (allServices && allServices.length > 0) {
+                    handleShowService(allServices[0], 'book');
+                  }
+                }}
+              >
+                Book Treatment
+              </Button>
+              <Button 
+                variant="secondary"
+                onClick={() => setIsBookingOpen(true)}
+              >
                 View Itinerary
               </Button>
             </div>
@@ -329,8 +431,8 @@ export function BeautySpaStorefront({ onClose }) {
                   const isActive = activeCategory === category;
                   const categoryCount =
                     category === 'All'
-                      ? spaServices.length
-                      : spaServices.filter((service) => service.serviceCategory === category).length;
+                      ? (allServices || []).length
+                      : (allServices || []).filter((service) => service.serviceCategory === category).length;
 
                   return (
                     <button
@@ -381,21 +483,47 @@ export function BeautySpaStorefront({ onClose }) {
           </div>
 
           <div ref={servicesGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
-            {filteredServices.map((service, index) => (
-              <div
-                key={service.id}
-                className="storefront-card"
-                style={{
-                  animationDelay: `${index * 0.1}s`,
-                }}
-              >
-                <ServiceCard
-                  service={service}
-                  onViewDetails={(selected) => handleShowService(selected, 'view')}
-                  onBook={(selected) => handleShowService(selected, 'book')}
-                />
+            {servicesLoading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
+                <p className="text-white/60">Loading spa services...</p>
               </div>
-            ))}
+            ) : servicesError ? (
+              <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+                <p className="text-red-200 font-semibold">Error loading services</p>
+                <p className="mt-2 text-sm text-red-200/70">{servicesError}</p>
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                <p className="text-white/60">No services found in this category.</p>
+              </div>
+            ) : (
+              filteredServices.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="storefront-card"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                  }}
+                >
+                  <ServiceCard
+                    service={service}
+                    onViewDetails={(selected) => handleShowService(selected, 'view')}
+                    onBook={(selected) => handleShowService(selected, 'book')}
+                  />
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -407,8 +535,26 @@ export function BeautySpaStorefront({ onClose }) {
           <p className="mt-4 text-base text-white/80">
             Contact our spa concierge to customize a treatment package tailored to your wellness needs.
           </p>
+          <div className="mt-6 mb-4 flex flex-wrap justify-center gap-3 text-sm text-white/70">
+            <a href="tel:+27788637252" className="flex items-center gap-2 hover:text-brand-200 transition-colors">
+              <span>📞</span>
+              <span>+27 788637252</span>
+            </a>
+            <span className="text-white/30">•</span>
+            <a href="mailto:Tanasbeautyboost@gmail.com" className="flex items-center gap-2 hover:text-brand-200 transition-colors">
+              <span>📧</span>
+              <span>Tana'sbeautyboost@gmail.com</span>
+            </a>
+          </div>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button onClick={() => showNotification('Concierge will reach out shortly with package details.')}>Contact Spa Concierge</Button>
+            <Button onClick={() => {
+              const email = 'Tanasbeautyboost@gmail.com';
+              const subject = encodeURIComponent('Spa Booking Inquiry');
+              const body = encodeURIComponent('Hello, I would like to inquire about booking a spa treatment package.');
+              window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            }}>
+              Contact Spa Concierge
+            </Button>
             <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
               View Packages
             </Button>
@@ -431,6 +577,7 @@ export function BeautySpaStorefront({ onClose }) {
         onCancelBooking={handleCancelBooking}
         onClearBookings={handleClearBookings}
         onConfirmBookings={handleConfirmBookings}
+        isConfirming={isConfirming}
       />
 
       <CartNotification
@@ -438,7 +585,7 @@ export function BeautySpaStorefront({ onClose }) {
         isVisible={notification.isVisible}
         onClose={() => setNotification({ message: '', isVisible: false })}
       />
-    </div>
+    </ContainerScrollAnimation>
   );
 }
 

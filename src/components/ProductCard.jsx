@@ -39,7 +39,7 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
   };
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl bg-ocean/50 border border-white/8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-brand-400/40 hover:shadow-[0_20px_60px_rgba(29,160,230,0.3)]">
+    <article className="group relative flex flex-col overflow-hidden rounded-3xl bg-ocean/50 border border-white/8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-brand-400/40 hover:shadow-[0_20px_60px_rgba(29,160,230,0.3)]">
       <div className="relative h-56 overflow-hidden cursor-pointer" onClick={handleViewDetails}>
         <img
           src={imageSrc}
@@ -70,27 +70,34 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-4 p-6">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-brand-300 transition-colors group-hover:text-brand-200">{product.category}</p>
-          <h3 className="mt-2 font-display text-xl text-white transition-all group-hover:text-brand-100">{product.name}</h3>
-          <p className="mt-2 text-sm text-white/70 leading-relaxed transition-colors group-hover:text-white/80">{product.description}</p>
-        </div>
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 p-6 min-h-[200px]">
+        {/* Top row: Price and View Details */}
         <div className="flex items-center justify-between">
-          <span className="text-lg font-semibold text-white">{product.price}</span>
-            <Button variant="secondary" onClick={handleViewDetails}>
-              View Details
-            </Button>
-          </div>
+          <span className="text-xl font-bold text-white">
+            {product.price ? (
+              typeof product.price === 'string' ? product.price : `$${Number(product.price).toFixed(2)}`
+            ) : product.basePrice ? (
+              `$${Number(product.basePrice).toFixed(2)}`
+            ) : (
+              <span className="text-white/60">Price unavailable</span>
+            )}
+          </span>
+          <Button variant="secondary" onClick={handleViewDetails} className="text-xs px-3 py-1.5">
+            View Details
+          </Button>
+        </div>
+        
+        {/* Main Add to Cart Button */}
+        <div className="flex-1 flex items-end">
           <Button
             onClick={handleAddToCart}
             disabled={isAdding}
             className="w-full justify-center"
+            aria-label={`Add ${product.name} to cart`}
           >
             {isAdding ? (
               <>
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path
                     className="opacity-75"

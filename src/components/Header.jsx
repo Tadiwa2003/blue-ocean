@@ -65,29 +65,6 @@ export function Header({ onSignInClick, onSignUpClick, onViewStorefront, onViewS
           )}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
-          <div className="relative group">
-            <Button variant="ghost" onClick={onViewStorefront}>
-              Storefronts
-            </Button>
-            {onViewSpaStorefront && (
-              <div className="invisible absolute right-0 top-full mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-ocean/95 p-2 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={onViewStorefront}
-                  className="w-full rounded-xl px-4 py-2 text-left text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
-                >
-                  🛍️ Products Storefront
-                </button>
-                <button
-                  type="button"
-                  onClick={onViewSpaStorefront}
-                  className="w-full rounded-xl px-4 py-2 text-left text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
-                >
-                  💆 Spa Storefront
-                </button>
-              </div>
-            )}
-          </div>
           <Button variant="ghost" onClick={onSignInClick}>
             Log in
           </Button>

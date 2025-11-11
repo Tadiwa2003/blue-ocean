@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { highlightProducts } from '../data/products.js';
+import { useProducts } from '../hooks/useProducts.js';
 import { ProductCard } from '../components/ProductCard.jsx';
 import { ProductDetailsModal } from '../components/ProductDetailsModal.jsx';
 import { Cart } from '../components/Cart.jsx';
@@ -11,6 +11,8 @@ import { ContactModal } from '../components/ContactModal.jsx';
 import { Button } from '../components/Button.jsx';
 import { Logo } from '../components/Logo.jsx';
 import { Phone } from 'lucide-react';
+import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
+import { motion } from 'framer-motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,10 +67,13 @@ export function Storefront({ onClose }) {
     }),
     [],
   );
+  // Fetch products from backend
+  const { products: allProducts, loading: productsLoading, error: productsError } = useProducts();
+  
   // Filter out Beauty Spa Services - this is for products only
   const productItems = useMemo(
-    () => highlightProducts.filter((p) => p.category !== 'Beauty Spa Services'),
-    []
+    () => (allProducts || []).filter((p) => p.category !== 'Beauty Spa Services'),
+    [allProducts]
   );
 
   const categoryCounts = useMemo(() => {
@@ -111,8 +116,15 @@ export function Storefront({ onClose }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Cart state
-  const [cartItems, setCartItems] = useState([]);
+  // Cart state - load from localStorage on mount
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('blueOceanCart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -136,20 +148,42 @@ export function Storefront({ onClose }) {
 
   // Cart functions
   const addToCart = (product, color = '', size = '') => {
-    const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
-    const newItem = {
-      cartId,
-      ...product,
-      color,
-      size,
-      quantity: 1,
-    };
-    setCartItems((prev) => [...prev, newItem]);
-    const variantText = [color, size].filter(Boolean).join(', ');
-    const message = variantText 
-      ? `Added to cart: ${product.name} (${variantText})`
-      : `Added to cart: ${product.name}`;
-    showNotification(message);
+    // Check if item with same product ID, color, and size already exists
+    const existingItemIndex = cartItems.findIndex(
+      (item) => item.id === product.id && item.color === color && item.size === size
+    );
+
+    if (existingItemIndex >= 0) {
+      // Item exists, increment quantity
+      setCartItems((prev) =>
+        prev.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+      const variantText = [color, size].filter(Boolean).join(', ');
+      const message = variantText 
+        ? `Updated quantity: ${product.name} (${variantText})`
+        : `Updated quantity: ${product.name}`;
+      showNotification(message);
+    } else {
+      // New item, add to cart
+      const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
+      const newItem = {
+        cartId,
+        ...product,
+        color,
+        size,
+        quantity: 1,
+      };
+      setCartItems((prev) => [...prev, newItem]);
+      const variantText = [color, size].filter(Boolean).join(', ');
+      const message = variantText 
+        ? `Added to cart: ${product.name} (${variantText})`
+        : `Added to cart: ${product.name}`;
+      showNotification(message);
+    }
   };
 
   const removeFromCart = (cartId) => {
@@ -168,8 +202,23 @@ export function Storefront({ onClose }) {
 
   const clearCart = () => {
     setCartItems([]);
+    // Clear cart from localStorage
+    try {
+      localStorage.removeItem('blueOceanCart');
+    } catch (error) {
+      console.error('Failed to clear cart from localStorage:', error);
+    }
     showNotification('Cart cleared');
   };
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('blueOceanCart', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Failed to save cart to localStorage:', error);
+    }
+  }, [cartItems]);
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -179,6 +228,12 @@ export function Storefront({ onClose }) {
   const handleOrderComplete = (orderData) => {
     setCartItems([]);
     setIsCheckoutOpen(false);
+    // Clear cart from localStorage after successful order
+    try {
+      localStorage.removeItem('blueOceanCart');
+    } catch (error) {
+      console.error('Failed to clear cart from localStorage:', error);
+    }
     showNotification(`Order ${orderData.orderId} placed successfully!`);
   };
 
@@ -585,7 +640,7 @@ export function Storefront({ onClose }) {
   }, [paginatedProducts]);
 
   return (
-    <div className="min-h-screen bg-midnight text-white">
+    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <Logo className="hidden sm:flex" />
@@ -648,6 +703,9 @@ export function Storefront({ onClose }) {
             <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
+            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+              <Logo className="h-24 w-auto sm:h-32 md:h-40" />
+            </div>
             <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
               Blue Ocean Capsule · Resort 2026
             </span>
@@ -708,7 +766,7 @@ export function Storefront({ onClose }) {
               <div className="no-scrollbar relative -mx-2 flex gap-3 overflow-x-auto px-2 pb-1">
                 {categories.map((cat) => {
                   const isActive = activeCategory === cat;
-                  const count = cat === 'All' ? highlightProducts.length : (categoryCounts[cat] || 0);
+                  const count = cat === 'All' ? productItems.length : (categoryCounts[cat] || 0);
                   return (
                     <button
                       key={cat}
@@ -746,26 +804,52 @@ export function Storefront({ onClose }) {
           </div>
 
           {/* Filtered Grid */}
-          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
-            {paginatedProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className="storefront-card"
-                style={{
-                  animationDelay: `${index * 0.1}s`,
-                }}
-              >
-                <ProductCard
-                  product={product}
-                  onViewDetails={handleViewProductDetails}
-                  onAddToCart={(product) => addToCart(product)}
-                />
+          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr" style={{ perspective: '1000px' }}>
+            {productsLoading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20">
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
+                <p className="text-white/60">Loading products...</p>
               </div>
-            ))}
+            ) : productsError ? (
+              <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+                <p className="text-red-200 font-semibold">Error loading products</p>
+                <p className="mt-2 text-sm text-red-200/70">{productsError}</p>
+              </div>
+            ) : paginatedProducts.length === 0 ? (
+              <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                <p className="text-white/60">No products found in this category.</p>
+              </div>
+            ) : (
+              paginatedProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="storefront-card"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                  }}
+                >
+                  <ProductCard
+                    product={product}
+                    onViewDetails={handleViewProductDetails}
+                    onAddToCart={(product) => addToCart(product)}
+                  />
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {!productsLoading && !productsError && totalPages > 1 && (
             <div className="mt-12 flex items-center justify-center gap-4">
               {/* Previous Button */}
               <button
@@ -1059,6 +1143,6 @@ export function Storefront({ onClose }) {
         isVisible={notification.isVisible}
         onClose={() => setNotification({ message: '', isVisible: false })}
       />
-    </div>
+    </ContainerScrollAnimation>
   );
 }

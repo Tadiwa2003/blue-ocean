@@ -32,6 +32,7 @@ export function BookingDrawer({
   onCancelBooking,
   onClearBookings,
   onConfirmBookings,
+  isConfirming = false,
 }) {
   useEffect(() => {
     if (!isOpen) return;
@@ -98,13 +99,14 @@ export function BookingDrawer({
               {bookings.length} {bookings.length === 1 ? 'service reserved' : 'services reserved'}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition hover:bg-white/20 hover:text-white"
+            className="uppercase tracking-[0.2em]"
           >
             Close
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -172,13 +174,14 @@ export function BookingDrawer({
                       <span>Therapist</span>
                       <span className="font-semibold text-white/75">{booking.therapistLevel}</span>
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
                       onClick={() => onCancelBooking?.(booking.bookingId)}
-                      className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:text-brand-200"
+                      className="text-xs uppercase tracking-[0.18em]"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -196,11 +199,20 @@ export function BookingDrawer({
               Taxes and gratuity are settled in-spa. A concierge will confirm within 15 minutes.
             </div>
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={onClearBookings} className="flex-1">
+              <Button 
+                variant="secondary" 
+                onClick={onClearBookings} 
+                className="flex-1"
+                disabled={isConfirming}
+              >
                 Clear All
               </Button>
-              <Button onClick={onConfirmBookings} className="flex-1">
-                Confirm Appointments
+              <Button 
+                onClick={onConfirmBookings} 
+                className="flex-1"
+                disabled={isConfirming}
+              >
+                {isConfirming ? 'Confirming...' : 'Confirm Appointments'}
               </Button>
             </div>
           </div>

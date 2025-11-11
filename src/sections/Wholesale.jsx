@@ -19,7 +19,7 @@ const tiers = [
   },
 ];
 
-export function Wholesale() {
+export function Wholesale({ onBookDiscoveryCall }) {
   return (
     <section id="wholesale" className="mx-auto mt-24 max-w-6xl px-6">
       <div className="grid gap-12 rounded-[36px] border border-white/10 bg-white/[0.02] p-10 backdrop-blur-xl lg:grid-cols-[0.6fr,1fr]">
@@ -36,7 +36,18 @@ export function Wholesale() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-display text-xl text-white">{tier.name}</h3>
-                <Button variant="ghost" className="text-xs uppercase tracking-[0.3em]">
+                <Button 
+                  variant="ghost" 
+                  className="text-xs uppercase tracking-[0.3em]"
+                  onClick={() => {
+                    // Show tier details - could expand accordion or show modal
+                    // For now, scroll to contact section for more info
+                    const contactSection = document.getElementById('cta');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
                   View Details
                 </Button>
               </div>
@@ -57,7 +68,21 @@ export function Wholesale() {
                 Co-create a limited tide drop for your next activation.
               </p>
             </div>
-            <Button>Book Discovery Call</Button>
+            <Button 
+              onClick={() => {
+                if (onBookDiscoveryCall) {
+                  onBookDiscoveryCall();
+                } else {
+                  // Fallback: scroll to contact section
+                  const contactSection = document.getElementById('cta');
+                  if (contactSection) {
+                    contactSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
+            >
+              Book Discovery Call
+            </Button>
           </div>
         </div>
       </div>
