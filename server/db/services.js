@@ -1,7 +1,11 @@
 import Service from '../models/Service.js';
 
-export const getAllServices = async () => {
-  return await Service.find({}).sort({ createdAt: -1 }).lean();
+export const getAllServices = async (userId = null, isOwner = false) => {
+  // If userId is provided and user is not owner, ONLY show services with that userId
+  // This excludes platform services (without userId) from user dashboards
+  // Owners see all services (including platform services without userId)
+  const query = userId && !isOwner ? { userId } : {};
+  return await Service.find(query).sort({ createdAt: -1 }).lean();
 };
 
 export const getServiceById = async (id) => {

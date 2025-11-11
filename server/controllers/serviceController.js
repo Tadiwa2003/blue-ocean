@@ -5,7 +5,25 @@ import crypto from 'crypto';
 // Get all services
 export const getServices = async (req, res) => {
   try {
-    const services = await getAllServices();
+    // If user is authenticated, filter by role
+    if (req.user) {
+      const userRole = req.user.role;
+      const userId = req.user.id;
+      const isOwner = userRole === 'owner';
+      
+      // Owners see all services, regular users see ONLY their own (excludes platform services)
+      const services = await getAllServices(userId, isOwner);
+      
+      return res.json({
+        success: true,
+        data: {
+          services,
+        },
+      });
+    }
+    
+    // Public access (for storefronts) - show all services
+    const services = await getAllServices(null, false);
     res.json({
       success: true,
       data: {
@@ -81,9 +99,13 @@ export const createService = async (req, res) => {
     
     const id = `${baseSlug}-${crypto.randomUUID().substring(0, 8)}`;
 
+    // Associate service with user (owners can create platform services without userId)
+    const userId = req.user?.role === 'owner' ? null : req.user?.id;
+    
     // Create service in database
     const createdService = await createServiceDB({
       id,
+      userId,
       name: name.trim(),
       serviceCategory,
       description: description || '',

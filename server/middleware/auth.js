@@ -39,6 +39,28 @@ export const authenticateToken = (req, res, next) => {
   }
 };
 
+// Optional authentication - sets req.user if token is valid, but doesn't fail if no token
+export const optionalAuth = (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (token) {
+      jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (!err && user) {
+          req.user = user;
+        }
+        next();
+      });
+    } else {
+      next();
+    }
+  } catch (error) {
+    // On error, continue without authentication
+    next();
+  }
+};
+
 // Check if user has required role
 export const requireRole = (...roles) => {
   return (req, res, next) => {

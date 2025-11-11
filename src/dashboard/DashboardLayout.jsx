@@ -15,6 +15,7 @@ import { DonutChart } from '../components/ui/DonutChart.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api.js';
 import { SubscriptionPage } from '../pages/SubscriptionPage.jsx';
+import { CreateStorefrontModal } from '../components/CreateStorefrontModal.jsx';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -270,16 +271,29 @@ const spaSalesBreakdown = [
 ];
 
 function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
+  const isOwner = currentUser?.role === 'owner';
+  
+  // Filter nav items based on user role
+  const filteredNavItems = useMemo(() => {
+    if (isOwner) {
+      return navItems; // Owner sees all items
+    }
+    // Non-owners don't see bookings, subscription, reports, analytics
+    return navItems.filter(item => 
+      !['bookings', 'subscription', 'reports', 'analytics'].includes(item.id)
+    );
+  }, [isOwner]);
+
   return (
     <aside className="relative flex w-full max-w-[230px] flex-col gap-8 rounded-[32px] border border-white/10 bg-ocean/75 px-4 py-6 backdrop-blur-xl">
       <div className="px-2">
         <Logo className="text-sm" />
         <p className="mt-4 text-xs uppercase tracking-[0.3em] text-white/40">Signed in as</p>
         <p className="mt-1 text-sm font-semibold text-white">{currentUser?.name ?? 'Merchant'}</p>
-        <p className="text-xs text-white/50">{currentUser?.role === 'owner' ? 'Owner · Full access' : 'Team member'}</p>
+        <p className="text-xs text-white/50">{currentUser?.role === 'owner' ? 'Owner · Full access' : 'Merchant · Your storefront'}</p>
       </div>
       <nav className="flex flex-1 flex-col gap-2">
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -435,9 +449,77 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
 }
 
 function MetricRow() {
+  const { products } = useProducts();
+  const { services } = useServices();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.orders.getUserOrders();
+        if (response.success) {
+          setOrders(response.data.orders || []);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  const metrics = useMemo(() => {
+    const totalSales = orders.reduce((sum, order) => {
+      const amount = typeof order.total === 'string' 
+        ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
+        : parseFloat(order.total) || 0;
+      return sum + amount;
+    }, 0);
+    
+    const productCount = products?.length || 0;
+    const serviceCount = services?.length || 0;
+    const totalItems = productCount + serviceCount;
+    const orderCount = orders.length;
+
+    return [
+      {
+        label: 'Total Sales',
+        value: `$${totalSales.toFixed(2)}`,
+        icon: '💠',
+        tone: 'from-brand-500/30 to-brand-500/10',
+      },
+      {
+        label: 'Products & Services',
+        value: totalItems.toString(),
+        icon: '🧺',
+        tone: 'from-emerald-500/30 to-emerald-500/10',
+      },
+      {
+        label: 'Orders',
+        value: orderCount.toString(),
+        icon: '🛒',
+        tone: 'from-amber-500/30 to-amber-500/10',
+      },
+    ];
+  }, [orders, products, services]);
+
+  if (loading) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      {metricSummary.map((metric) => (
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-3xl border border-white/10 bg-gradient-to-br from-ocean/50 to-ocean/30 px-5 py-4 animate-pulse">
+            <div className="h-20"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {metrics.map((metric) => (
         <div
           key={metric.label}
           className={`rounded-3xl border border-white/10 bg-gradient-to-br ${metric.tone} px-5 py-4 text-white`}
@@ -453,13 +535,94 @@ function MetricRow() {
   );
 }
 
-function AnalyticsSummary() {
+function AnalyticsSummary({ isOwner }) {
+  const { products } = useProducts();
+  const { services } = useServices();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.orders.getUserOrders();
+        if (response.success) {
+          setOrders(response.data.orders || []);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  const analytics = useMemo(() => {
+    if (isOwner) {
+      // Owner sees platform analytics (hardcoded for now, can be replaced with API)
+      return analyticsTiles;
+    }
+
+    // User sees their own analytics
+    const totalSales = orders.reduce((sum, order) => {
+      const amount = typeof order.total === 'string' 
+        ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
+        : parseFloat(order.total) || 0;
+      return sum + amount;
+    }, 0);
+
+    const orderCount = orders.length;
+    const productCount = products?.length || 0;
+    const serviceCount = services?.length || 0;
+    const totalItems = productCount + serviceCount;
+
+    // Calculate growth (simplified - compare with previous period)
+    const previousPeriodSales = totalSales * 0.85; // Simulated
+    const salesGrowth = previousPeriodSales > 0 
+      ? ((totalSales - previousPeriodSales) / previousPeriodSales * 100).toFixed(1)
+      : 0;
+
+    return [
+      {
+        label: 'Gross Volume',
+        value: `$${totalSales.toFixed(2)}`,
+        delta: salesGrowth > 0 ? `+${salesGrowth}%` : `${salesGrowth}%`,
+        icon: '📈',
+        tone: 'from-brand-500/30 to-brand-500/10',
+      },
+      {
+        label: 'Total Orders',
+        value: orderCount.toString(),
+        delta: '+0%', // Can be calculated from historical data
+        icon: '🛍️',
+        tone: 'from-emerald-500/30 to-emerald-500/10',
+      },
+      {
+        label: 'Revenue',
+        value: `$${totalSales.toFixed(2)}`,
+        delta: salesGrowth > 0 ? `+${salesGrowth}%` : `${salesGrowth}%`,
+        icon: '💸',
+        tone: 'from-amber-500/30 to-amber-500/10',
+      },
+    ];
+  }, [orders, products, services, isOwner]);
+
+  if (loading) {
+    return (
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+        <div className="text-center text-white/60 py-8">Loading analytics...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <h2 className="font-display text-2xl">Analytics Overview</h2>
-          <p className="text-sm text-white/70">Track performance trends and momentum across capsules.</p>
+          <p className="text-sm text-white/70">
+            {isOwner ? 'Platform performance trends and momentum.' : 'Track your storefront performance trends.'}
+          </p>
         </div>
         <div className="ml-auto flex flex-wrap gap-2">
           <span className="rounded-full border border-brand-400/40 bg-brand-500/20 px-3 py-1 text-xs font-semibold">
@@ -467,13 +630,10 @@ function AnalyticsSummary() {
           </span>
           <span className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/60">Last 7 days</span>
           <span className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/60">Monthly</span>
-          <button className="rounded-full border border-white/20 px-3 py-1 text-xs text-white/70 hover:border-brand-400/60 hover:text-white">
-            View transactions
-          </button>
         </div>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {analyticsTiles.map((tile) => (
+        {analytics.map((tile) => (
           <div
             key={tile.label}
             className={`rounded-3xl border border-white/10 bg-gradient-to-br ${tile.tone} px-5 py-4`}
@@ -483,7 +643,9 @@ function AnalyticsSummary() {
               <div className="text-xs uppercase tracking-[0.3em] text-white/60">{tile.label}</div>
             </div>
             <p className="mt-4 text-2xl font-semibold text-white">{tile.value}</p>
-            <p className="mt-2 text-xs text-emerald-300">{tile.delta} from last period</p>
+            <p className={`mt-2 text-xs ${tile.delta.startsWith('+') ? 'text-emerald-300' : 'text-rose-300'}`}>
+              {tile.delta} from last period
+            </p>
           </div>
         ))}
       </div>
@@ -491,14 +653,77 @@ function AnalyticsSummary() {
   );
 }
 
-function SalesTrend() {
+function SalesTrend({ isOwner }) {
   const [timeframe, setTimeframe] = useState('Week');
+  const [orders, setOrders] = useState([]);
   
-  const currentData = salesTrendData[timeframe];
+  useEffect(() => {
+    if (!isOwner) {
+      const fetchOrders = async () => {
+        try {
+          const response = await api.orders.getUserOrders();
+          if (response.success) {
+            setOrders(response.data.orders || []);
+          }
+        } catch (error) {
+          console.error('Error fetching orders:', error);
+        }
+      };
+      fetchOrders();
+    }
+  }, [isOwner]);
 
-  const totalSales = currentData.reduce((sum, item) => sum + item.sales, 0);
-  const totalProfit = currentData.reduce((sum, item) => sum + item.profit, 0);
-  const totalOrders = currentData.reduce((sum, item) => sum + item.orders, 0);
+  // For owner, use platform data; for users, calculate from their orders
+  const currentData = useMemo(() => {
+    if (isOwner) {
+      return salesTrendData[timeframe];
+    }
+
+    // Calculate user's sales trend from their orders
+    const now = new Date();
+    const ordersByPeriod = {};
+
+    orders.forEach((order) => {
+      const orderDate = new Date(order.createdAt || order.orderDate || now);
+      const amount = typeof order.total === 'string' 
+        ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
+        : parseFloat(order.total) || 0;
+
+      let periodKey;
+      if (timeframe === 'Week') {
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        periodKey = dayNames[orderDate.getDay()];
+      } else if (timeframe === 'Month') {
+        const weekNum = Math.ceil(orderDate.getDate() / 7);
+        periodKey = `Week ${weekNum}`;
+      } else {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        periodKey = monthNames[orderDate.getMonth()];
+      }
+
+      if (!ordersByPeriod[periodKey]) {
+        ordersByPeriod[periodKey] = { sales: 0, profit: 0, orders: 0 };
+      }
+      ordersByPeriod[periodKey].sales += amount;
+      ordersByPeriod[periodKey].profit += amount * 0.6; // Assume 60% profit margin
+      ordersByPeriod[periodKey].orders += 1;
+    });
+
+    // Convert to array format
+    return Object.entries(ordersByPeriod).map(([period, data]) => ({
+      period,
+      sales: Math.round(data.sales),
+      profit: Math.round(data.profit),
+      orders: data.orders,
+    }));
+  }, [orders, timeframe, isOwner]);
+  
+  const defaultData = salesTrendData[timeframe];
+  const displayData = currentData.length > 0 ? currentData : defaultData;
+
+  const totalSales = displayData.reduce((sum, item) => sum + item.sales, 0);
+  const totalProfit = displayData.reduce((sum, item) => sum + item.profit, 0);
+  const totalOrders = displayData.reduce((sum, item) => sum + item.orders, 0);
 
   // Calculate percentage changes (simulated based on timeframe)
   const getChangeForMetric = (metric) => {
@@ -526,7 +751,7 @@ function SalesTrend() {
   };
 
   // Latest data point for stats
-  const latestData = currentData[currentData.length - 1];
+  const latestData = displayData[displayData.length - 1] || { sales: 0, profit: 0, orders: 0 };
 
   return (
     <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/80 to-ocean/60 p-8 text-white shadow-xl">
@@ -598,7 +823,7 @@ function SalesTrend() {
         >
           <RechartsAreaChart
             accessibilityLayer
-            data={currentData}
+            data={displayData}
             margin={{
               top: 10,
               bottom: 10,
@@ -716,7 +941,66 @@ function SalesTrend() {
   );
 }
 
-function RecentOrders() {
+function RecentOrders({ onViewAll }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.orders.getUserOrders();
+        if (response.success) {
+          setOrders(response.data.orders || []);
+        } else {
+          setError('Failed to load orders');
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError(err.message || 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  const recentOrdersList = useMemo(() => {
+    return orders
+      .sort((a, b) => new Date(b.createdAt || b.orderDate) - new Date(a.createdAt || a.orderDate))
+      .slice(0, 5)
+      .map((order) => {
+        const orderDate = order.createdAt || order.orderDate;
+        const date = orderDate ? new Date(orderDate) : new Date();
+        const formattedDate = date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric',
+          year: 'numeric'
+        });
+        const formattedTime = date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        const total = typeof order.total === 'string' 
+          ? order.total 
+          : `$${parseFloat(order.total || 0).toFixed(2)}`;
+        
+        const itemCount = order.items?.length || order.itemCount || 0;
+        const customerName = order.customerName || order.customer || 'Guest';
+        const status = order.status || 'pending';
+        
+        return {
+          id: order._id || order.id,
+          customer: customerName,
+          items: itemCount,
+          date: `${formattedDate} · ${formattedTime}`,
+          amount: total,
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+        };
+      });
+  }, [orders]);
+
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
       <div className="flex items-center justify-between">
@@ -724,10 +1008,28 @@ function RecentOrders() {
           <h2 className="font-display text-2xl">Recent Orders</h2>
           <p className="text-sm text-white/70">Latest transactions and guest activity.</p>
         </div>
-        <button className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/70 hover:border-brand-400/60 hover:text-white">
+        {onViewAll && (
+          <button 
+            onClick={onViewAll}
+            className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/70 hover:border-brand-400/60 hover:text-white"
+          >
           View all
         </button>
+        )}
       </div>
+      {loading ? (
+        <div className="mt-6 text-center text-white/60 py-8">
+          Loading orders...
+        </div>
+      ) : error && recentOrdersList.length === 0 ? (
+        <div className="mt-6 text-center text-white/60 py-8">
+          {error}
+        </div>
+      ) : recentOrdersList.length === 0 ? (
+        <div className="mt-6 text-center text-white/60 py-8">
+          No orders yet. Orders will appear here after customers make purchases.
+        </div>
+      ) : (
       <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
         <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
           <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
@@ -740,8 +1042,8 @@ function RecentOrders() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {recentOrders.map((order) => (
-              <tr key={`${order.customer}-${order.date}`} className="hover:bg-white/5">
+              {recentOrdersList.map((order) => (
+                <tr key={order.id} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-white">{order.customer}</td>
                 <td className="px-4 py-3">{order.items}</td>
                 <td className="px-4 py-3">{order.date}</td>
@@ -749,7 +1051,7 @@ function RecentOrders() {
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      order.status === 'Paid'
+                        order.status.toLowerCase() === 'paid' || order.status.toLowerCase() === 'completed'
                         ? 'bg-emerald-500/20 text-emerald-200'
                         : 'bg-amber-500/20 text-amber-200'
                     }`}
@@ -762,19 +1064,63 @@ function RecentOrders() {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }
 
 function OrdersPanel() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.orders.getUserOrders();
+        if (response.success) {
+          setOrders(response.data.orders || []);
+        } else {
+          setError('Failed to load orders');
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError(err.message || 'Failed to load orders');
+        // Fallback to static data on error
+        setOrders(ordersTable);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Calculate metrics from orders
+  const metrics = useMemo(() => {
+    const totalValue = orders.reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'paid').length;
+    const unpaidOrders = orders.filter(o => o.status === 'pending' || o.status === 'unpaid').length;
+
+    return {
+      totalValue: `$${totalValue.toFixed(2)}`,
+      totalOrders: totalOrders.toString(),
+      completedOrders: completedOrders.toString(),
+      unpaidOrders: unpaidOrders.toString(),
+    };
+  }, [orders]);
+
   return (
     <div className="space-y-6 text-white">
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: 'Total order value', value: '$63,000.00' },
-          { label: 'Total orders', value: '34' },
-          { label: 'Completed orders', value: '23' },
-          { label: 'Unpaid orders', value: '45' },
+          { label: 'Total order value', value: metrics.totalValue },
+          { label: 'Total orders', value: metrics.totalOrders },
+          { label: 'Completed orders', value: metrics.completedOrders },
+          { label: 'Unpaid orders', value: metrics.unpaidOrders },
         ].map((metric) => (
           <div key={metric.label} className="rounded-3xl border border-white/10 bg-ocean/65 px-5 py-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">{metric.label}</p>
@@ -789,54 +1135,87 @@ function OrdersPanel() {
             <p className="text-sm text-white/70">Track transactions, fulfillment status, and outstanding payments.</p>
           </div>
         </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-white/60">Loading orders...</div>
+          </div>
+        ) : error && orders.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-red-300">{error}</div>
+          </div>
+        ) : (
+          <>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
             <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
               <tr>
+                    <th className="px-6 py-4">Order Number</th>
                 <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4">Items</th>
                 <th className="px-6 py-4">Total</th>
                 <th className="px-6 py-4">Date/Time</th>
-                <th className="px-6 py-4">Amount</th>
                 <th className="px-6 py-4">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {ordersTable.map((order, index) => (
-                <tr key={`${order.customer}-${index}`} className="hover:bg-white/5">
-                  <td className="px-6 py-4 text-white">{order.customer}</td>
-                  <td className="px-6 py-4">{order.total}</td>
-                  <td className="px-6 py-4">{order.datetime}</td>
-                  <td className="px-6 py-4">{order.amount}</td>
+                  {orders.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-8 text-center text-white/60">
+                        No orders found. Orders will appear here after checkout.
+                      </td>
+                    </tr>
+                  ) : (
+                    orders.map((order) => {
+                      const customerName = order.shippingInfo 
+                        ? `${order.shippingInfo.firstName || ''} ${order.shippingInfo.lastName || ''}`.trim() || 'Guest'
+                        : 'Guest';
+                      const orderDate = order.createdAt 
+                        ? new Date(order.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', month: 'short', day: 'numeric', 
+                            hour: '2-digit', minute: '2-digit' 
+                          })
+                        : 'N/A';
+                      const itemCount = order.items ? order.items.length : 0;
+                      
+                      return (
+                        <tr key={order.id || order.orderNumber} className="hover:bg-white/5">
+                          <td className="px-6 py-4 text-white font-mono text-xs">{order.orderNumber || order.id}</td>
+                          <td className="px-6 py-4 text-white">{customerName}</td>
+                          <td className="px-6 py-4">{itemCount} item{itemCount !== 1 ? 's' : ''}</td>
+                          <td className="px-6 py-4">${parseFloat(order.total || 0).toFixed(2)}</td>
+                          <td className="px-6 py-4">{orderDate}</td>
                   <td className="px-6 py-4">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        order.status === 'Paid'
+                                order.status === 'completed' || order.status === 'paid'
                           ? 'bg-emerald-500/20 text-emerald-200'
-                          : 'bg-amber-500/20 text-amber-200'
+                                  : order.status === 'pending'
+                                  ? 'bg-amber-500/20 text-amber-200'
+                                  : 'bg-red-500/20 text-red-200'
                       }`}
                     >
-                      {order.status}
+                              {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Pending'}
                     </span>
                   </td>
                 </tr>
-              ))}
+                      );
+                    })
+                  )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 text-xs text-white/50">
-          <span>919 results</span>
-          <div className="flex gap-2">
-            <button className="rounded-full border border-white/15 px-3 py-1 hover:text-white">Previous</button>
-            <button className="rounded-full border border-white/15 px-3 py-1 hover:text-white">Next</button>
+              <span>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</span>
           </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront }) {
-  const { products: allProducts, loading } = useProducts();
+function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, onProductAdded }) {
+  const { products: allProducts, loading, refresh } = useProducts();
   // Allow owners to add products even without subscription for testing/admin purposes
   const hasSubscription = !!subscription || isOwner;
   
@@ -865,7 +1244,9 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront }
       <div className="flex flex-col gap-4 border-b border-white/10 px-6 py-6 text-white sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl">Product Catalogue</h2>
-          <p className="text-sm text-white/60">Manage assortment, pricing, and availability.</p>
+          <p className="text-sm text-white/60">
+            {isOwner ? 'Manage platform product assortment, pricing, and availability.' : 'View your products and manage your storefront inventory.'}
+          </p>
         </div>
         <div className="flex gap-3">
           <Button 
@@ -895,12 +1276,14 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront }
           </Button>
           <Button
             onClick={onAddProduct}
-            disabled={!isOwner}
-            className={!isOwner ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
+            disabled={!hasSubscription}
+            className={!hasSubscription ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
             title={
-              !isOwner 
-                ? 'Only the Blue Ocean owner can add products'
-                : 'Create a new Blue Ocean product'
+              !hasSubscription 
+                ? 'Subscription required to add products'
+                : isOwner 
+                  ? 'Create a new Blue Ocean product'
+                  : 'Create a new product for your storefront'
             }
           >
             Add Product
@@ -945,37 +1328,247 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront }
   );
 }
 
-function StorefrontPanel() {
+function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, onNavigateToSubscription, currentUser }) {
+  const [userStorefronts, setUserStorefronts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const isOwner = currentUser?.role === 'owner';
+
+  useEffect(() => {
+    if (subscription) {
+      const fetchStorefronts = async () => {
+        try {
+          const response = await api.storefronts.getUserStorefronts();
+          if (response.success) {
+            setUserStorefronts(response.data.storefronts || []);
+          }
+        } catch (error) {
+          console.error('Error fetching storefronts:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchStorefronts();
+    } else {
+      setLoading(false);
+    }
+  }, [subscription]);
+
+  const handleStorefrontCreated = async (newStorefront) => {
+    // Refresh the storefronts list from the server to ensure we have the latest data
+    try {
+      const response = await api.storefronts.getUserStorefronts();
+      if (response.success) {
+        setUserStorefronts(response.data.storefronts || []);
+      } else {
+        // Fallback: add the new storefront to the list
+        setUserStorefronts((prev) => [newStorefront, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error refreshing storefronts:', error);
+      // Fallback: add the new storefront to the list
+      setUserStorefronts((prev) => [newStorefront, ...prev]);
+    }
+    setIsCreateModalOpen(false);
+  };
+
+  const handleViewUserStorefront = (storefront) => {
+    // Navigate to user's custom storefront
+    if (storefront.type === 'products' || storefront.type === 'mixed') {
+      onViewStorefront?.();
+    }
+    if (storefront.type === 'spa' || storefront.type === 'mixed') {
+      onViewSpaStorefront?.();
+    }
+  };
+
+  const platformStorefronts = [
+    {
+      id: 'platform-products',
+      name: 'Blue Ocean Products',
+      type: 'products',
+      isPlatform: true,
+      description: 'Our main products storefront showcasing all available products.',
+    },
+    {
+      id: 'platform-spa',
+      name: "Tana's Beauty Boost Spa",
+      type: 'spa',
+      isPlatform: true,
+      description: 'Our beauty spa storefront for booking services and treatments.',
+    },
+  ];
+
   return (
+    <>
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
-      <h2 className="font-display text-2xl">Storefront</h2>
-      <p className="mt-3 text-sm text-white/70">
-        Blueprint your digital storefront with curated hero spots, capsule rails, and editorial campaigns. Preview responsive
-        layouts before publishing to customers.
-      </p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {[
-          'Hero Modules · Resort Capsule, Editorial Film, Gift Guide',
-          'Content Blocks · Shoreline Journal, Maker Interviews, Scent Pairings',
-          'Conversion Tools · Floating CTA, Gift With Purchase, Loyalty Tiers',
-          'Publishing · Schedule updates and sync to in-store displays',
-        ].map((item) => (
-          <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-            {item}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="font-display text-2xl">Storefronts</h2>
+            <p className="mt-2 text-sm text-white/70">
+              Manage your custom storefronts and access platform storefronts.
+            </p>
+          </div>
+          {subscription && (
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-brand-500/80 hover:bg-brand-500"
+            >
+              + Create Storefront
+            </Button>
+          )}
+        </div>
+        
+        {!subscription ? (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-amber-500/10 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-200 mb-2">
+                  ⚠️ Subscription Required
+                </h3>
+                <p className="text-sm text-amber-200/80 mb-4">
+                  Subscribe to create and manage your own storefront. Once subscribed, you'll be able to:
+                </p>
+                <ul className="text-sm text-amber-200/80 space-y-2 mb-4">
+                  <li>✓ Create your own product storefront</li>
+                  <li>✓ Create your own beauty spa storefront</li>
+                  <li>✓ Customize your storefront design</li>
+                  <li>✓ Share your storefront with customers</li>
+                </ul>
+                {onNavigateToSubscription && (
+                  <Button
+                    onClick={onNavigateToSubscription}
+                    className="bg-amber-500/80 hover:bg-amber-500 text-white"
+                  >
+                    Subscribe Now
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Platform Storefronts - Only shown to owner */}
+            {isOwner && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-white mb-4">Platform Storefronts</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {platformStorefronts.map((storefront) => (
+                    <div key={storefront.id} className="rounded-xl border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-1">{storefront.name}</h4>
+                          <p className="text-xs text-white/60 mb-2">
+                            {storefront.type === 'products' ? '🛍️ Products' : storefront.type === 'spa' ? '💆 Beauty Spa' : '🛍️💆 Mixed'}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-brand-500/30 px-3 py-1 text-xs font-semibold text-brand-200">
+                          Platform
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/70 mb-4">{storefront.description}</p>
+                      <Button
+                        onClick={() => {
+                          if (storefront.type === 'products') {
+                            onViewStorefront?.();
+                          } else if (storefront.type === 'spa') {
+                            onViewSpaStorefront?.();
+                          }
+                        }}
+                        variant="secondary"
+                        className="w-full"
+                      >
+                        View Storefront
+                      </Button>
           </div>
         ))}
       </div>
     </div>
+            )}
+
+            {/* User Storefronts */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4">{isOwner ? 'Platform Storefronts' : 'Your Storefronts'}</h3>
+              {loading ? (
+                <div className="text-center text-white/60 py-8">Loading storefronts...</div>
+              ) : userStorefronts.length === 0 ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
+                  <p className="text-white/70 mb-4">You haven't created any storefronts yet.</p>
+                  <Button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-brand-500/80 hover:bg-brand-500"
+                  >
+                    Create Your First Storefront
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {userStorefronts.map((storefront) => (
+                    <div key={storefront._id || storefront.id} className="rounded-xl border border-white/10 bg-white/5 p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-1">{storefront.name}</h4>
+                          <p className="text-xs text-white/60 mb-2">
+                            {storefront.type === 'products' ? '🛍️ Products' : storefront.type === 'spa' ? '💆 Beauty Spa' : '🛍️💆 Mixed'}
+                          </p>
+                        </div>
+                        {storefront.isPublished && (
+                          <span className="rounded-full bg-emerald-500/30 px-2 py-1 text-xs font-semibold text-emerald-200">
+                            Published
+                          </span>
+                        )}
+                      </div>
+                      {storefront.design?.branding?.tagline && (
+                        <p className="text-sm text-white/70 mb-4">{storefront.design.branding.tagline}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleViewUserStorefront(storefront)}
+                          variant="secondary"
+                          className="flex-1 text-xs"
+                        >
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            // TODO: Open edit modal
+                            console.log('Edit storefront:', storefront);
+                          }}
+                          variant="ghost"
+                          className="text-xs"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      <CreateStorefrontModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleStorefrontCreated}
+      />
+    </>
   );
 }
 
-function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isOwner }) {
-  const { services: allServices, loading: servicesLoading } = useServices();
+function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isOwner, onServiceAdded }) {
+  const { services: allServices, loading: servicesLoading, refresh } = useServices();
   // Allow owners to add services even without subscription for testing/admin purposes
   const hasSubscription = !!subscription || isOwner;
   
+  // Filter services - users see their own, owner sees all
   const services = useMemo(
-    () => allServices || [],
+    () => {
+      // For now, all services are shown (no userId field in schema)
+      // In future, filter by userId: isOwner ? allServices : allServices.filter(s => s.userId === currentUserId)
+      return allServices || [];
+    },
     [allServices]
   );
 
@@ -1033,7 +1626,9 @@ function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isO
           <div>
             <h2 className="font-display text-2xl">Beauty Spa Services</h2>
             <p className="mt-2 text-sm text-white/70">
-              Manage your treatment menu, highlight premium rituals, and align spa merchandising with seasonal demand.
+              {isOwner 
+                ? 'Manage platform treatment menu, highlight premium rituals, and align spa merchandising with seasonal demand.'
+                : 'View your spa services and manage your beauty spa storefront offerings.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1041,8 +1636,8 @@ function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isO
               variant="secondary" 
               className="border-white/20" 
               onClick={onAddService}
-              disabled={!isOwner}
-              title={isOwner ? 'Add a new beauty spa service' : 'Only the Blue Ocean owner can add services'}
+              disabled={!hasSubscription}
+              title={!hasSubscription ? 'Subscription required to add services' : isOwner ? 'Add a new beauty spa service' : 'Add a new service to your spa storefront'}
             >
               Add New Service
             </Button>
@@ -2344,7 +2939,127 @@ function SpaSalesTable({ onSelect }) {
   );
 }
 
-function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription }) {
+function OwnerStorefrontAnalytics() {
+  const [userStorefrontsData, setUserStorefrontsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [topSellingItems, setTopSellingItems] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch all orders to analyze user storefronts
+        // Note: This would need an admin endpoint in production
+        // For now, we'll simulate with available data
+        const ordersResponse = await api.orders.getUserOrders();
+        const productsResponse = await api.products.getProducts();
+        
+        if (ordersResponse.success && productsResponse.success) {
+          const allOrders = ordersResponse.data.orders || [];
+          const allProducts = productsResponse.data.products || [];
+          
+          // Calculate top selling items across all users
+          const itemSales = {};
+          allOrders.forEach((order) => {
+            if (order.items && Array.isArray(order.items)) {
+              order.items.forEach((item) => {
+                const itemId = item.productId || item.id || item.name;
+                if (!itemSales[itemId]) {
+                  itemSales[itemId] = {
+                    name: item.name || 'Unknown',
+                    quantity: 0,
+                    revenue: 0,
+                  };
+                }
+                itemSales[itemId].quantity += item.quantity || 1;
+                const price = parseFloat(item.price || item.total || 0);
+                itemSales[itemId].revenue += price * (item.quantity || 1);
+              });
+            }
+          });
+
+          const topItems = Object.values(itemSales)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 10);
+          
+          setTopSellingItems(topItems);
+        }
+      } catch (error) {
+        console.error('Error fetching owner analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <h2 className="font-display text-2xl mb-2">User Storefront Analytics</h2>
+      <p className="text-sm text-white/70 mb-6">
+        Monitor performance and top-selling items across all user storefronts.
+      </p>
+
+      {/* Top Selling Items */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-4">Top Selling Items</h3>
+        {loading ? (
+          <div className="text-center text-white/60 py-8">Loading...</div>
+        ) : topSellingItems.length === 0 ? (
+          <div className="text-center text-white/60 py-8">No sales data available yet.</div>
+        ) : (
+          <div className="space-y-3">
+            {topSellingItems.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500/20 text-lg font-bold text-brand-200">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{item.name}</p>
+                    <p className="text-xs text-white/60">{item.quantity} sold</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-white">${item.revenue.toFixed(2)}</p>
+                  <p className="text-xs text-white/60">Revenue</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* User Storefront Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-4">
+          <div className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Total User Storefronts</div>
+          <div className="text-2xl font-semibold text-white">
+            {loading ? '...' : userStorefrontsData.length || '0'}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 p-4">
+          <div className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Total Revenue</div>
+          <div className="text-2xl font-semibold text-white">
+            ${topSellingItems.reduce((sum, item) => sum + item.revenue, 0).toFixed(2)}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-gradient-to-br from-amber-500/20 to-amber-600/10 p-4">
+          <div className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Active Products</div>
+          <div className="text-2xl font-semibold text-white">
+            {topSellingItems.length}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription, onViewOrders }) {
+  const isOwner = currentUser?.role === 'owner';
+
   return (
     <div className="space-y-6">
       <DashboardHero 
@@ -2355,9 +3070,10 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
         onNavigateToSubscription={onNavigateToSubscription}
       />
       <MetricRow />
-      <AnalyticsSummary />
-      <SalesTrend />
-      <RecentOrders />
+      <AnalyticsSummary isOwner={isOwner} />
+      <SalesTrend isOwner={isOwner} />
+      {isOwner && <OwnerStorefrontAnalytics />}
+      <RecentOrders onViewAll={onViewOrders} />
     </div>
   );
 }
@@ -2427,6 +3143,9 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           onAddProduct={() => setIsAddProductOpen(true)} 
           subscription={subscription}
           onViewStorefront={onViewStorefront}
+          onProductAdded={() => {
+            // Refresh will be handled by the modal's onSuccess callback
+          }}
         />;
       case 'spaServices':
         return <SpaServicesPanel 
@@ -2434,16 +3153,57 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           subscription={subscription}
           onViewSpaStorefront={onViewSpaStorefront}
           isOwner={isOwner}
+          onServiceAdded={() => {
+            // Refresh will be handled by the modal's onSuccess callback
+          }}
         />;
       case 'bookings':
+        if (!isOwner) {
+          return (
+            <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+              <h2 className="font-display text-2xl">Access Denied</h2>
+              <p className="mt-3 text-sm text-white/70">This section is only available to platform owners.</p>
+            </div>
+          );
+        }
         return <SpaAnalyticsPanel onSelect={setActiveSection} onViewSpaStorefront={onViewSpaStorefront} />;
       case 'storefront':
-        return <StorefrontPanel />;
+        return <StorefrontPanel 
+          subscription={subscription}
+          onViewStorefront={onViewStorefront}
+          onViewSpaStorefront={onViewSpaStorefront}
+          onNavigateToSubscription={() => setActiveSection('subscription')}
+          currentUser={currentUser}
+        />;
       case 'subscription':
+        if (!isOwner) {
+          return (
+            <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+              <h2 className="font-display text-2xl">Access Denied</h2>
+              <p className="mt-3 text-sm text-white/70">This section is only available to platform owners.</p>
+            </div>
+          );
+        }
         return <SubscriptionPage onBack={() => setActiveSection('dashboard')} onSubscribeSuccess={handleSubscribeSuccess} />;
       case 'reports':
+        if (!isOwner) {
+          return (
+            <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+              <h2 className="font-display text-2xl">Access Denied</h2>
+              <p className="mt-3 text-sm text-white/70">This section is only available to platform owners.</p>
+            </div>
+          );
+        }
         return <ReportsPanel />;
       case 'analytics':
+        if (!isOwner) {
+          return (
+            <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+              <h2 className="font-display text-2xl">Access Denied</h2>
+              <p className="mt-3 text-sm text-white/70">This section is only available to platform owners.</p>
+            </div>
+          );
+        }
         return <AnalyticsPanel />;
       case 'orders':
         return <OrdersPanel />;
@@ -2463,6 +3223,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           onViewSpaStorefront={onViewSpaStorefront} 
           subscription={subscription}
           onNavigateToSubscription={() => setActiveSection('subscription')}
+          onViewOrders={() => setActiveSection('orders')}
         />;
     }
   };
@@ -2481,11 +3242,10 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
       <AddProductModal
         isOpen={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
-        onSuccess={(product) => {
+        onSuccess={async (product) => {
           setIsAddProductOpen(false);
-          // Trigger a refresh by changing a key or using a refresh function
-          // The hooks will automatically refetch when the component remounts
-          // For now, we'll use a simple page reload to ensure data is fresh
+          // Product is already saved to database via API
+          // Refresh the products list by reloading the page to ensure all components update
           setTimeout(() => {
             window.location.reload();
           }, 500);
@@ -2494,11 +3254,10 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
       <AddServiceModal
         isOpen={isAddServiceOpen}
         onClose={() => setIsAddServiceOpen(false)}
-        onSuccess={(service) => {
+        onSuccess={async (service) => {
           setIsAddServiceOpen(false);
-          // Trigger a refresh by changing a key or using a refresh function
-          // The hooks will automatically refetch when the component remounts
-          // For now, we'll use a simple page reload to ensure data is fresh
+          // Service is already saved to database via API
+          // Refresh the services list by reloading the page to ensure all components update
           setTimeout(() => {
             window.location.reload();
           }, 500);

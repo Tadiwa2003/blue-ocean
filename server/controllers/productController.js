@@ -57,7 +57,25 @@ function isValidUrl(urlString) {
 // Get all products
 export const getProducts = async (req, res) => {
   try {
-    const products = await getAllProducts();
+    // If user is authenticated, filter by role
+    if (req.user) {
+      const userRole = req.user.role;
+      const userId = req.user.id;
+      const isOwner = userRole === 'owner';
+      
+      // Owners see all products, regular users see ONLY their own (excludes platform products)
+      const products = await getAllProducts(userId, isOwner);
+      
+      return res.json({
+        success: true,
+        data: {
+          products,
+        },
+      });
+    }
+    
+    // Public access (for storefronts) - show all products
+    const products = await getAllProducts(null, false);
     res.json({
       success: true,
       data: {
@@ -211,8 +229,12 @@ export const createProduct = async (req, res) => {
     const sanitizedName = sanitizeString(trimmedName);
     const sanitizedDescription = sanitizeString(trimmedDescription);
 
+    // Associate product with user (owners can create platform products without userId)
+    const userId = req.user?.role === 'owner' ? null : req.user?.id;
+    
     const newProduct = await createProductDB({
       id,
+      userId,
       name: sanitizedName,
       category,
       price: parsedPrice, // Store as number in DB

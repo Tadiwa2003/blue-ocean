@@ -6,6 +6,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  userId: {
+    type: String,
+    required: false, // Optional for backward compatibility with platform products
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -54,6 +59,7 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ category: 1 });
 productSchema.index({ id: 1 });
 productSchema.index({ slug: 1 });
+productSchema.index({ userId: 1 });
 
 const Product = mongoose.model('Product', productSchema);
 

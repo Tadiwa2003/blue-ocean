@@ -286,6 +286,53 @@ export const api = {
     },
   },
 
+  // Storefronts
+  storefronts: {
+    async getUserStorefronts() {
+      return await apiFetch(`${API_BASE_URL}/storefronts`);
+    },
+
+    async getStorefrontById(storefrontId) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}`);
+    },
+
+    async getStorefrontBySlug(slug) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/slug/${slug}`, { skipAuth: true });
+    },
+
+    async createStorefront(storefrontData) {
+      return await apiFetch(`${API_BASE_URL}/storefronts`, {
+        method: 'POST',
+        body: JSON.stringify(storefrontData),
+      });
+    },
+
+    async updateStorefront(storefrontId, updateData) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+      });
+    },
+
+    async deleteStorefront(storefrontId) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async publishStorefront(storefrontId) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}/publish`, {
+        method: 'POST',
+      });
+    },
+
+    async unpublishStorefront(storefrontId) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}/unpublish`, {
+        method: 'POST',
+      });
+    },
+  },
+
   // Bookings
   bookings: {
     async create(bookingsArray) {

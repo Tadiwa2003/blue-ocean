@@ -11,9 +11,11 @@ import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
 import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
 import { motion } from 'framer-motion';
 import api from '../services/api.js';
-import { HeroDesignali } from '../components/ui/HeroDesignali.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const FALLBACK_GRADIENT =
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
 export function BeautySpaStorefront({ onClose }) {
   // Fetch services from backend
@@ -317,24 +319,84 @@ export function BeautySpaStorefront({ onClose }) {
       </header>
 
       <main className="pb-24">
-        <HeroDesignali
-          title="Rejuvenate your senses with ocean-inspired luxury"
-          subtitle="Tana's Beauty Boost Spa · Wellness 2026"
-          description="Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal."
-          typeWriterStrings={['Facial Treatments', 'Body Massages', 'Wellness Rituals', 'Spa Packages', 'Luxury Services']}
-          primaryButtonText="Book Treatment"
-          primaryButtonAction={() => {
-            if (allServices && allServices.length > 0) {
-              handleShowService(allServices[0], 'book');
-            }
-          }}
-          secondaryButtonText="View Itinerary"
-          secondaryButtonAction={() => setIsBookingOpen(true)}
-          showBadge={true}
-          badgeText="Tana's Beauty Boost Spa · Wellness 2026"
-          accentColor="purple-500"
-          canvasId="spa-hero-canvas"
-        />
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0" ref={heroRef}>
+            <img
+              src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85"
+              data-fallback-index="0"
+              alt="Luxury spa treatment room with ocean view"
+              className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              style={{ backgroundColor: '#0b233e', objectPosition: 'center 50%', filter: 'brightness(0.85) contrast(1.1)' }}
+              onError={(e) => {
+                const sources = [
+                  'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85', // spa treatment room
+                  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85', // luxury spa interior
+                  'https://images.unsplash.com/photo-1600334125308-73316e67749a?auto=format&fit=crop&w=1600&q=85', // spa relaxation area
+                  'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=85', // wellness spa
+                  '/assets/images/hero-bg.jpg',
+                  FALLBACK_GRADIENT,
+                ];
+                const currentIndex = Number(e.currentTarget.getAttribute('data-fallback-index') || '0');
+                const nextIndex = Math.min(currentIndex, sources.length - 1);
+                e.currentTarget.setAttribute('data-fallback-index', String(nextIndex + 1));
+                e.currentTarget.src = sources[nextIndex];
+              }}
+            />
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-r from-amber-900/40 via-orange-800/30 to-amber-800/40" />
+          </div>
+          <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
+            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+              <BeautySpaLogo className="h-24 w-auto sm:h-32 md:h-40" size={180} showText={false} />
+            </div>
+            <div className="storefront-hero-text mb-6 w-full max-w-4xl mx-auto" style={{ animationDelay: '0.1s' }}>
+              <div className="rounded-xl border border-white/30 bg-white/10 backdrop-blur-md px-6 py-3 flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+                  TANA'S BEAUTY BOOST SPA
+                </span>
+                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+                  WELLNESS 2026
+                </span>
+              </div>
+            </div>
+            <h1 
+              className="storefront-hero-text font-serif text-5xl sm:text-6xl md:text-7xl font-bold leading-tight" 
+              style={{ 
+                animationDelay: '0.2s',
+                background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 4px 8px rgba(217, 119, 6, 0.4))',
+                textShadow: '0 2px 4px rgba(217, 119, 6, 0.3)',
+              }}
+            >
+              Tana's Beauty Boost Spa
+            </h1>
+            <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
+              Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
+            </p>
+            <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
+              <Button 
+                onClick={() => {
+                  if (allServices && allServices.length > 0) {
+                    handleShowService(allServices[0], 'book');
+                  }
+                }}
+              >
+                Book Treatment
+              </Button>
+              <Button 
+                variant="secondary"
+                onClick={() => setIsBookingOpen(true)}
+              >
+                View Itinerary
+              </Button>
+            </div>
+          </div>
+        </section>
 
         <section className="mx-auto mt-20 max-w-7xl px-6">
           <div className="flex flex-col gap-8 text-left">

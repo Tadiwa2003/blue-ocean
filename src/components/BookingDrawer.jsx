@@ -99,13 +99,14 @@ export function BookingDrawer({
               {bookings.length} {bookings.length === 1 ? 'service reserved' : 'services reserved'}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white/80 transition hover:bg-white/20 hover:text-white"
+            className="uppercase tracking-[0.2em]"
           >
             Close
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -173,13 +174,14 @@ export function BookingDrawer({
                       <span>Therapist</span>
                       <span className="font-semibold text-white/75">{booking.therapistLevel}</span>
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
                       onClick={() => onCancelBooking?.(booking.bookingId)}
-                      className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:text-brand-200"
+                      className="text-xs uppercase tracking-[0.18em]"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

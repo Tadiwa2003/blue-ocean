@@ -6,6 +6,11 @@ const serviceSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  userId: {
+    type: String,
+    required: false, // Optional for backward compatibility with platform services
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -58,6 +63,7 @@ const serviceSchema = new mongoose.Schema({
 // Indexes
 serviceSchema.index({ serviceCategory: 1 });
 serviceSchema.index({ id: 1 });
+serviceSchema.index({ userId: 1 });
 
 const Service = mongoose.model('Service', serviceSchema);
 

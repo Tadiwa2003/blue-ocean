@@ -13,6 +13,7 @@ import productRoutes from './routes/products.js';
 import serviceRoutes from './routes/services.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import bookingRoutes from './routes/bookings.js';
+import storefrontRoutes from './routes/storefronts.js';
 
 // Load environment variables
 dotenv.config();
@@ -85,6 +86,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/storefronts', storefrontRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -116,8 +116,15 @@ export function Storefront({ onClose }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Cart state
-  const [cartItems, setCartItems] = useState([]);
+  // Cart state - load from localStorage on mount
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('blueOceanCart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -141,20 +148,42 @@ export function Storefront({ onClose }) {
 
   // Cart functions
   const addToCart = (product, color = '', size = '') => {
-    const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
-    const newItem = {
-      cartId,
-      ...product,
-      color,
-      size,
-      quantity: 1,
-    };
-    setCartItems((prev) => [...prev, newItem]);
-    const variantText = [color, size].filter(Boolean).join(', ');
-    const message = variantText 
-      ? `Added to cart: ${product.name} (${variantText})`
-      : `Added to cart: ${product.name}`;
-    showNotification(message);
+    // Check if item with same product ID, color, and size already exists
+    const existingItemIndex = cartItems.findIndex(
+      (item) => item.id === product.id && item.color === color && item.size === size
+    );
+
+    if (existingItemIndex >= 0) {
+      // Item exists, increment quantity
+      setCartItems((prev) =>
+        prev.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+      const variantText = [color, size].filter(Boolean).join(', ');
+      const message = variantText 
+        ? `Updated quantity: ${product.name} (${variantText})`
+        : `Updated quantity: ${product.name}`;
+      showNotification(message);
+    } else {
+      // New item, add to cart
+      const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
+      const newItem = {
+        cartId,
+        ...product,
+        color,
+        size,
+        quantity: 1,
+      };
+      setCartItems((prev) => [...prev, newItem]);
+      const variantText = [color, size].filter(Boolean).join(', ');
+      const message = variantText 
+        ? `Added to cart: ${product.name} (${variantText})`
+        : `Added to cart: ${product.name}`;
+      showNotification(message);
+    }
   };
 
   const removeFromCart = (cartId) => {
@@ -173,8 +202,23 @@ export function Storefront({ onClose }) {
 
   const clearCart = () => {
     setCartItems([]);
+    // Clear cart from localStorage
+    try {
+      localStorage.removeItem('blueOceanCart');
+    } catch (error) {
+      console.error('Failed to clear cart from localStorage:', error);
+    }
     showNotification('Cart cleared');
   };
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('blueOceanCart', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Failed to save cart to localStorage:', error);
+    }
+  }, [cartItems]);
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -184,6 +228,12 @@ export function Storefront({ onClose }) {
   const handleOrderComplete = (orderData) => {
     setCartItems([]);
     setIsCheckoutOpen(false);
+    // Clear cart from localStorage after successful order
+    try {
+      localStorage.removeItem('blueOceanCart');
+    } catch (error) {
+      console.error('Failed to clear cart from localStorage:', error);
+    }
     showNotification(`Order ${orderData.orderId} placed successfully!`);
   };
 
@@ -653,6 +703,9 @@ export function Storefront({ onClose }) {
             <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
+            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+              <Logo className="h-24 w-auto sm:h-32 md:h-40" />
+            </div>
             <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
               Blue Ocean Capsule · Resort 2026
             </span>
@@ -751,7 +804,7 @@ export function Storefront({ onClose }) {
           </div>
 
           {/* Filtered Grid */}
-          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ perspective: '1000px' }}>
+          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr" style={{ perspective: '1000px' }}>
             {productsLoading ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20">
                 <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
