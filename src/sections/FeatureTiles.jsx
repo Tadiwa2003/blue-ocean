@@ -4,25 +4,25 @@ import { useInView } from 'framer-motion';
 
 const tiles = [
   {
-    label: 'Curate',
-    title: 'Add capsule inventory in minutes.',
+    label: 'Beauty Spa',
+    title: 'Tana\'s Beauty Boost Spa Services',
     description:
-      'Choose from ready-to-launch product drops with merchandising copy, photography, and packaging already aligned to your resort or boutique aesthetic.',
-    icon: '🧺',
-  },
-  {
-    label: 'Activate',
-    title: 'Send spa itineraries to every suite.',
-    description:
-      'Schedule treatments, automate confirmations, and give therapists choreography, scent notes, and upsell prompts for each guest journey.',
+      'Book premium beauty and wellness treatments online. From facials and massages to complete wellness packages, we offer professional spa services with easy online booking.',
     icon: '💆',
   },
   {
-    label: 'Delight',
-    title: 'Exchange stories across retail & spa.',
+    label: 'Merchant Store',
+    title: 'Sell Your Products Online',
     description:
-      'Blend take-home rituals with on-site experiences. Guests leave with products they already love and memories tied to your brand.',
-    icon: '🌊',
+      'Manage your product catalog, track inventory, process orders, and analyze sales through our integrated merchant store platform. Everything you need to run your online business.',
+    icon: '🛍️',
+  },
+  {
+    label: 'Rent Platform',
+    title: 'Let Others Sell Through Our Marketplace',
+    description:
+      'Rent our platform to other merchants who want to sell their goods. Subscription-based access with full features, support, and flexible revenue sharing options.',
+    icon: '🏪',
   },
 ];
 
@@ -38,11 +38,10 @@ export function FeatureTiles() {
         transition={{ duration: 0.6 }}
         className="space-y-4 text-center sm:text-left"
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Unify your guest journey</p>
-        <h2 className="font-display text-3xl text-white sm:text-4xl">One platform connects retail capsules and spa rituals.</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Three core business models</p>
+        <h2 className="font-display text-3xl text-white sm:text-4xl">Beauty Spa, Merchant Store, and Marketplace Platform Rental</h2>
         <p className="text-sm text-white/70 sm:max-w-2xl">
-          Operate with a single playbook—from curated inventory to treatment menus—so your team focuses on storytelling,
-          not stitching together tools.
+          Blue Ocean Marketplace powers Tana's Beauty Boost Spa for wellness services, our merchant store for product sales, and offers platform rental for other merchants to sell their goods through our marketplace.
         </p>
       </motion.div>
 

@@ -57,14 +57,14 @@ export function Hero() {
             />
             <BlurTextAnimation
               className="text-left max-w-3xl"
-              text="Two coastal brands, one elevated guest journey."
+              text="Your Complete Marketplace Platform: Beauty Spa Services & Product Store"
               fontSize="font-display text-[2.75rem] leading-tight sm:text-[3.1rem]"
               animationDelay={6000}
               textClassName="font-semibold sm:font-medium tracking-tight m-0"
             />
             <BlurTextAnimation
               className="max-w-2xl text-left"
-              text="Launch capsule drops, layer in spa itineraries, and orchestrate every guest touchpoint with data-backed storytelling, concierge fulfilment, and sensory brand kits."
+              text="Blue Ocean Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace."
               fontSize="text-base md:text-lg"
               fontFamily="font-sans"
               textColor="text-white/80"
@@ -129,19 +129,22 @@ export function Hero() {
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Blue Ocean Marketplace
                 </span>
-                <h2 className="font-display text-2xl">Retail capsules that ship ready-to-sell.</h2>
+                <h2 className="font-display text-2xl">Merchant Store: Sell Your Products</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
-                  Seasonal assortments, lookbooks, and fulfilment handled end-to-end. Launch coastal-luxury stories in
-                  days, not months.
+                  Our merchant store platform lets you showcase and sell your products online. Manage inventory, track sales, and reach customers through our integrated marketplace. Perfect for businesses looking to expand their digital presence.
               </p>
                 <ul className="space-y-2 text-xs text-white/65">
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Merchandising playbooks for every drop
+                    Easy product management and inventory tracking
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Logistics + packaging with shoreline flair
+                    Integrated payment processing and order management
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                    Rent our platform to other merchants
                   </li>
                 </ul>
                   </div>
@@ -153,19 +156,22 @@ export function Hero() {
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Tana&apos;s Beauty Boost Spa
                   </span>
-                <h2 className="font-display text-2xl">Signature rituals, concierge booking built in.</h2>
+                <h2 className="font-display text-2xl">Tana's Beauty Boost Spa: Premium Wellness Services</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
-                  Oceanstone facials, tidal massages, and curated add-ons that lift spa revenue while deepening guest
-                  loyalty.
+                  Experience luxury beauty and spa treatments at Tana's Beauty Boost Spa. From facials and massages to complete wellness packages, we offer a full range of services designed to rejuvenate and restore.
                 </p>
                 <ul className="space-y-2 text-xs text-white/65">
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Bookable itineraries with guest communications
+                    Online booking system for all spa services
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Ritual training, scent design, and therapist scripts
+                    Professional treatments and wellness packages
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
+                    Gift cards and membership options available
                   </li>
                 </ul>
               </div>

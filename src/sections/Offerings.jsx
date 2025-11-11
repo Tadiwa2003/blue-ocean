@@ -10,7 +10,7 @@ export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
 
   return (
     <section ref={sectionRef} id="offerings" className="mx-auto mt-24 max-w-6xl px-6">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-10 lg:grid-cols-3 lg:items-start">
         <motion.article 
           initial={{ x: -50, opacity: 0, scale: 0.95 }}
           animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
@@ -22,27 +22,30 @@ export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
           <div className="absolute -left-16 bottom-12 h-32 w-32 rounded-full bg-brand-400/20 blur-3xl" />
           <div className="relative space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/80">
-              Blue Ocean Capsule Kits
+              Merchant Store Platform
             </span>
             <h2 className="font-display text-3xl leading-tight sm:text-[2.5rem]">
-              Contactless retail refresh? Absolutely. Inventory controls? Covered.
+              Sell Your Products Online with Full Control
           </h2>
             <p className="text-sm text-white/75">
-              Build coastal-luxury collections with spending limits, capsule locks, and instant restock options. Freeze a drop,
-              launch a new one, or tailor assortments per property—all from one dashboard.
+              Our merchant store platform gives you everything you need to sell products online. Manage your catalog, track inventory, process payments, and analyze sales—all from one powerful dashboard.
             </p>
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-3">
                 <span className="mt-1 h-2 w-2 rounded-full bg-white/80" />
-                Set capsule budgets, merchandising layouts, and approval flows.
+                Complete product catalog and inventory management system.
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-1 h-2 w-2 rounded-full bg-white/80" />
-                Freeze collections in a tap and reassign inventory between boutiques.
+                Integrated payment processing and secure checkout.
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-1 h-2 w-2 rounded-full bg-white/80" />
-                Pair every drop with sensory assets, QR storytelling, and logistics.
+                Order tracking, fulfillment, and customer management tools.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-white/80" />
+                Real-time sales analytics and performance reporting.
               </li>
             </ul>
             <div className="flex flex-wrap gap-3">
@@ -157,6 +160,73 @@ export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
                 }}
               >
                 Download ritual menu
+              </Button>
+            </div>
+          </div>
+        </motion.article>
+
+        <motion.article
+          initial={{ x: 50, opacity: 0, scale: 0.95 }}
+          animate={isInView ? { x: 0, opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.01 }}
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-emerald-500/20 via-midnight to-emerald-700/40 p-10 text-white shadow-[0_35px_80px_rgba(4,11,24,0.45)] backdrop-blur"
+        >
+          <div className="absolute -right-12 top-6 h-32 w-32 rounded-full bg-emerald-500/15 blur-3xl" />
+          <div className="absolute -left-16 bottom-0 h-28 w-28 rounded-full bg-emerald-300/15 blur-3xl" />
+          <div className="relative space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/75">
+              Platform Rental
+            </span>
+            <h2 className="font-display text-3xl leading-tight sm:text-[2.5rem]">
+              Rent Our Platform to Other Merchants
+            </h2>
+            <p className="text-sm text-white/70">
+              Let other businesses sell their products and services through our marketplace. We offer subscription-based platform access with full features, dedicated support, and flexible revenue sharing models.
+            </p>
+            <ul className="space-y-3 text-sm text-white/70">
+              <li className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                Complete marketplace access for other merchants
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                Subscription-based pricing with flexible plans
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                Full platform features and dedicated support
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                Revenue sharing and commission options available
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-3">
+              <Button 
+                variant="secondary"
+                onClick={() => {
+                  const subscriptionSection = document.getElementById('intro');
+                  if (subscriptionSection) {
+                    subscriptionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+              >
+                Learn more
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (onBookStrategyCall) {
+                    onBookStrategyCall();
+                  } else {
+                    const contactSection = document.getElementById('cta');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
+              >
+                Get started
               </Button>
             </div>
           </div>
