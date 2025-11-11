@@ -569,9 +569,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                 <Button 
                   onClick={() => {
                     if (onAddToCart) {
-                      for (let i = 0; i < quantity; i++) {
-                        onAddToCart(product, selectedColor, selectedSize);
-                      }
+                      onAddToCart(product, selectedColor, selectedSize, quantity);
                       // Show success feedback
                       setTimeout(() => {
                         // Optionally close modal or show notification

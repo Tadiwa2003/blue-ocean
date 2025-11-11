@@ -147,18 +147,18 @@ export function Storefront({ onClose }) {
   };
 
   // Cart functions
-  const addToCart = (product, color = '', size = '') => {
+  const addToCart = (product, color = '', size = '', quantity = 1) => {
     // Check if item with same product ID, color, and size already exists
     const existingItemIndex = cartItems.findIndex(
       (item) => item.id === product.id && item.color === color && item.size === size
     );
 
     if (existingItemIndex >= 0) {
-      // Item exists, increment quantity
+      // Item exists, increment quantity by the specified amount
       setCartItems((prev) =>
         prev.map((item, index) =>
           index === existingItemIndex
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         )
       );
@@ -168,14 +168,18 @@ export function Storefront({ onClose }) {
         : `Updated quantity: ${product.name}`;
       showNotification(message);
     } else {
-      // New item, add to cart
-      const cartId = `${product.id}-${color}-${size}-${Date.now()}`;
+      // New item, add to cart with specified quantity
+      // Use crypto.randomUUID() for unique cartId to avoid collisions
+      const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+        ? crypto.randomUUID().substring(0, 8)
+        : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const cartId = `${product.id}-${color}-${size}-${uniqueId}`;
       const newItem = {
         cartId,
         ...product,
         color,
         size,
-        quantity: 1,
+        quantity,
       };
       setCartItems((prev) => [...prev, newItem]);
       const variantText = [color, size].filter(Boolean).join(', ');

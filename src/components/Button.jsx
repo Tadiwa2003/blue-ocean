@@ -29,23 +29,30 @@ const buttonVariants = cva(
   }
 );
 
-export function Button({
+export const Button = React.forwardRef(function Button({
   className,
   variant,
   size,
   asChild = false,
   icon: Icon,
   children,
+  type,
   ...props
-}) {
+}, ref) {
   const Comp = asChild ? Slot : 'button';
+  // Set default type="button" for native button elements to prevent form submission
+  const buttonProps = Comp === 'button' && !asChild
+    ? { ...props, type: type ?? 'button' }
+    : props;
+  
   return (
     <Comp
+      ref={ref}
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...buttonProps}
     >
       {Icon ? <Icon className="h-4 w-4 mr-2" aria-hidden="true" /> : null}
       {children}
     </Comp>
   );
-}
+});

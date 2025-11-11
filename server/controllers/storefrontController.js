@@ -14,7 +14,7 @@ export async function getUserStorefronts(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch storefronts',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -32,7 +32,11 @@ export async function getStorefrontById(req, res) {
     }
 
     // Check if user owns this storefront or if it's published
-    if (storefront.userId !== req.user.id && !storefront.isPublished) {
+    const isOwner = storefront.userId && (
+      (typeof storefront.userId.equals === 'function' && storefront.userId.equals(req.user.id)) ||
+      String(storefront.userId) === String(req.user.id)
+    );
+    if (!isOwner && !storefront.isPublished) {
       return res.status(403).json({
         success: false,
         message: 'Access denied',
@@ -48,7 +52,7 @@ export async function getStorefrontById(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -82,7 +86,7 @@ export async function getStorefrontBySlug(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -153,14 +157,14 @@ export async function createStorefront(req, res) {
       return res.status(400).json({
         success: false,
         message: 'A storefront with this name already exists. Please choose a different name.',
-        error: error.message,
+        ...(process.env.NODE_ENV === 'development' && { error: error.message }),
       });
     }
     
     res.status(500).json({
       success: false,
       message: 'Failed to create storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -193,7 +197,7 @@ export async function updateStorefront(req, res) {
     res.status(statusCode).json({
       success: false,
       message: 'Failed to update storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -215,7 +219,7 @@ export async function deleteStorefront(req, res) {
     res.status(statusCode).json({
       success: false,
       message: 'Failed to delete storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -238,7 +242,7 @@ export async function publishStorefront(req, res) {
     res.status(statusCode).json({
       success: false,
       message: 'Failed to publish storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
@@ -261,7 +265,7 @@ export async function unpublishStorefront(req, res) {
     res.status(statusCode).json({
       success: false,
       message: 'Failed to unpublish storefront',
-      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { error: error.message }),
     });
   }
 }
