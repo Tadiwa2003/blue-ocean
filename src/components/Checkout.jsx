@@ -51,10 +51,21 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
   const formRef = useRef(null);
 
   // Calculate totals
+  const normalizePrice = (price) => {
+    if (typeof price === 'number') {
+      return price;
+    }
+    if (typeof price === 'string') {
+      const numeric = parseFloat(price.replace(/[^0-9.]/g, ''));
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+    return 0;
+  };
+
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.price.replace('$', '')) || 0;
-      return total + price * item.quantity;
+      const price = normalizePrice(item.price);
+      return total + price * (item.quantity || 1);
     }, 0);
   };
 
@@ -168,7 +179,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         items: cartItems.map(item => ({
           productId: item.id,
           name: item.name,
-          price: parseFloat(item.price.replace('$', '')),
+          price: normalizePrice(item.price),
           quantity: item.quantity,
           image: item.image,
         })),

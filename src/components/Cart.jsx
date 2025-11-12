@@ -20,10 +20,21 @@ const fallbackImage =
 
 export function Cart({ cartItems, isOpen, onClose, onRemoveItem, onUpdateQuantity, onClearCart, onCheckout }) {
   // Calculate total
+  const normalizePrice = (price) => {
+    if (typeof price === 'number') {
+      return price;
+    }
+    if (typeof price === 'string') {
+      const numeric = parseFloat(price.replace(/[^0-9.]/g, ''));
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+    return 0;
+  };
+
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.price.replace('$', '')) || 0;
-      return total + price * item.quantity;
+      const price = normalizePrice(item.price);
+      return total + price * (item.quantity || 1);
     }, 0);
   };
 
@@ -157,7 +168,7 @@ export function Cart({ cartItems, isOpen, onClose, onRemoveItem, onUpdateQuantit
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-brand-300">
-                        ${(parseFloat(item.price.replace('$', '')) * item.quantity).toFixed(2)}
+                        {`$${(normalizePrice(item.price) * item.quantity).toFixed(2)}`}
                       </p>
                       <button
                         type="button"

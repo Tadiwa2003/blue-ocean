@@ -10,6 +10,17 @@
 
 body {
   @apply bg-midnight text-white antialiased;
+  line-height: 1.6;
+  color: #F2F2F2;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+p {
+  line-height: 1.6;
 }
 
 .gradient-background__layer {
@@ -22,7 +33,7 @@ body {
 }
 
 .gradient-background__layer--base {
-  background: linear-gradient(180deg, #010308 0%, #051023 25%, #0c2a45 50%, #162f5c 70%, #1b4a7e 100%);
+  background: linear-gradient(180deg, #0A192F 0%, #0A192F 25%, #0A192F 50%, #0A192F 70%, #0A192F 100%);
 }
 
 .gradient-background__layer--texture {
@@ -50,12 +61,12 @@ body {
 
 .gradient-background__layer--liquid {
   filter: blur(120px);
-  opacity: 0.9;
+  opacity: 0.25;
   animation: liquid-gradient-motion 52s ease-in-out infinite;
-  background: radial-gradient(circle at 20% 25%, rgba(51, 152, 255, 0.45), transparent 60%),
-    radial-gradient(circle at 80% 25%, rgba(112, 89, 255, 0.4), transparent 60%),
-    radial-gradient(circle at 25% 75%, rgba(17, 209, 189, 0.35), transparent 60%),
-    radial-gradient(circle at 75% 80%, rgba(255, 126, 188, 0.3), transparent 65%);
+  background: radial-gradient(circle at 20% 25%, rgba(27, 152, 224, 0.2), transparent 60%),
+    radial-gradient(circle at 80% 25%, rgba(27, 152, 224, 0.15), transparent 60%),
+    radial-gradient(circle at 25% 75%, rgba(27, 152, 224, 0.18), transparent 60%),
+    radial-gradient(circle at 75% 80%, rgba(27, 152, 224, 0.12), transparent 65%);
 }
 
 .shader-animation {

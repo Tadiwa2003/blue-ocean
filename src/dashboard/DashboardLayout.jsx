@@ -1088,8 +1088,10 @@ function OrdersPanel() {
       } catch (err) {
         console.error('Error fetching orders:', err);
         setError(err.message || 'Failed to load orders');
-        // Fallback to static data on error
-        setOrders(ordersTable);
+        // Fallback to static data on error only in development
+        if (process.env.NODE_ENV === 'development') {
+          setOrders(ordersTable);
+        }
       } finally {
         setLoading(false);
       }

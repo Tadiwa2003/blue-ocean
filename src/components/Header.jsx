@@ -29,7 +29,7 @@ const navSections = [
 
 export function Header({ onSignInClick, onSignUpClick, onViewStorefront, onViewSpaStorefront }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-ocean/80 backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[rgba(10,25,47,0.95)] backdrop-blur-xl" style={{ backgroundColor: 'rgba(10, 25, 47, 0.95)' }}>
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <a href="#hero" className="transition hover:opacity-90">
           <Logo />
@@ -45,7 +45,7 @@ export function Header({ onSignInClick, onSignUpClick, onViewStorefront, onViewS
                   {section.label}
                   <span className="text-xs opacity-60">▾</span>
                 </button>
-                <div className="invisible absolute left-0 top-full mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-ocean/95 p-2 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                <div className="invisible absolute left-0 top-full mt-2 min-w-[220px] rounded-2xl border border-white/10 bg-[rgba(10,25,47,0.95)] backdrop-blur-xl p-2 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}>
                   {section.items.map((item) => (
                     <a
                       key={item.name}
