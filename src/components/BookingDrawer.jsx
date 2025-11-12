@@ -212,7 +212,7 @@ export function BookingDrawer({
                 className="flex-1"
                 disabled={isConfirming}
               >
-                {isConfirming ? 'Confirming...' : 'Confirm Appointments'}
+                {isConfirming ? 'Confirming...' : 'Confirm Booking'}
               </Button>
             </div>
           </div>

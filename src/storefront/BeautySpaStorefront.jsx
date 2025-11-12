@@ -111,49 +111,101 @@ export function BeautySpaStorefront({ onClose }) {
   };
 
   const handleConfirmBookings = async () => {
-    if (bookings.length === 0) return;
+    if (bookings.length === 0) {
+      showNotification('No bookings to confirm. Please add services to your booking first.');
+      return;
+    }
 
     setIsConfirming(true);
+
     try {
-      // Check if user is authenticated
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        showNotification('Please sign in to confirm your bookings. Your bookings have been saved locally.');
+      // Validate bookings before submission
+      const invalidBookings = bookings.filter(booking =>
+        !booking.serviceId ||
+        !booking.name ||
+        !booking.date ||
+        !booking.time ||
+        !booking.totalPrice ||
+        booking.totalPrice <= 0
+      );
+
+      if (invalidBookings.length > 0) {
+        showNotification('Some bookings are missing required information. Please review and try again.');
         setIsConfirming(false);
         return;
       }
 
       // Transform bookings to match backend format
-      const bookingsToSubmit = bookings.map(booking => ({
-        serviceId: booking.serviceId,
-        name: booking.name,
-        serviceCategory: booking.serviceCategory,
-        duration: booking.duration,
-        basePrice: booking.basePrice,
-        totalPrice: booking.totalPrice,
-        currency: booking.currency || 'USD',
-        date: booking.date,
-        time: booking.time,
-        therapistLevel: booking.therapistLevel,
-        addOns: booking.addOns || [],
-        addOnTotal: booking.addOnTotal || 0,
-        notes: booking.notes || '',
-        image: booking.image,
-      }));
+      const bookingsToSubmit = bookings.map(booking => {
+        // Transform addOns from objects to the format expected by backend schema
+        // Schema expects: [{ name: String, price: Number }]
+        const transformedAddOns = (booking.addOns || []).map(addOn => {
+          if (typeof addOn === 'object' && addOn !== null) {
+            return {
+              name: addOn.name || 'Add-on',
+              price: addOn.price || 0,
+            };
+          }
+          return { name: 'Add-on', price: 0 };
+        });
+
+        // Generate unique ID for each booking (backend expects 'id' field)
+        const bookingId = booking.bookingId || `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        return {
+          id: bookingId,
+          serviceId: booking.serviceId,
+          name: booking.name,
+          serviceCategory: booking.serviceCategory || 'General',
+          duration: booking.duration || 60,
+          basePrice: booking.basePrice || booking.totalPrice,
+          totalPrice: booking.totalPrice,
+          currency: booking.currency || 'USD',
+          date: booking.date,
+          time: booking.time,
+          therapistLevel: booking.therapistLevel || 'Standard',
+          addOns: transformedAddOns,
+          addOnTotal: booking.addOnTotal || 0,
+          notes: booking.notes || '',
+          image: booking.image || null,
+        };
+      });
 
       // Call API to create bookings
+      console.log('Submitting bookings:', bookingsToSubmit);
       const response = await api.bookings.create(bookingsToSubmit);
+      console.log('Booking API response:', response);
 
-      if (response.success) {
-        showNotification(`Successfully confirmed ${bookings.length} booking(s)! Our spa concierge will contact you shortly.`);
+      if (response && response.success) {
+        const bookingCount = bookings.length;
+        showNotification(`Successfully confirmed ${bookingCount} booking${bookingCount > 1 ? 's' : ''}! Our spa concierge will contact you shortly.`);
         setBookings([]); // Clear bookings after successful confirmation
-        setIsBookingOpen(false);
+        // Close the drawer after a short delay to show the success message
+        setTimeout(() => {
+          setIsBookingOpen(false);
+        }, 2000);
       } else {
-        showNotification(response.message || 'Failed to confirm bookings. Please try again.');
+        const errorMsg = response?.message || 'Failed to confirm bookings. Please try again.';
+        showNotification(errorMsg);
+        console.error('Booking confirmation failed:', response);
       }
     } catch (error) {
       console.error('Error confirming bookings:', error);
-      const errorMessage = error.message || 'Failed to confirm bookings. Please try again.';
+      let errorMessage = 'Failed to confirm bookings. Please try again.';
+
+      // Provide more specific error messages
+      if (error.message) {
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          errorMessage = 'Please sign in to confirm your bookings. Your bookings have been saved locally.';
+        } else if (error.message.includes('400') || error.message.includes('validation')) {
+          errorMessage = 'Invalid booking data. Please review your bookings and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       showNotification(errorMessage);
     } finally {
       setIsConfirming(false);
