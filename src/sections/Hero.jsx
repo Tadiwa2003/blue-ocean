@@ -40,8 +40,8 @@ export function Hero() {
           }}
         />
       </div>
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/55 via-midnight/30 to-transparent" />
-      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(29,160,230,0.2),_transparent_60%)]" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/75 via-midnight/60 to-midnight/40" />
+      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(27,152,224,0.15),_transparent_60%)]" />
 
       <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">

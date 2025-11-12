@@ -65,21 +65,29 @@ export const getProducts = async (req, res) => {
       
       // Owners see all products, regular users see ONLY their own (excludes platform products)
       const products = await getAllProducts(userId, isOwner);
+      const formattedProducts = products.map((product) => ({
+        ...product,
+        price: typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price,
+      }));
       
       return res.json({
         success: true,
         data: {
-          products,
+          products: formattedProducts,
         },
       });
     }
     
     // Public access (for storefronts) - show all products
     const products = await getAllProducts(null, false);
+    const formattedProducts = products.map((product) => ({
+      ...product,
+      price: typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price,
+    }));
     res.json({
       success: true,
       data: {
-        products,
+        products: formattedProducts,
       },
     });
   } catch (error) {

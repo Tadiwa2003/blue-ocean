@@ -12,6 +12,8 @@ import { Button } from '../components/Button.jsx';
 import { Logo } from '../components/Logo.jsx';
 import { Phone } from 'lucide-react';
 import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
+import { SplineBackground } from '../components/SplineBackground.jsx';
+import DataGridHero from '../components/ui/DataGridHero.jsx';
 import { motion } from 'framer-motion';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -680,31 +682,43 @@ export function Storefront({ onClose }) {
       <main className="pb-24">
         <section className="relative overflow-hidden">
           <div className="absolute inset-0" ref={heroRef}>
-            <img
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85"
-              data-fallback-index="0"
-              alt="Luxury retail store with products on display"
-              className="storefront-hero-image h-full w-full object-cover transition-transform duration-300"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              style={{ backgroundColor: '#0b233e', objectPosition: 'center 50%', filter: 'brightness(0.85) contrast(1.1)' }}
-              onError={(e) => {
-                const sources = [
-                  'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1600&q=85', // modern retail store
-                  'https://images.unsplash.com/photo-1555529908-3a01abb9bb93?auto=format&fit=crop&w=1600&q=85', // boutique shop interior
-                  'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1600&q=85', // shopping boutique
-                  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85', // retail storefront
-                  '/assets/images/hero-bg.jpg',
-                  FALLBACK_GRADIENT,
-                ];
-                const currentIndex = Number(e.currentTarget.getAttribute('data-fallback-index') || '0');
-                const nextIndex = Math.min(currentIndex, sources.length - 1);
-                e.currentTarget.setAttribute('data-fallback-index', String(nextIndex + 1));
-                e.currentTarget.src = sources[nextIndex];
-              }}
-            />
-            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70" />
+            {/* 3D Spline Background - can be enabled via environment variable */}
+            {import.meta.env.VITE_PRODUCTS_SPLINE_SCENE && (
+              <SplineBackground 
+                sceneUrl={import.meta.env.VITE_PRODUCTS_SPLINE_SCENE}
+                className="z-0"
+                interactive={false}
+                opacity={0.7}
+              />
+            )}
+            {/* Fallback image background - shown if Spline is not configured */}
+            {!import.meta.env.VITE_PRODUCTS_SPLINE_SCENE && (
+              <img
+                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85"
+                data-fallback-index="0"
+                alt="Luxury retail store with products on display"
+                className="storefront-hero-image h-full w-full object-cover transition-transform duration-300 z-0"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                style={{ backgroundColor: '#0b233e', objectPosition: 'center 50%', filter: 'brightness(0.85) contrast(1.1)' }}
+                onError={(e) => {
+                  const sources = [
+                    'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1600&q=85', // modern retail store
+                    'https://images.unsplash.com/photo-1555529908-3a01abb9bb93?auto=format&fit=crop&w=1600&q=85', // boutique shop interior
+                    'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?auto=format&fit=crop&w=1600&q=85', // shopping boutique
+                    'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=85', // retail storefront
+                    '/assets/images/hero-bg.jpg',
+                    FALLBACK_GRADIENT,
+                  ];
+                  const currentIndex = Number(e.currentTarget.getAttribute('data-fallback-index') || '0');
+                  const nextIndex = Math.min(currentIndex, sources.length - 1);
+                  e.currentTarget.setAttribute('data-fallback-index', String(nextIndex + 1));
+                  e.currentTarget.src = sources[nextIndex];
+                }}
+              />
+            )}
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70 z-10" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
             <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
@@ -808,7 +822,24 @@ export function Storefront({ onClose }) {
           </div>
 
           {/* Filtered Grid */}
-          <div ref={productsGridRef} className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr" style={{ perspective: '1000px' }}>
+          <div ref={productsGridRef} className="relative mt-10">
+            {/* Animated Dot Grid Background */}
+            <div className="absolute inset-0 -z-10">
+              <DataGridHero
+                rows={30}
+                cols={40}
+                spacing={6}
+                duration={5.0}
+                color="#1B98E0"
+                animationType="pulse"
+                pulseEffect={true}
+                mouseGlow={true}
+                opacityMin={0.3}
+                opacityMax={0.8}
+                background="transparent"
+              />
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr relative z-10" style={{ perspective: '1000px' }}>
             {productsLoading ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20">
                 <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
@@ -850,6 +881,7 @@ export function Storefront({ onClose }) {
                 </motion.div>
               ))
             )}
+            </div>
           </div>
 
           {/* Pagination */}

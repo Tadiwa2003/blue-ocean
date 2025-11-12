@@ -45,15 +45,15 @@ export function ValueJourney() {
         <div className="flex flex-col gap-6 text-center sm:text-left sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Simple · Fast · Guided</p>
-            <h2 className="mt-2 font-display text-3xl text-white sm:text-[2.5rem]">Every launch follows the same tide.</h2>
+            <h2 className="mt-2 font-display text-3xl text-white sm:text-[2.5rem] leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">Every launch follows the same tide.</h2>
           </div>
-          <p className="text-sm text-white/65 sm:max-w-md">
+          <p className="text-sm text-white/80 sm:max-w-md leading-relaxed">
             Whether you&apos;re stocking a pop-up boutique or opening a spa wing, Blue Ocean and Tana&apos;s Beauty Boost Spa
             keep the process five steps end-to-end.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-5">
+        <div className="mt-10 grid gap-8 md:grid-cols-5">
           {pillars.map((pillar, index) => (
             <motion.div
               key={pillar.number}
@@ -66,13 +66,13 @@ export function ValueJourney() {
                 stiffness: 100
               }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-white/4 p-5 text-left text-white transition hover:border-brand-400/40 hover:bg-white/8"
+              className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-white/5 p-6 text-left text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm transition hover:border-brand-400/40 hover:bg-white/8 hover:shadow-[0_12px_32px_rgba(27,152,224,0.2)]"
             >
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-white/50">
                 {pillar.number}
               </span>
               <h3 className="text-lg font-semibold">{pillar.title}</h3>
-              <p className="text-xs text-white/65 leading-relaxed">{pillar.description}</p>
+              <p className="text-xs text-white/75 leading-relaxed">{pillar.description}</p>
             </motion.div>
           ))}
         </div>
