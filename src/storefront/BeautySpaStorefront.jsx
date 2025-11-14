@@ -32,6 +32,57 @@ export function BeautySpaStorefront({ onClose }) {
   const [notification, setNotification] = useState({ message: '', isVisible: false });
   const [isConfirming, setIsConfirming] = useState(false);
 
+  // LocalStorage key for persisting bookings
+  const BOOKINGS_STORAGE_KEY = 'beautySpaBookings';
+
+  // Restore bookings from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedBookings = localStorage.getItem(BOOKINGS_STORAGE_KEY);
+      if (savedBookings) {
+        const parsedBookings = JSON.parse(savedBookings);
+        // Validate that parsed data is an array
+        if (Array.isArray(parsedBookings) && parsedBookings.length > 0) {
+          setBookings(parsedBookings);
+          console.log('📦 Restored bookings from localStorage:', parsedBookings.length);
+        }
+      }
+    } catch (error) {
+      // Handle parse errors or quota exceeded errors silently
+      console.warn('Failed to restore bookings from localStorage:', error);
+      // Clear corrupted data
+      try {
+        localStorage.removeItem(BOOKINGS_STORAGE_KEY);
+      } catch (clearError) {
+        // Ignore errors when clearing
+      }
+    }
+  }, []);
+
+  // Debug: Log bookings state changes
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('📊 Bookings state updated:', {
+        count: bookings.length,
+        bookings: bookings,
+      });
+    }
+  }, [bookings]);
+
+  // Save bookings to localStorage
+  const saveBookingsToLocalStorage = (bookingsToSave) => {
+    try {
+      localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookingsToSave));
+    } catch (error) {
+      // Handle quota exceeded or other storage errors
+      if (error.name === 'QuotaExceededError') {
+        console.warn('LocalStorage quota exceeded, unable to save bookings');
+      } else {
+        console.warn('Failed to save bookings to localStorage:', error);
+      }
+    }
+  };
+
   const serviceCategories = useMemo(() => {
     const uniqueCategories = new Set((allServices || []).map((service) => service.serviceCategory));
     return ['All', ...uniqueCategories];
@@ -50,9 +101,18 @@ export function BeautySpaStorefront({ onClose }) {
   };
 
   const handleShowService = (service, intent = 'view') => {
+    if (!service) {
+      console.error('❌ Cannot show service: Service is missing');
+      return;
+    }
+    
     setSelectedService(service);
     setBookingIntent(intent);
     setIsModalOpen(true);
+    
+    if (intent === 'book') {
+      console.log('📅 Opening booking modal for:', service.name);
+    }
   };
 
   const handleCloseModal = () => {
@@ -69,145 +129,339 @@ export function BeautySpaStorefront({ onClose }) {
   };
 
   const handleBookService = (service, bookingData) => {
-    if (!service) return;
+    // Validate inputs
+    if (!service) {
+      console.error('❌ Cannot book: Service is missing');
+      showNotification('Error: Service information is missing. Please try again.');
+      return;
+    }
 
-    const bookingId = `${service.id}-${Date.now()}`;
+    if (!bookingData || !bookingData.date || !bookingData.time) {
+      console.error('❌ Cannot book: Booking data is incomplete', bookingData);
+      showNotification('Error: Please select both date and time for your booking.');
+      return;
+    }
+
+    // Generate unique booking ID
+    const bookingId = `${service.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Find date label for display
     const dateLabel = service.bookableDates?.find((date) => date.value === bookingData.date)?.label;
-    const selectedAddOns = bookingData.addOns
-      ?.map((addOnId) => service.addOns?.find((addOn) => addOn.id === addOnId))
-      .filter(Boolean);
+    
+    // Map add-on IDs to add-on objects
+    const selectedAddOns = Array.isArray(bookingData.addOns)
+      ? bookingData.addOns
+          .map((addOnId) => service.addOns?.find((addOn) => addOn.id === addOnId))
+          .filter(Boolean)
+      : [];
 
+    // Calculate total price
+    const addOnTotal = bookingData.addOnTotal || selectedAddOns.reduce((sum, addOn) => sum + (addOn?.price || 0), 0);
+    const totalPrice = bookingData.totalPrice || (service.basePrice || 0) + addOnTotal;
+
+    // Create booking entry
     const bookingEntry = {
       bookingId,
-      serviceId: service.id,
-      name: service.name,
-      serviceCategory: service.serviceCategory,
-      duration: service.duration,
-      basePrice: service.basePrice,
-      currency: service.currency,
-      therapistLevel: service.therapistLevel,
-      image: service.image,
+      serviceId: service.id || service._id,
+      name: service.name || 'Spa Service',
+      serviceCategory: service.serviceCategory || 'General',
+      duration: service.duration || 60,
+      basePrice: service.basePrice || 0,
+      currency: service.currency || 'USD',
+      therapistLevel: service.therapistLevel || 'Standard',
+      image: service.image || null,
       date: bookingData.date,
       dateLabel: dateLabel || bookingData.date,
       time: bookingData.time,
       addOns: selectedAddOns,
-      addOnTotal: bookingData.addOnTotal || 0,
-      totalPrice: bookingData.totalPrice || service.basePrice,
-      notes: bookingData.notes,
+      addOnTotal: addOnTotal,
+      totalPrice: totalPrice,
+      notes: bookingData.notes || '',
     };
 
-    setBookings((prev) => [...prev, bookingEntry]);
-    showNotification(`Reserved: ${service.name} · ${bookingEntry.dateLabel} at ${bookingEntry.time}`);
-    setIsBookingOpen(true);
+    // Add booking to state
+    setBookings((prev) => {
+      // Ensure prev is an array
+      const prevBookings = Array.isArray(prev) ? prev : [];
+      
+      // Check for duplicates (same service, date, and time)
+      const isDuplicate = prevBookings.some(
+        (booking) =>
+          booking.serviceId === bookingEntry.serviceId &&
+          booking.date === bookingEntry.date &&
+          booking.time === bookingEntry.time
+      );
+
+      if (isDuplicate) {
+        showNotification(`⚠️ This booking already exists: ${bookingEntry.name} on ${bookingEntry.dateLabel} at ${bookingEntry.time}`);
+        return prevBookings;
+      }
+
+      const updatedBookings = [...prevBookings, bookingEntry];
+      
+      // Log successful addition
+      console.log('✅ Booking added successfully:', {
+        bookingId: bookingEntry.bookingId,
+        serviceName: bookingEntry.name,
+        date: bookingEntry.dateLabel,
+        time: bookingEntry.time,
+        totalBookings: updatedBookings.length,
+        bookingEntry: bookingEntry,
+      });
+      
+      // Save to localStorage
+      try {
+        saveBookingsToLocalStorage(updatedBookings);
+        console.log('💾 Booking saved to localStorage, total bookings:', updatedBookings.length);
+      } catch (error) {
+        console.warn('⚠️ Failed to save booking to localStorage:', error);
+      }
+
+      return updatedBookings;
+    });
+
+    // Show success notification
+    showNotification(`✅ Reserved: ${service.name} · ${bookingEntry.dateLabel} at ${bookingEntry.time}`);
+    
+    // Close the service modal first
     handleCloseModal();
+    
+    // Open booking drawer after state update completes
+    // Use setTimeout to ensure React state update completes before opening drawer
+    setTimeout(() => {
+      setIsBookingOpen(true);
+      console.log('📂 Opening booking drawer with updated bookings');
+    }, 350);
   };
 
   const handleCancelBooking = (bookingId) => {
-    setBookings((prev) => prev.filter((booking) => booking.bookingId !== bookingId));
+    setBookings((prev) => {
+      const updatedBookings = prev.filter((booking) => booking.bookingId !== bookingId);
+      saveBookingsToLocalStorage(updatedBookings);
+      return updatedBookings;
+    });
   };
 
   const handleClearBookings = () => {
     setBookings([]);
+    try {
+      localStorage.removeItem(BOOKINGS_STORAGE_KEY);
+    } catch (error) {
+      console.warn('Failed to clear bookings from localStorage:', error);
+    }
   };
 
+  // Recreated Confirm Booking Handler with enhanced functionality
   const handleConfirmBookings = async () => {
-    if (bookings.length === 0) {
+    // Early validation: Check if there are any bookings
+    if (!bookings || bookings.length === 0) {
       showNotification('No bookings to confirm. Please add services to your booking first.');
+      return;
+    }
+
+    // Prevent multiple simultaneous submissions
+    if (isConfirming) {
       return;
     }
 
     setIsConfirming(true);
 
     try {
-      // Validate bookings before submission
-      const invalidBookings = bookings.filter(booking =>
-        !booking.serviceId ||
-        !booking.name ||
-        !booking.date ||
-        !booking.time ||
-        !booking.totalPrice ||
-        booking.totalPrice <= 0
-      );
+      // Step 1: Comprehensive validation of all bookings
+      const validationErrors = [];
+      bookings.forEach((booking, index) => {
+        const bookingNum = index + 1;
+        if (!booking.serviceId) {
+          validationErrors.push(`Booking ${bookingNum}: Service ID is required`);
+        }
+        if (!booking.name || booking.name.trim() === '') {
+          validationErrors.push(`Booking ${bookingNum}: Service name is required`);
+        }
+        if (!booking.date || booking.date.trim() === '') {
+          validationErrors.push(`Booking ${bookingNum}: Date is required`);
+        }
+        if (!booking.time || booking.time.trim() === '') {
+          validationErrors.push(`Booking ${bookingNum}: Time is required`);
+        }
+        if (!booking.totalPrice || typeof booking.totalPrice !== 'number' || booking.totalPrice <= 0) {
+          validationErrors.push(`Booking ${bookingNum}: Valid total price is required`);
+        }
+      });
 
-      if (invalidBookings.length > 0) {
-        showNotification('Some bookings are missing required information. Please review and try again.');
+      if (validationErrors.length > 0) {
+        showNotification(`Please fix the following issues:\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? '\n...' : ''}`);
         setIsConfirming(false);
         return;
       }
 
-      // Transform bookings to match backend format
-      const bookingsToSubmit = bookings.map(booking => {
-        // Transform addOns from objects to the format expected by backend schema
-        // Schema expects: [{ name: String, price: Number }]
-        const transformedAddOns = (booking.addOns || []).map(addOn => {
-          if (typeof addOn === 'object' && addOn !== null) {
-            return {
-              name: addOn.name || 'Add-on',
-              price: addOn.price || 0,
-            };
-          }
-          return { name: 'Add-on', price: 0 };
-        });
+      // Step 2: Transform bookings to match backend API format
+      const bookingsToSubmit = bookings.map((booking, index) => {
+        // Transform addOns array to backend format
+        const transformedAddOns = Array.isArray(booking.addOns)
+          ? booking.addOns
+              .filter(addOn => addOn != null)
+              .map(addOn => {
+                if (typeof addOn === 'object') {
+                  return {
+                    name: String(addOn.name || 'Add-on').trim() || 'Add-on',
+                    price: Number(addOn.price) || 0,
+                  };
+                }
+                return { name: 'Add-on', price: 0 };
+              })
+          : [];
 
-        // Generate unique ID for each booking (backend expects 'id' field)
-        const bookingId = booking.bookingId || `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        // Generate unique booking ID if not present
+        const bookingId = booking.id || booking.bookingId || `booking-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`;
 
+        // Ensure date is in correct format - use date field, fallback to dateLabel if date is not available
+        let bookingDate = booking.date || booking.dateLabel || '';
+        // If dateLabel is being used and it's a formatted string, try to extract the actual date
+        if (!booking.date && booking.dateLabel) {
+          // dateLabel might be formatted like "Monday, January 15, 2024" - we need the actual date value
+          // For now, use dateLabel as fallback, but ideally we should store the actual date value
+          bookingDate = booking.dateLabel;
+        }
+
+        // Build booking object with all required and optional fields
         return {
           id: bookingId,
-          serviceId: booking.serviceId,
-          name: booking.name,
-          serviceCategory: booking.serviceCategory || 'General',
-          duration: booking.duration || 60,
-          basePrice: booking.basePrice || booking.totalPrice,
-          totalPrice: booking.totalPrice,
-          currency: booking.currency || 'USD',
-          date: booking.date,
-          time: booking.time,
-          therapistLevel: booking.therapistLevel || 'Standard',
+          serviceId: String(booking.serviceId || '').trim(),
+          name: String(booking.name || '').trim(),
+          serviceCategory: String(booking.serviceCategory || 'General').trim(),
+          duration: Number(booking.duration) || 60,
+          basePrice: Number(booking.basePrice || booking.totalPrice || 0),
+          totalPrice: Number(booking.totalPrice || booking.basePrice || 0),
+          currency: String(booking.currency || 'USD').trim().toUpperCase(),
+          date: String(bookingDate).trim(),
+          time: String(booking.time || '').trim(),
+          therapistLevel: String(booking.therapistLevel || 'Standard').trim(),
           addOns: transformedAddOns,
-          addOnTotal: booking.addOnTotal || 0,
-          notes: booking.notes || '',
-          image: booking.image || null,
+          addOnTotal: Number(booking.addOnTotal || 0),
+          notes: booking.notes ? String(booking.notes).trim() : '',
+          image: booking.image ? String(booking.image).trim() : null,
         };
       });
 
-      // Call API to create bookings
-      console.log('Submitting bookings:', bookingsToSubmit);
-      const response = await api.bookings.create(bookingsToSubmit);
-      console.log('Booking API response:', response);
+      // Step 3: Final validation before submission
+      const finalValidationErrors = [];
+      bookingsToSubmit.forEach((booking, index) => {
+        const bookingNum = index + 1;
+        if (!booking.serviceId || booking.serviceId.trim() === '') {
+          finalValidationErrors.push(`Booking ${bookingNum}: Service ID is missing`);
+        }
+        if (!booking.name || booking.name.trim() === '') {
+          finalValidationErrors.push(`Booking ${bookingNum}: Service name is missing`);
+        }
+        if (!booking.date || booking.date.trim() === '') {
+          finalValidationErrors.push(`Booking ${bookingNum}: Date is missing`);
+        }
+        if (!booking.time || booking.time.trim() === '') {
+          finalValidationErrors.push(`Booking ${bookingNum}: Time is missing`);
+        }
+        if (!booking.totalPrice || booking.totalPrice <= 0) {
+          finalValidationErrors.push(`Booking ${bookingNum}: Total price is invalid`);
+        }
+      });
 
+      if (finalValidationErrors.length > 0) {
+        showNotification(`Validation failed:\n${finalValidationErrors.slice(0, 3).join('\n')}${finalValidationErrors.length > 3 ? '\n...' : ''}`);
+        setIsConfirming(false);
+        return;
+      }
+
+      // Log submission in development mode
+      if (process.env.NODE_ENV === 'development' || import.meta.env.DEV) {
+        console.log('📅 Submitting bookings:', {
+          count: bookingsToSubmit.length,
+          bookings: bookingsToSubmit,
+        });
+      }
+
+      // Step 4: Call API to create bookings
+      let response;
+      try {
+        response = await api.bookings.create(bookingsToSubmit);
+      } catch (apiError) {
+        // Re-throw to be caught by outer catch block
+        throw apiError;
+      }
+
+      if (process.env.NODE_ENV === 'development' || import.meta.env.DEV) {
+        console.log('📅 Booking API response:', response);
+      }
+
+      // Step 5: Handle successful response
       if (response && response.success) {
-        const bookingCount = bookings.length;
-        showNotification(`Successfully confirmed ${bookingCount} booking${bookingCount > 1 ? 's' : ''}! Our spa concierge will contact you shortly.`);
-        setBookings([]); // Clear bookings after successful confirmation
-        // Close the drawer after a short delay to show the success message
+        const createdBookings = response.data?.bookings || [];
+        const bookingCount = createdBookings.length || bookings.length;
+        
+        // Show success notification
+        showNotification(
+          `✅ Successfully confirmed ${bookingCount} booking${bookingCount > 1 ? 's' : ''}! ` +
+          `Our spa concierge will contact you within 15 minutes.`
+        );
+
+        // Clear bookings from state
+        setBookings([]);
+
+        // Clear localStorage
+        try {
+          localStorage.removeItem(BOOKINGS_STORAGE_KEY);
+        } catch (error) {
+          console.warn('⚠️ Failed to clear bookings from localStorage:', error);
+        }
+
+        // Close drawer after showing success message
         setTimeout(() => {
           setIsBookingOpen(false);
-        }, 2000);
+        }, 2500);
       } else {
+        // Handle API error response
         const errorMsg = response?.message || 'Failed to confirm bookings. Please try again.';
-        showNotification(errorMsg);
-        console.error('Booking confirmation failed:', response);
+        showNotification(`❌ ${errorMsg}`);
+        console.error('❌ Booking confirmation failed:', response);
       }
     } catch (error) {
-      console.error('Error confirming bookings:', error);
+      // Step 6: Handle exceptions with detailed error messages
+      console.error('❌ Error confirming bookings:', error);
+      
       let errorMessage = 'Failed to confirm bookings. Please try again.';
 
-      // Provide more specific error messages
-      if (error.message) {
-        if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
-        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          errorMessage = 'Please sign in to confirm your bookings. Your bookings have been saved locally.';
-        } else if (error.message.includes('400') || error.message.includes('validation')) {
+      if (error && error.message) {
+        const errorMsg = error.message.toLowerCase();
+        
+        // Network/connection errors
+        if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('failed to fetch')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and ensure the backend server is running.';
+        }
+        // Authentication errors
+        else if (errorMsg.includes('401') || errorMsg.includes('unauthorized') || errorMsg.includes('authentication')) {
+          // Save bookings locally before showing error
+          try {
+            saveBookingsToLocalStorage(bookings);
+            errorMessage = 'Please sign in to confirm your bookings. Your bookings have been saved locally and will be available when you sign in.';
+          } catch (saveError) {
+            errorMessage = 'Please sign in to confirm your bookings.';
+          }
+        }
+        // Validation errors
+        else if (errorMsg.includes('400') || errorMsg.includes('validation') || errorMsg.includes('required')) {
           errorMessage = 'Invalid booking data. Please review your bookings and try again.';
-        } else {
+        }
+        // Server errors
+        else if (errorMsg.includes('500') || errorMsg.includes('server')) {
+          errorMessage = 'Server error occurred. Please try again in a few moments.';
+        }
+        // Use the error message if it's descriptive
+        else if (error.message.length < 100) {
           errorMessage = error.message;
         }
       }
 
-      showNotification(errorMessage);
+      showNotification(`❌ ${errorMessage}`);
     } finally {
+      // Always reset confirming state
       setIsConfirming(false);
     }
   };

@@ -1216,8 +1216,15 @@ function OrdersPanel() {
   );
 }
 
-function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, onProductAdded }) {
+function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, onProductAdded, refreshTrigger }) {
   const { products: allProducts, loading, refresh } = useProducts();
+  
+  // Refresh products when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refresh();
+    }
+  }, [refreshTrigger, refresh]);
   // Allow owners to add products even without subscription for testing/admin purposes
   const hasSubscription = !!subscription || isOwner;
   
@@ -3086,6 +3093,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [productRefreshTrigger, setProductRefreshTrigger] = useState(0);
   const isOwner = currentUser?.role === 'owner';
 
   // Fetch subscription status
@@ -3145,6 +3153,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           onAddProduct={() => setIsAddProductOpen(true)} 
           subscription={subscription}
           onViewStorefront={onViewStorefront}
+          refreshTrigger={productRefreshTrigger}
           onProductAdded={() => {
             // Refresh will be handled by the modal's onSuccess callback
           }}
@@ -3246,11 +3255,8 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         onClose={() => setIsAddProductOpen(false)}
         onSuccess={async (product) => {
           setIsAddProductOpen(false);
-          // Product is already saved to database via API
-          // Refresh the products list by reloading the page to ensure all components update
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
+          // Trigger product list refresh by incrementing the trigger
+          setProductRefreshTrigger(prev => prev + 1);
         }}
       />
       <AddServiceModal

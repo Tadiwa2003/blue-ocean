@@ -22,7 +22,7 @@ const fallbackImage =
     </svg>
   `);
 
-export function ProductDetailsModal({ product, open, onClose, onViewProduct, onAddToCart }) {
+export function ProductDetailsModal({ product, open, onClose, onViewProduct, onAddToCart, onBuyNow }) {
   const { products: allProducts } = useProducts();
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -585,8 +585,27 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
               </div>
               <Button 
                 variant="secondary" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // Validate selections if required
+                  if ((requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)) {
+                    return;
+                  }
+                  
+                  if (onBuyNow) {
+                    onBuyNow(product, selectedColor, selectedSize, quantity);
+                  } else if (onAddToCart) {
+                    // Fallback: if onBuyNow is not provided, add to cart and close modal
+                    onAddToCart(product, selectedColor, selectedSize, quantity);
+                    onClose();
+                  }
+                }}
                 className="w-full justify-center text-base py-3 font-semibold"
+                disabled={(requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)}
                 aria-label="Buy now"
+                type="button"
               >
                 Buy Now
               </Button>

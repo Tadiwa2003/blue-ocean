@@ -284,11 +284,22 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
     });
   };
 
-  const handleBook = () => {
-    if (!service || !selectedDate || !selectedTime) {
+  const handleBook = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    // Validate required fields
+    if (!service) {
+      console.error('❌ Cannot book: Service is missing');
       return;
     }
 
+    if (!selectedDate || !selectedTime) {
+      console.warn('⚠️ Please select both date and time before booking');
+      return;
+    }
+
+    // Call the onBook handler with booking data
     if (onBook) {
       onBook(service, {
         date: selectedDate,
@@ -298,6 +309,8 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
         addOnTotal,
         totalPrice,
       });
+    } else {
+      console.error('❌ onBook handler is not provided');
     }
   };
 
@@ -747,7 +760,8 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                 <Button
                   onClick={handleBook}
                   className="w-full justify-center py-4 text-base font-semibold"
-                  disabled={!selectedDate || !selectedTime}
+                  disabled={!selectedDate || !selectedTime || !service}
+                  type="button"
                   aria-label={intent === 'book' ? 'Confirm your booking' : 'Reserve this service'}
                 >
                   {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}

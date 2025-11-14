@@ -1,10 +1,11 @@
 import { createBookings as createBookingsData, getAllBookings, getBookingsByUserId, getBookingById as getBookingByIdData, updateBooking } from '../db/bookings.js';
+import crypto from 'crypto';
 
 // Create bookings (multiple bookings can be created at once)
 export const createBookings = async (req, res) => {
   try {
     const { bookings } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.id || null; // Allow null for guest bookings
 
     if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
       return res.status(400).json({
@@ -14,34 +15,42 @@ export const createBookings = async (req, res) => {
     }
 
     // Validate each booking
-    for (const booking of bookings) {
+    for (let i = 0; i < bookings.length; i++) {
+      const booking = bookings[i];
       if (!booking.serviceId || !booking.name) {
         return res.status(400).json({
           success: false,
-          message: 'Each booking must have serviceId and name',
+          message: `Booking ${i + 1}: serviceId and name are required`,
         });
       }
 
       if (!booking.date || !booking.time) {
         return res.status(400).json({
           success: false,
-          message: 'Each booking must have date and time',
+          message: `Booking ${i + 1}: date and time are required`,
         });
       }
 
       if (!booking.totalPrice || booking.totalPrice <= 0) {
         return res.status(400).json({
           success: false,
-          message: 'Each booking must have a valid totalPrice',
+          message: `Booking ${i + 1}: totalPrice must be a positive number`,
         });
       }
     }
 
-    // Add userId to each booking
-    const bookingsWithUserId = bookings.map(booking => ({
-      ...booking,
-      userId: userId || booking.userId,
-    }));
+    // Add userId and ensure unique IDs for each booking
+    const bookingsWithUserId = bookings.map((booking, index) => {
+      // Generate unique ID if not provided or ensure uniqueness
+      const bookingId = booking.id || `booking-${Date.now()}-${index}-${crypto.randomUUID().substring(0, 8)}`;
+      
+      return {
+        ...booking,
+        id: bookingId,
+        userId: userId || booking.userId || null, // Allow null for guest bookings
+        status: booking.status || 'pending', // Default status
+      };
+    });
 
     const createdBookings = await createBookingsData(bookingsWithUserId);
 
@@ -54,9 +63,27 @@ export const createBookings = async (req, res) => {
     });
   } catch (error) {
     console.error('Create bookings error:', error);
+    
+    // Provide more specific error messages
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error: ' + Object.values(error.errors).map(e => e.message).join(', '),
+      });
+    }
+    
+    if (error.code === 11000) {
+      // Duplicate key error (MongoDB)
+      return res.status(400).json({
+        success: false,
+        message: 'A booking with this ID already exists. Please try again.',
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Failed to create bookings. Please try again.',
+      message: error.message || 'Failed to create bookings. Please try again.',
+      ...(process.env.NODE_ENV === 'development' && { error: error.stack }),
     });
   }
 };

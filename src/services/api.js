@@ -73,9 +73,13 @@ const apiFetch = async (url, options = {}) => {
     
     return await handleResponse(response);
   } catch (error) {
-    // Handle network errors
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Unable to connect to server. Please make sure the backend server is running on http://localhost:3001');
+    // Handle network errors - server not running or connection refused
+    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      throw new Error('Unable to connect to server. Please make sure the backend server is running. Start it with: npm run server');
+    }
+    // Handle CORS errors
+    if (error.message && error.message.includes('CORS')) {
+      throw new Error('CORS Error: The server is not allowing requests from this origin. Please check the backend CORS configuration.');
     }
     // Re-throw other errors
     throw error;

@@ -2,7 +2,7 @@ import { getAllProducts, getProductById as getProductByIdDB, createProduct as cr
 import crypto from 'crypto';
 
 // Allowed product categories
-const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sandals', 'Clothing', 'Accessories'];
+const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sandals', 'Clothing', 'Accessories', 'Jewelry'];
 
 // Maximum lengths for validation
 const MAX_NAME_LENGTH = 200;

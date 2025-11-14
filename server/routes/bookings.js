@@ -6,21 +6,12 @@ import {
   getBookingById, 
   updateBookingStatus 
 } from '../controllers/bookingController.js';
-import { authenticateToken } from '../middleware/auth.js';
-import { requireRole } from '../middleware/auth.js';
+import { authenticateToken, optionalAuth, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Create bookings - allow both authenticated and guest bookings
-router.post('/', async (req, res, next) => {
-  // Try to authenticate if token exists, but don't fail if no token (for guest bookings)
-  const authHeader = req.headers['authorization'];
-  if (authHeader) {
-    return authenticateToken(req, res, next);
-  }
-  // No auth header, continue without user (guest booking)
-  next();
-}, createBookings);
+router.post('/', optionalAuth, createBookings);
 
 // All other routes require authentication
 router.use(authenticateToken);
