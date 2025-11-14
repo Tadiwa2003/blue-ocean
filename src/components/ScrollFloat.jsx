@@ -36,7 +36,7 @@ const ScrollFloat = ({
 
     const charElements = el.querySelectorAll('.char');
 
-    gsap.fromTo(charElements, {
+    const anim = gsap.fromTo(charElements, {
       willChange: 'opacity, transform',
       opacity: 0,
       yPercent: 120,
@@ -59,6 +59,18 @@ const ScrollFloat = ({
         scrub: true
       }
     });
+
+    // Cleanup function
+    return () => {
+      if (anim && anim.scrollTrigger) {
+        anim.scrollTrigger.kill();
+      }
+      if (anim) {
+        anim.kill();
+      }
+      // To be safe, kill all ScrollTriggers
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
   }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
 
   return (

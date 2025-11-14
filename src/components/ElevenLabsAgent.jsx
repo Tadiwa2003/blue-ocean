@@ -19,6 +19,7 @@ export function ElevenLabsAgent() {
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
   const audioElementRef = useRef(null);
+  const lastObjectUrlRef = useRef(null);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -38,6 +39,11 @@ export function ElevenLabsAgent() {
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
+      }
+      // Revoke any remaining object URLs
+      if (lastObjectUrlRef.current) {
+        URL.revokeObjectURL(lastObjectUrlRef.current);
+        lastObjectUrlRef.current = null;
       }
     };
   }, [isOpen]);
@@ -133,14 +139,18 @@ export function ElevenLabsAgent() {
               if (data.type === 'audio' && data.audio) {
                 // Base64 audio data
                 const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
-                playAudio(audioBlob);
+                if (audioBlob) {
+                  playAudio(audioBlob);
+                }
               } else if (data.type === 'conversation_initiation') {
                 setAgentResponse('Agent is ready. Start speaking!');
               } else if (data.type === 'response_audio' || data.type === 'audio') {
                 // Handle audio response
                 if (data.audio) {
                   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
-                  playAudio(audioBlob);
+                  if (audioBlob) {
+                    playAudio(audioBlob);
+                  }
                 }
               } else if (data.text || data.message) {
                 setAgentResponse(data.text || data.message);
@@ -187,7 +197,14 @@ export function ElevenLabsAgent() {
     }
 
     try {
+      // Revoke previous object URL if it exists
+      if (lastObjectUrlRef.current) {
+        URL.revokeObjectURL(lastObjectUrlRef.current);
+        lastObjectUrlRef.current = null;
+      }
+
       const audioUrl = URL.createObjectURL(audioBlob);
+      lastObjectUrlRef.current = audioUrl;
       const audio = new Audio(audioUrl);
       
       audio.onloadeddata = () => {
@@ -196,18 +213,27 @@ export function ElevenLabsAgent() {
       
       audio.onerror = (err) => {
         console.error('Audio playback error:', err);
-        URL.revokeObjectURL(audioUrl);
+        if (lastObjectUrlRef.current === audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+          lastObjectUrlRef.current = null;
+        }
       };
       
       audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
+        if (lastObjectUrlRef.current === audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+          lastObjectUrlRef.current = null;
+        }
         console.log('Audio playback finished');
       };
 
       // Play audio
       audio.play().catch((err) => {
         console.error('Error playing audio:', err);
-        URL.revokeObjectURL(audioUrl);
+        if (lastObjectUrlRef.current === audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+          lastObjectUrlRef.current = null;
+        }
         // If autoplay is blocked, show a message
         if (err.name === 'NotAllowedError') {
           setError('Please interact with the page first to enable audio playback.');
@@ -219,17 +245,33 @@ export function ElevenLabsAgent() {
       }
     } catch (err) {
       console.error('Error creating audio:', err);
+      // Revoke URL on error
+      if (lastObjectUrlRef.current) {
+        URL.revokeObjectURL(lastObjectUrlRef.current);
+        lastObjectUrlRef.current = null;
+      }
     }
   };
 
   const base64ToBlob = (base64, mimeType) => {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    // Guard for falsy/non-string input
+    if (!base64 || typeof base64 !== 'string') {
+      console.error('base64ToBlob: Invalid input - expected non-empty string');
+      return null;
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
+
+    try {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new Blob([byteArray], { type: mimeType });
+    } catch (err) {
+      console.error('base64ToBlob: Error decoding base64 string:', err);
+      return null;
+    }
   };
 
   const startListening = async () => {
