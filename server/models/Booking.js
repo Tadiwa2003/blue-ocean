@@ -18,6 +18,24 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  guestName: {
+    type: String,
+    default: '',
+  },
+  guestEmail: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Please provide a valid email address'
+    }
+  },
+  guestPhone: {
+    type: String,
+    default: '',
+  },
   serviceCategory: {
     type: String,
     default: '',
@@ -42,10 +60,24 @@ const bookingSchema = new mongoose.Schema({
   date: {
     type: String,
     required: true,
+    validate: {
+      validator: function(v) {
+        // Validate ISO date format (YYYY-MM-DD)
+        return /^\d{4}-\d{2}-\d{2}$/.test(v);
+      },
+      message: 'Date must be in ISO format (YYYY-MM-DD)'
+    }
   },
   time: {
     type: String,
     required: true,
+    validate: {
+      validator: function(v) {
+        // Validate time format (HH:MM AM/PM or 24-hour format)
+        return /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i.test(v);
+      },
+      message: 'Time must be in format like "10:00 AM" or "14:00"'
+    }
   },
   therapistLevel: {
     type: String,
@@ -87,12 +119,16 @@ const bookingSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Indexes
+// Indexes for better query performance
 bookingSchema.index({ userId: 1 });
-bookingSchema.index({ id: 1 });
+bookingSchema.index({ id: 1 }, { unique: true });
 bookingSchema.index({ serviceId: 1 });
 bookingSchema.index({ status: 1 });
 bookingSchema.index({ date: 1, time: 1 });
+// Compound index for checking availability (serviceId + date + time)
+bookingSchema.index({ serviceId: 1, date: 1, time: 1 });
+// Index for date range queries
+bookingSchema.index({ date: 1, status: 1 });
 
 const Booking = mongoose.model('Booking', bookingSchema);
 

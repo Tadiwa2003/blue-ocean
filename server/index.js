@@ -14,12 +14,14 @@ import serviceRoutes from './routes/services.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import bookingRoutes from './routes/bookings.js';
 import storefrontRoutes from './routes/storefronts.js';
+import elevenlabsRoutes from './routes/elevenlabs.js';
+import adminRoutes from './routes/admin.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from server/.env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -87,6 +89,8 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/storefronts', storefrontRoutes);
+app.use('/api/elevenlabs', elevenlabsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,5 +1,12 @@
-import { createBookings as createBookingsData, getAllBookings, getBookingsByUserId, getBookingById as getBookingByIdData, updateBooking } from '../db/bookings.js';
+import {
+  createBookings as createBookingsData,
+  getAllBookings,
+  getBookingsByUserId,
+  getBookingById as getBookingByIdData,
+  updateBooking,
+} from '../db/bookings.js';
 import crypto from 'crypto';
+import { sendBookingNotifications } from '../utils/email.js';
 
 // Create bookings (multiple bookings can be created at once)
 export const createBookings = async (req, res) => {
@@ -17,24 +24,98 @@ export const createBookings = async (req, res) => {
     // Validate each booking
     for (let i = 0; i < bookings.length; i++) {
       const booking = bookings[i];
+      const bookingNum = i + 1;
+      
+      // Validate serviceId and name
       if (!booking.serviceId || !booking.name) {
         return res.status(400).json({
           success: false,
-          message: `Booking ${i + 1}: serviceId and name are required`,
+          message: `Booking ${bookingNum}: serviceId and name are required`,
         });
       }
 
-      if (!booking.date || !booking.time) {
+      // Validate date format (must be ISO format YYYY-MM-DD)
+      if (!booking.date) {
         return res.status(400).json({
           success: false,
-          message: `Booking ${i + 1}: date and time are required`,
+          message: `Booking ${bookingNum}: date is required`,
+        });
+      }
+      
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(booking.date)) {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: date must be in ISO format (YYYY-MM-DD)`,
+        });
+      }
+      
+      // Validate that date is not in the past
+      const bookingDate = new Date(booking.date + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (bookingDate < today) {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: cannot book a date in the past`,
         });
       }
 
-      if (!booking.totalPrice || booking.totalPrice <= 0) {
+      // Validate time
+      if (!booking.time || typeof booking.time !== 'string' || booking.time.trim() === '') {
         return res.status(400).json({
           success: false,
-          message: `Booking ${i + 1}: totalPrice must be a positive number`,
+          message: `Booking ${bookingNum}: time is required`,
+        });
+      }
+      
+      // Validate time format (basic check for AM/PM or 24-hour format)
+      const timeRegex = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i;
+      if (!timeRegex.test(booking.time.trim())) {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: invalid time format. Use format like "10:00 AM" or "14:00"`,
+        });
+      }
+
+      // Validate totalPrice
+      if (typeof booking.totalPrice !== 'number' || booking.totalPrice <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: totalPrice must be a positive number`,
+        });
+      }
+
+      // Validate guestEmail
+      if (!booking.guestEmail || typeof booking.guestEmail !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: guestEmail is required`,
+        });
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(booking.guestEmail.trim())) {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: invalid email format`,
+        });
+      }
+
+      // Validate serviceId is a string
+      if (typeof booking.serviceId !== 'string' || booking.serviceId.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: serviceId must be a non-empty string`,
+        });
+      }
+
+      // Validate name is a string
+      if (typeof booking.name !== 'string' || booking.name.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: `Booking ${bookingNum}: name must be a non-empty string`,
         });
       }
     }
@@ -53,6 +134,40 @@ export const createBookings = async (req, res) => {
     });
 
     const createdBookings = await createBookingsData(bookingsWithUserId);
+
+    console.log(`[Booking] ✅ Created ${createdBookings.length} booking(s) in database`);
+    console.log(`[Booking] 📧 Preparing to send email notifications to concierge: tadiwachoga2003@gmail.com`);
+
+    // Send email notifications for each booking (fire-and-forget, don't block response)
+    // But log the results for debugging
+    createdBookings.forEach((booking, index) => {
+      const bookingNum = index + 1;
+      console.log(`[Booking] 📧 Processing email for booking ${bookingNum}/${createdBookings.length}:`, {
+        id: booking.id || booking._id,
+        name: booking.name,
+        guestName: booking.guestName,
+        guestEmail: booking.guestEmail,
+        date: booking.date,
+        time: booking.time,
+        totalPrice: booking.totalPrice,
+      });
+      
+      // Ensure booking has all required fields before sending
+      if (!booking.name || !booking.date || !booking.time) {
+        console.error(`[Booking] ❌ Booking ${bookingNum} missing required fields, skipping email`);
+        return;
+      }
+      
+      sendBookingNotifications(booking)
+        .then(() => {
+          console.log(`[Booking] ✅ Email notification processed for booking ${bookingNum}`);
+        })
+        .catch((error) => {
+          console.error(`[Booking] ❌ Email notification failed for booking ${bookingNum}:`, error.message);
+          console.error('[Booking] ❌ Error stack:', error.stack);
+          // Don't throw - we want bookings to succeed even if email fails
+      });
+    });
 
     res.status(201).json({
       success: true,

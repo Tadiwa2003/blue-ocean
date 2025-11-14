@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api.js';
 import { SubscriptionPage } from '../pages/SubscriptionPage.jsx';
 import { CreateStorefrontModal } from '../components/CreateStorefrontModal.jsx';
+import { DatabaseViewer } from '../pages/DatabaseViewer.jsx';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -28,6 +29,7 @@ const navItems = [
   { id: 'analytics', label: 'Analytics', icon: '📈' },
   { id: 'orders', label: 'Orders', icon: '📦' },
   { id: 'customers', label: 'Customers', icon: '🤝' },
+  { id: 'database', label: 'Database', icon: '🗄️' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -278,9 +280,9 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
     if (isOwner) {
       return navItems; // Owner sees all items
     }
-    // Non-owners don't see bookings, subscription, reports, analytics
+    // Non-owners don't see bookings, subscription, reports, analytics, database
     return navItems.filter(item => 
-      !['bookings', 'subscription', 'reports', 'analytics'].includes(item.id)
+      !['bookings', 'subscription', 'reports', 'analytics', 'database'].includes(item.id)
     );
   }, [isOwner]);
 
@@ -3218,6 +3220,16 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         return <AnalyticsPanel />;
       case 'orders':
         return <OrdersPanel />;
+      case 'database':
+        if (!isOwner) {
+          return (
+            <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+              <h2 className="font-display text-2xl">Access Denied</h2>
+              <p className="mt-3 text-sm text-white/70">This section is only available to platform owners.</p>
+            </div>
+          );
+        }
+        return <DatabaseViewer />;
       case 'customers':
       case 'settings':
         return (

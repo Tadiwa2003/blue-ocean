@@ -182,6 +182,34 @@ export default function App() {
     }
   }, [isAuthenticated, currentUser]);
 
+  // Verify 21st.dev extension is loaded and monitor connection
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('✅ 21st.dev Extension Status:', {
+        toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
+        reactPluginAvailable: typeof ReactPlugin !== 'undefined',
+        port: window.location.port || 'default',
+        host: window.location.hostname,
+        message: '21st.dev toolbar initialized. If it shows "Not Connected", install the 21st.dev extension in Cursor/VSCode',
+      });
+      
+      // Monitor for connection status changes
+      const checkConnection = () => {
+        const toolbar = document.querySelector('[data-21st-toolbar]') || 
+                       document.querySelector('*[class*="21st"]') ||
+                       document.querySelector('*[id*="21st"]');
+        if (toolbar) {
+          console.log('✅ 21st.dev Toolbar element found in DOM');
+        }
+      };
+      
+      // Check after a short delay to allow toolbar to render
+      const timeoutId = setTimeout(checkConnection, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
+
   const openStorefront = (type = 'products') => {
     setStorefrontType(type);
     setIsViewingStorefront(true);
@@ -210,7 +238,16 @@ export default function App() {
         <div className="pointer-events-none fixed inset-0 -z-10 opacity-70">
           <ShaderAnimation />
         </div>
-        <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
+        {/* 21st.dev Toolbar - Requires Cursor/VSCode extension to be installed and active */}
+        {typeof window !== 'undefined' && (
+          <TwentyFirstToolbar 
+            config={{ 
+              plugins: [ReactPlugin],
+              // Enable auto-connect
+              autoConnect: true,
+            }} 
+          />
+        )}
       <SignInModal
         open={isModalOpen}
         onClose={() => {
@@ -275,6 +312,7 @@ export default function App() {
             <ValueJourney />
             <Offerings 
               onBookStrategyCall={() => setIsContactModalOpen(true)}
+              onViewSpaStorefront={() => openStorefront('spa')}
               onDownloadMenu={() => {
                 downloadRitualMenu(() => {
                   // Optional: Show success notification
