@@ -60,16 +60,17 @@ const ScrollFloat = ({
       }
     });
 
+    // Store the specific ScrollTrigger reference for this component
+    const localTrigger = anim?.scrollTrigger;
+
     // Cleanup function
     return () => {
-      if (anim && anim.scrollTrigger) {
-        anim.scrollTrigger.kill();
+      if (localTrigger) {
+        localTrigger.kill();
       }
       if (anim) {
         anim.kill();
       }
-      // To be safe, kill all ScrollTriggers
-      ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
 
