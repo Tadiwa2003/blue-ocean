@@ -36,7 +36,7 @@ const ScrollFloat = ({
 
     const charElements = el.querySelectorAll('.char');
 
-    gsap.fromTo(charElements, {
+    const anim = gsap.fromTo(charElements, {
       willChange: 'opacity, transform',
       opacity: 0,
       yPercent: 120,
@@ -59,6 +59,19 @@ const ScrollFloat = ({
         scrub: true
       }
     });
+
+    // Store the specific ScrollTrigger reference for this component
+    const localTrigger = anim?.scrollTrigger;
+
+    // Cleanup function
+    return () => {
+      if (localTrigger) {
+        localTrigger.kill();
+      }
+      if (anim) {
+        anim.kill();
+      }
+    };
   }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger]);
 
   return (

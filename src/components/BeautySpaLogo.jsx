@@ -1,40 +1,134 @@
 import { useState } from 'react';
 
 export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
-  // Try to load the logo image, fallback to SVG if not found
+  // Use the image path - Vite handles public folder assets correctly, even with spaces
+  // If encoding is needed, browsers will handle it automatically
   const logoSrc = '/assets/images/Tana beauty boost.png';
   const [imageError, setImageError] = useState(false);
 
-  return (
-    <div className={`flex flex-col items-center ${className}`}>
-      {/* Circular Logo - Use image if available, otherwise SVG */}
-      <div
-        className="relative"
-        style={{
-          width: `${size * 1.3}px`,
-          height: `${size}px`,
+  // Logo aspect ratio: approximately 1.3:1 (260:200 from viewBox)
+  const LOGO_ASPECT_RATIO = 260 / 200; // 1.3
+  
+  // Determine if this is for header (no text) to optimize layout
+  const isHeaderLogo = !showText;
+  
+  // Extract height classes and remove w-auto to let aspect-ratio handle width
+  const cleanClassName = className.replace(/\s*w-auto\s*/g, ' ').trim();
+  
+  // For header logos, return just the logo without extra wrapper
+  if (isHeaderLogo) {
+    return (
+      <div 
+        className={`relative inline-block overflow-hidden ${cleanClassName}`}
+        style={{ 
+          aspectRatio: `${LOGO_ASPECT_RATIO}`, 
+          width: 'auto',
+          borderRadius: '50% / 40%',
         }}
       >
         {!imageError ? (
           <img
             src={logoSrc}
             alt="Tana's Beauty Boost Logo"
-            className="w-full h-full object-contain drop-shadow-2xl"
+            className="w-full h-full object-contain"
             style={{
-              filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
-              borderRadius: '50% / 45%',
-              backgroundColor: 'rgba(255,255,255,0.02)',
-              padding: '6px',
+              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))',
+              display: 'block',
             }}
-            onError={() => setImageError(true)}
+            onError={() => {
+              console.warn('Logo image failed to load, falling back to SVG');
+              setImageError(true);
+            }}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
           />
         ) : (
           <svg
-            width={size * 1.3}
-            height={size}
             viewBox="0 0 260 200"
-            className="drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))' }}
+            className="w-full h-full"
+            style={{ 
+              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))',
+              display: 'block',
+            }}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <defs>
+              <linearGradient id="headerPurpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#6B46C1" stopOpacity="1" />
+                <stop offset="100%" stopColor="#A78BFA" stopOpacity="1" />
+              </linearGradient>
+              <linearGradient id="headerGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FCD34D" stopOpacity="1" />
+                <stop offset="50%" stopColor="#F59E0B" stopOpacity="1" />
+                <stop offset="100%" stopColor="#D97706" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="130" cy="100" rx="120" ry="95" fill="url(#headerGoldGradient)" stroke="#B45309" strokeWidth="2" />
+            <ellipse cx="130" cy="100" rx="105" ry="85" fill="url(#headerPurpleGradient)" />
+            <g transform="translate(130, 100)">
+              <path d="M -25,-15 Q -20,-25 -15,-20 Q -10,-15 -5,-10 Q 0,-5 5,-8 Q 10,-10 15,-8 Q 20,-5 25,-3 L 25,15 Q 20,20 15,18 Q 10,15 5,12 Q 0,10 -5,12 Q -10,15 -15,18 Q -20,20 -25,15 Z" fill="#F3E8FF" stroke="#E9D5FF" strokeWidth="0.5" />
+              <path d="M -30,-20 Q -35,-30 -30,-40 Q -25,-50 -20,-55 Q -15,-60 -10,-58 Q -5,-55 0,-52 Q 5,-50 10,-52 Q 15,-55 20,-58 Q 25,-60 30,-55 Q 35,-50 40,-45 Q 35,-40 30,-35 Q 25,-30 20,-25 Q 15,-20 10,-18 Q 5,-15 0,-18 Q -5,-20 -10,-22 Q -15,-25 -20,-28 Q -25,-30 -30,-25 Z" fill="#E9D5FF" fillOpacity="0.6" stroke="url(#headerGoldGradient)" strokeWidth="1.5" />
+              <circle cx="15" cy="5" r="3" fill="#8B5CF6" />
+            </g>
+          </svg>
+        )}
+      </div>
+    );
+  }
+  
+  // For hero/feature logos with text, use full layout
+  // Parse className to extract height classes for logo container
+  const heightMatch = className.match(/(h-\d+)(?:\s+sm:(h-\d+))?(?:\s+md:(h-\d+))?(?:\s+lg:(h-\d+))?/);
+  const baseHeightClass = heightMatch ? heightMatch[1] : 'h-40';
+  
+  // Remove height and width classes from outer container, keep only layout classes
+  const layoutClasses = className.replace(/\s*h-\d+\s*/g, ' ')
+    .replace(/\s*sm:h-\d+\s*/g, ' ')
+    .replace(/\s*md:h-\d+\s*/g, ' ')
+    .replace(/\s*lg:h-\d+\s*/g, ' ')
+    .replace(/\s*w-auto\s*/g, ' ')
+    .replace(/\s+mx-auto\s*/g, ' ')
+    .trim();
+  
+  return (
+    <div className={`flex flex-col items-center justify-center ${layoutClasses || ''}`}>
+      {/* Circular Logo - Use image if available, otherwise SVG */}
+      <div 
+        className={`relative inline-block overflow-hidden ${className.split(' ').filter(c => c.match(/^(h-|sm:h-|md:h-|lg:h-)/)).join(' ')}`}
+        style={{ 
+          aspectRatio: `${LOGO_ASPECT_RATIO}`, 
+          width: 'auto', 
+          maxWidth: '100%',
+          borderRadius: '50% / 40%',
+        }}
+      >
+        {!imageError ? (
+          <img
+            src={logoSrc}
+            alt="Tana's Beauty Boost Logo"
+            className="w-full h-full object-contain"
+            style={{
+              filter: 'drop-shadow(0 15px 40px rgba(0, 0, 0, 0.5)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(217, 119, 6, 0.4)) drop-shadow(0 2px 6px rgba(217, 119, 6, 0.3))',
+              display: 'block',
+            }}
+            onError={() => {
+              console.warn('Logo image failed to load, falling back to SVG');
+              setImageError(true);
+            }}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+        ) : (
+          <svg
+            viewBox="0 0 260 200"
+            className="w-full h-full"
+            style={{ 
+              filter: 'drop-shadow(0 15px 40px rgba(0, 0, 0, 0.5)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(217, 119, 6, 0.4))',
+              display: 'block',
+            }}
+            preserveAspectRatio="xMidYMid meet"
           >
           <defs>
             {/* Purple gradient */}
@@ -208,21 +302,38 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
 
       {/* Text below logo */}
       {showText && (
-        <div className="mt-4 sm:mt-6 text-center">
-          <h1
-            className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold"
+        <div className="mt-6 sm:mt-8 md:mt-10 text-center space-y-3">
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold"
             style={{
-              background: 'linear-gradient(180deg, #FCD34D 0%, #D97706 100%)',
+              background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 45%, #D97706 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              textShadow: '0 2px 4px rgba(217, 119, 6, 0.3)',
-              letterSpacing: '0.05em',
-              filter: 'drop-shadow(0 2px 4px rgba(217, 119, 6, 0.2))',
+              letterSpacing: '0.1em',
+              filter: 'drop-shadow(0 2px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 -2px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 4px 8px rgba(217, 119, 6, 0.6)) drop-shadow(0 8px 16px rgba(217, 119, 6, 0.4)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3))',
+              lineHeight: '1.1',
+              position: 'relative',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(217, 119, 6, 0.2)',
             }}
           >
-            Tana's Beauty Boost Spa
-          </h1>
+            TANA'S BEAUTY BOOST
+          </h2>
+          <p
+            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-semibold"
+            style={{
+              background: 'linear-gradient(180deg, #F59E0B 0%, #D97706 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '0.12em',
+              filter: 'drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8)) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.4)) drop-shadow(0 3px 6px rgba(217, 119, 6, 0.5)) drop-shadow(0 6px 12px rgba(217, 119, 6, 0.3)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25))',
+              lineHeight: '1.2',
+              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(217, 119, 6, 0.2)',
+            }}
+          >
+            BEAUTY SPA
+          </p>
         </div>
       )}
     </div>
