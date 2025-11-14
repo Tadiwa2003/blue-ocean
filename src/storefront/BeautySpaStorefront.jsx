@@ -13,6 +13,7 @@ import { SplineBackground } from '../components/SplineBackground.jsx';
 import DataGridHero from '../components/ui/DataGridHero.jsx';
 import { motion } from 'framer-motion';
 import api from '../services/api.js';
+import { convertDateLabelToISO, isPastDateTime, getRelativeDateLabel } from '../utils/dateHelpers.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -145,41 +146,89 @@ export function BeautySpaStorefront({ onClose }) {
     }
 
     // Auto-select first available date and time, or use placeholders
-    let defaultDate = service.bookableDates?.[0]?.value || '';
-    let defaultTime = service.timeSlots?.[0] || '';
-    let dateLabel = service.bookableDates?.[0]?.label || '';
+    // ALWAYS default to tomorrow to avoid any past date issues
+    let defaultDate = '';
+    let defaultTime = service.timeSlots?.[0] || '10:00 AM';
+    let dateLabel = '';
     
-    // If no date/time available, use placeholder values so booking can still be created
-    // User can edit these in the booking drawer
+    // Try to get a valid future date from bookableDates
+    if (service.bookableDates && service.bookableDates.length > 0) {
+      for (const dateOption of service.bookableDates) {
+        const isoDate = convertDateLabelToISO(dateOption.value);
+        if (isoDate) {
+          // Check if this date/time combination is in the future
+          if (!isPastDateTime(isoDate, defaultTime)) {
+            defaultDate = isoDate;
+            dateLabel = dateOption.label;
+            break;
+          }
+        }
+      }
+    }
+    
+    // If no valid future date found, or no dates available, use tomorrow
     if (!defaultDate) {
-      // Use today's date as placeholder
-      const today = new Date();
-      defaultDate = today.toISOString().split('T')[0];
-      dateLabel = 'To be confirmed';
-      console.log('⚠️ No date available, using placeholder:', defaultDate);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      defaultDate = tomorrow.toISOString().split('T')[0];
+      dateLabel = getRelativeDateLabel(defaultDate);
     }
     
+    // Final check: ensure the date/time is not in the past
+    if (defaultDate && defaultTime && isPastDateTime(defaultDate, defaultTime)) {
+      // If somehow still in the past, use tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      defaultDate = tomorrow.toISOString().split('T')[0];
+      dateLabel = getRelativeDateLabel(defaultDate);
+    }
+    
+    // Ensure we always have a valid time
     if (!defaultTime) {
-      // Use a default time slot
       defaultTime = '10:00 AM';
-      console.log('⚠️ No time available, using placeholder:', defaultTime);
     }
     
-    if (!dateLabel && service.bookableDates?.[0]) {
-      dateLabel = service.bookableDates[0].label;
-    }
+    // Ensure dateLabel is always set to a readable format
     if (!dateLabel) {
-      dateLabel = defaultDate;
+      dateLabel = getRelativeDateLabel(defaultDate);
     }
+    
+    // Final validation: ensure date is valid ISO format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(defaultDate)) {
+      // Last resort: use tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      defaultDate = tomorrow.toISOString().split('T')[0];
+      dateLabel = getRelativeDateLabel(defaultDate);
+    }
+    
+    // Log for debugging
+    console.log('📅 Quick book date selection:', {
+      defaultDate,
+      defaultTime,
+      dateLabel,
+      isPast: isPastDateTime(defaultDate, defaultTime),
+    });
 
-    // Generate unique booking ID
-    const bookingId = `${service.id || service._id || 'service'}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate unique booking ID using crypto.randomUUID() when available
+    let bookingId;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      bookingId = crypto.randomUUID();
+    } else {
+      // Fallback: use incrementing counter with service ID and timestamp for uniqueness
+      const counter = (window.__bookingCounter = (window.__bookingCounter || 0) + 1);
+      bookingId = `${service.id || service._id || 'service'}-${Date.now()}-${counter}`;
+    }
 
     // Create booking entry with default values
     const bookingEntry = {
       bookingId,
       serviceId: service.id || service._id,
       name: service.name || 'Spa Service',
+      guestName: '',
+      guestEmail: '',
+      guestPhone: '',
       serviceCategory: service.serviceCategory || 'General',
       duration: service.duration || 60,
       basePrice: service.basePrice || 0,
@@ -286,11 +335,61 @@ export function BeautySpaStorefront({ onClose }) {
       return;
     }
 
-    // Generate unique booking ID
-    const bookingId = `${service.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!bookingData.guestEmail || !emailRegex.test(bookingData.guestEmail.trim())) {
+      console.error('❌ Cannot book: Guest email is missing or invalid', bookingData);
+      showNotification('Error: Please provide a valid email address so we can confirm your booking.');
+      return;
+    }
+
+    // Generate unique booking ID using crypto.randomUUID() when available
+    let bookingId;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      bookingId = crypto.randomUUID();
+    } else {
+      // Fallback: use incrementing counter with service ID and timestamp for uniqueness
+      const counter = (window.__bookingCounter = (window.__bookingCounter || 0) + 1);
+      bookingId = `${service.id || service._id || 'service'}-${Date.now()}-${counter}`;
+    }
+    
+    // Ensure bookingData.date is in ISO format (YYYY-MM-DD)
+    let bookingDate = bookingData.date;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(bookingDate)) {
+      // Convert date label to ISO format using date helper
+      const isoDate = convertDateLabelToISO(bookingDate);
+      if (isoDate) {
+        bookingDate = isoDate;
+        bookingData.date = isoDate;
+      } else {
+      // Try to parse if not in ISO format
+      try {
+          const parsedDate = new Date(bookingDate);
+        if (!isNaN(parsedDate.getTime())) {
+            bookingDate = parsedDate.toISOString().split('T')[0];
+            bookingData.date = bookingDate;
+        } else {
+          throw new Error('Invalid date format');
+        }
+      } catch (e) {
+        showNotification('Error: Invalid date format. Please select a valid date.');
+        return;
+      }
+      }
+    }
+    
+    // Validate that the selected date/time is not in the past
+    if (isPastDateTime(bookingDate, bookingData.time)) {
+      showNotification('Error: Cannot book a date and time in the past. Please select a future date and time.');
+      return;
+    }
     
     // Find date label for display
-    const dateLabel = service.bookableDates?.find((date) => date.value === bookingData.date)?.label;
+    const dateLabel = service.bookableDates?.find((date) => {
+      const dateValue = convertDateLabelToISO(date.value) || date.value;
+      return dateValue === bookingDate;
+    })?.label || getRelativeDateLabel(bookingDate);
     
     // Map add-on IDs to add-on objects
     const selectedAddOns = Array.isArray(bookingData.addOns)
@@ -308,6 +407,9 @@ export function BeautySpaStorefront({ onClose }) {
       bookingId,
       serviceId: service.id || service._id,
       name: service.name || 'Spa Service',
+      guestName: bookingData.guestName || '',
+      guestEmail: bookingData.guestEmail || '',
+      guestPhone: bookingData.guestPhone || '',
       serviceCategory: service.serviceCategory || 'General',
       duration: service.duration || 60,
       basePrice: service.basePrice || 0,
@@ -414,6 +516,8 @@ export function BeautySpaStorefront({ onClose }) {
     try {
       // Step 1: Comprehensive validation of all bookings
       const validationErrors = [];
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      
       bookings.forEach((booking, index) => {
         const bookingNum = index + 1;
         if (!booking.serviceId) {
@@ -422,11 +526,36 @@ export function BeautySpaStorefront({ onClose }) {
         if (!booking.name || booking.name.trim() === '') {
           validationErrors.push(`Booking ${bookingNum}: Service name is required`);
         }
-        if (!booking.date || booking.date.trim() === '') {
+        
+        // Validate and convert date to ISO format
+        let bookingDate = booking.date || '';
+        if (!bookingDate || bookingDate.trim() === '') {
           validationErrors.push(`Booking ${bookingNum}: Date is required`);
+        } else {
+          // Convert date if not in ISO format
+          if (!dateRegex.test(bookingDate)) {
+            const isoDate = convertDateLabelToISO(bookingDate || booking.dateLabel);
+            if (isoDate && dateRegex.test(isoDate)) {
+              bookingDate = isoDate;
+              // Update the booking date
+              booking.date = isoDate;
+            } else {
+              validationErrors.push(`Booking ${bookingNum}: Invalid date format. Please select a valid date.`);
+            }
+          }
+          
+          // Validate date is not in the past
+          if (bookingDate && booking.time && isPastDateTime(bookingDate, booking.time)) {
+            validationErrors.push(`Booking ${bookingNum}: Date and time cannot be in the past. Please select a future date and time.`);
+          }
         }
+        
         if (!booking.time || booking.time.trim() === '') {
           validationErrors.push(`Booking ${bookingNum}: Time is required`);
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!booking.guestEmail || booking.guestEmail.trim() === '' || !emailRegex.test(booking.guestEmail.trim())) {
+          validationErrors.push(`Please enter a valid email address in the booking drawer to receive confirmation`);
         }
         if (!booking.totalPrice || typeof booking.totalPrice !== 'number' || booking.totalPrice <= 0) {
           validationErrors.push(`Booking ${bookingNum}: Valid total price is required`);
@@ -434,7 +563,10 @@ export function BeautySpaStorefront({ onClose }) {
       });
 
       if (validationErrors.length > 0) {
-        showNotification(`Please fix the following issues:\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? '\n...' : ''}`);
+        const errorMessage = validationErrors.length === 1 
+          ? validationErrors[0]
+          : `Please fix the following:\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? '\n...' : ''}`;
+        showNotification(errorMessage);
         setIsConfirming(false);
         return;
       }
@@ -457,15 +589,79 @@ export function BeautySpaStorefront({ onClose }) {
           : [];
 
         // Generate unique booking ID if not present
-        const bookingId = booking.id || booking.bookingId || `booking-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`;
+        let bookingId;
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          bookingId = booking.id || booking.bookingId || crypto.randomUUID();
+        } else {
+          const counter = (window.__bookingCounter = (window.__bookingCounter || 0) + 1);
+          bookingId = booking.id || booking.bookingId || `booking-${Date.now()}-${index}-${counter}`;
+        }
 
-        // Ensure date is in correct format - use date field, fallback to dateLabel if date is not available
-        let bookingDate = booking.date || booking.dateLabel || '';
-        // If dateLabel is being used and it's a formatted string, try to extract the actual date
-        if (!booking.date && booking.dateLabel) {
-          // dateLabel might be formatted like "Monday, January 15, 2024" - we need the actual date value
-          // For now, use dateLabel as fallback, but ideally we should store the actual date value
-          bookingDate = booking.dateLabel;
+        // Ensure date is in correct ISO format (YYYY-MM-DD)
+        let bookingDate = booking.date || '';
+        
+        // Validate date format with regex
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        
+        if (!bookingDate || !dateRegex.test(bookingDate)) {
+          // If date is not in ISO format, try to convert using date helper
+          const isoDate = convertDateLabelToISO(bookingDate || booking.dateLabel);
+          if (isoDate) {
+            bookingDate = isoDate;
+          } else if (booking.dateLabel) {
+            // Try to parse from dateLabel
+            try {
+              const parsedDate = new Date(booking.dateLabel);
+              if (!isNaN(parsedDate.getTime())) {
+                bookingDate = parsedDate.toISOString().split('T')[0];
+              } else {
+                // If parsing fails, this is invalid
+                throw new Error(`Booking ${index + 1}: Invalid date format. Expected ISO date (YYYY-MM-DD) or parseable date string.`);
+              }
+            } catch (parseError) {
+              throw new Error(`Booking ${index + 1}: Invalid date format. Expected ISO date (YYYY-MM-DD) or parseable date string.`);
+            }
+          } else {
+            throw new Error(`Booking ${index + 1}: Date is required and must be in ISO format (YYYY-MM-DD).`);
+          }
+        }
+        
+        // Final validation that we have a valid ISO date
+        if (!dateRegex.test(bookingDate)) {
+          throw new Error(`Booking ${index + 1}: Date validation failed. Expected ISO format (YYYY-MM-DD).`);
+        }
+        
+        // Validate that the date/time is not in the past
+        // But first, ensure we have a valid date
+        if (bookingDate && booking.time) {
+          // Double-check the date is valid ISO format
+          if (!dateRegex.test(bookingDate)) {
+            // Try to convert again
+            const convertedDate = convertDateLabelToISO(bookingDate);
+            if (convertedDate && dateRegex.test(convertedDate)) {
+              bookingDate = convertedDate;
+              booking.date = convertedDate;
+            }
+          }
+          
+          // Now check if it's in the past
+          if (isPastDateTime(bookingDate, booking.time)) {
+            // Instead of throwing error, try to fix it by using tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowISO = tomorrow.toISOString().split('T')[0];
+            
+            // Only throw error if we can't fix it
+            if (isPastDateTime(tomorrowISO, booking.time)) {
+              throw new Error(`Booking ${index + 1}: The selected time is too early. Please select a later time.`);
+            } else {
+              // Auto-fix: use tomorrow with the same time
+              bookingDate = tomorrowISO;
+              booking.date = tomorrowISO;
+              booking.dateLabel = getRelativeDateLabel(tomorrowISO);
+              console.log(`⚠️ Auto-fixed booking ${index + 1} date to tomorrow:`, tomorrowISO);
+            }
+          }
         }
 
         // Build booking object with all required and optional fields
@@ -473,6 +669,9 @@ export function BeautySpaStorefront({ onClose }) {
           id: bookingId,
           serviceId: String(booking.serviceId || '').trim(),
           name: String(booking.name || '').trim(),
+          guestName: booking.guestName ? String(booking.guestName).trim() : '',
+          guestEmail: String(booking.guestEmail || '').trim(),
+          guestPhone: booking.guestPhone ? String(booking.guestPhone).trim() : '',
           serviceCategory: String(booking.serviceCategory || 'General').trim(),
           duration: Number(booking.duration) || 60,
           basePrice: Number(booking.basePrice || booking.totalPrice || 0),
@@ -504,13 +703,20 @@ export function BeautySpaStorefront({ onClose }) {
         if (!booking.time || booking.time.trim() === '') {
           finalValidationErrors.push(`Booking ${bookingNum}: Time is missing`);
         }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!booking.guestEmail || booking.guestEmail.trim() === '' || !emailRegex.test(booking.guestEmail.trim())) {
+          finalValidationErrors.push(`Please enter a valid email address in the booking drawer to receive confirmation`);
+        }
         if (!booking.totalPrice || booking.totalPrice <= 0) {
           finalValidationErrors.push(`Booking ${bookingNum}: Total price is invalid`);
         }
       });
 
       if (finalValidationErrors.length > 0) {
-        showNotification(`Validation failed:\n${finalValidationErrors.slice(0, 3).join('\n')}${finalValidationErrors.length > 3 ? '\n...' : ''}`);
+        const errorMessage = finalValidationErrors.length === 1
+          ? finalValidationErrors[0]
+          : `Please fix the following:\n${finalValidationErrors.slice(0, 3).join('\n')}${finalValidationErrors.length > 3 ? '\n...' : ''}`;
+        showNotification(errorMessage);
         setIsConfirming(false);
         return;
       }
@@ -1067,6 +1273,17 @@ export function BeautySpaStorefront({ onClose }) {
         onClearBookings={handleClearBookings}
         onConfirmBookings={handleConfirmBookings}
         isConfirming={isConfirming}
+        onUpdateGuestInfo={(guestInfo) => {
+          // Update all bookings with guest info
+          setBookings((prev) => {
+            return prev.map((booking) => ({
+              ...booking,
+              guestName: guestInfo.name || booking.guestName || '',
+              guestEmail: guestInfo.email || booking.guestEmail || '',
+              guestPhone: guestInfo.phone || booking.guestPhone || '',
+            }));
+          });
+        }}
       />
 
       <CartNotification

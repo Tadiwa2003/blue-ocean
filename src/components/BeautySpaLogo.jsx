@@ -13,7 +13,11 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
   const isHeaderLogo = !showText;
   
   // Extract height classes and remove w-auto to let aspect-ratio handle width
-  const cleanClassName = className.replace(/\s*w-auto\s*/g, ' ').trim();
+  // Use word-boundary pattern to match w-auto regardless of position
+  const cleanClassName = (className || '')
+    .replace(/\bw-auto\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   
   // For header logos, return just the logo without extra wrapper
   if (isHeaderLogo) {
@@ -78,24 +82,25 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
   }
   
   // For hero/feature logos with text, use full layout
-  // Parse className to extract height classes for logo container
-  const heightMatch = className.match(/(h-\d+)(?:\s+sm:(h-\d+))?(?:\s+md:(h-\d+))?(?:\s+lg:(h-\d+))?/);
-  const baseHeightClass = heightMatch ? heightMatch[1] : 'h-40';
+  // Guard against null/undefined className
+  const safeClassName = className || '';
   
   // Remove height and width classes from outer container, keep only layout classes
-  const layoutClasses = className.replace(/\s*h-\d+\s*/g, ' ')
-    .replace(/\s*sm:h-\d+\s*/g, ' ')
-    .replace(/\s*md:h-\d+\s*/g, ' ')
-    .replace(/\s*lg:h-\d+\s*/g, ' ')
-    .replace(/\s*w-auto\s*/g, ' ')
-    .replace(/\s+mx-auto\s*/g, ' ')
+  // Use word-boundary aware regexes to match classes regardless of position
+  const layoutClasses = safeClassName
+    .replace(/\b(h-\d+|sm:h-\d+|md:h-\d+|lg:h-\d+|w-auto|mx-auto)\b/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
   
   return (
     <div className={`flex flex-col items-center justify-center ${layoutClasses || ''}`}>
       {/* Circular Logo - Use image if available, otherwise SVG */}
       <div 
-        className={`relative inline-block overflow-hidden ${className.split(' ').filter(c => c.match(/^(h-|sm:h-|md:h-|lg:h-)/)).join(' ')}`}
+        className={`relative inline-block overflow-hidden ${(safeClassName || '').split(' ').filter(c => {
+          if (!c || !c.trim()) return false;
+          // Match height utilities with optional responsive prefixes and numeric or bracketed values
+          return /^(?:(?:sm|md|lg):)?h-(?:\d+|auto|px|rem|em|\[.*\])$/.test(c.trim());
+        }).join(' ')}`}
         style={{ 
           aspectRatio: `${LOGO_ASPECT_RATIO}`, 
           width: 'auto', 

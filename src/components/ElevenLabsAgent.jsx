@@ -3,7 +3,21 @@ import { Mic, MicOff, X, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ELEVENLABS_AGENT_ID = 'agent_9701k9yhpb0meqnsw2gskcj0ncc3';
-const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY || '';
+// Note: API key is now handled server-side via /api/elevenlabs/* proxy endpoints
+// Only the agent ID (which is public) is used client-side
+
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/api`;
+  }
+  return '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export function ElevenLabsAgent() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,22 +64,16 @@ export function ElevenLabsAgent() {
 
   const connectToAgent = async () => {
     try {
-      if (!ELEVENLABS_API_KEY) {
-        // If no API key, use iframe mode as fallback
-        console.log('No API key found, using iframe mode');
-        setUseIframe(true);
-        setIsConnected(true);
-        setError(null);
-        return;
+      // Log connection attempt
+      if (import.meta.env.DEV) {
+        console.log('Connecting to ElevenLabs agent via backend proxy...');
       }
-
-      console.log('Connecting to ElevenLabs agent...');
       
-      // Initialize conversation with ElevenLabs API
-      const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation`, {
+      // Initialize conversation via secure backend proxy
+      // The backend handles the API key server-side
+      const response = await fetch(`${API_BASE_URL}/elevenlabs/conversation`, {
         method: 'POST',
         headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -75,12 +83,14 @@ export function ElevenLabsAgent() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.detail?.message || errorData.message || `HTTP ${response.status}: Failed to initialize conversation`;
-        console.error('API Error:', errorMessage);
+        const errorMessage = errorData.message || `HTTP ${response.status}: Failed to initialize conversation`;
         
         // If API fails, fallback to iframe
-        if (response.status === 401 || response.status === 403) {
-          setError('API key invalid. Using web interface instead.');
+        if (response.status === 401 || response.status === 403 || response.status === 500) {
+          if (import.meta.env.DEV) {
+            console.warn('Backend API key not configured. Using web interface instead.');
+          }
+          setError('API key not configured. Using web interface instead.');
           setUseIframe(true);
           setIsConnected(true);
           return;
@@ -89,8 +99,17 @@ export function ElevenLabsAgent() {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      console.log('Conversation initialized:', data);
+      const result = await response.json();
+      
+      if (!result.success || !result.data) {
+        throw new Error(result.message || 'Failed to initialize conversation');
+      }
+
+      const data = result.data;
+      
+      if (import.meta.env.DEV) {
+        console.log('Conversation initialized via backend proxy');
+      }
       
       // Get WebSocket URL - ElevenLabs provides this in the response
       const conversationId = data.conversation_id || data.id || data.conversationId;
@@ -109,13 +128,14 @@ export function ElevenLabsAgent() {
         return;
       }
 
-      // Connect to WebSocket - add API key if not already in URL
-      const finalWsUrl = wsUrl.includes('xi-api-key') 
-        ? wsUrl 
-        : `${wsUrl}${wsUrl.includes('?') ? '&' : '?'}xi-api-key=${ELEVENLABS_API_KEY}`;
-      
-      console.log('Connecting to WebSocket:', finalWsUrl.replace(ELEVENLABS_API_KEY, '***'));
-      const ws = new WebSocket(finalWsUrl);
+      // Connect to WebSocket
+      // Note: The WebSocket URL from ElevenLabs may already include authentication
+      // If not, we would need a backend WebSocket proxy, but for now we'll use the URL as provided
+      // The initial conversation setup is secured via the backend proxy
+      if (import.meta.env.DEV) {
+        console.log('Connecting to ElevenLabs WebSocket');
+      }
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log('Connected to ElevenLabs agent');
@@ -422,6 +442,12 @@ export function ElevenLabsAgent() {
             <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
               {useIframe ? (
                 <div className="relative h-96 rounded-lg overflow-hidden border border-white/10 bg-black/20">
+                  {/* 
+                    Note: allow-same-origin is required for the ElevenLabs widget to function properly.
+                    The widget needs same-origin access to communicate with the parent page and handle
+                    authentication state. This is a trusted third-party integration with ElevenLabs.
+                    The sandbox still restricts other potentially dangerous capabilities.
+                  */}
                   <iframe
                     src={`https://elevenlabs.io/app/talk-to?agent_id=${ELEVENLABS_AGENT_ID}`}
                     className="w-full h-full"
@@ -438,17 +464,15 @@ export function ElevenLabsAgent() {
                   {error && (
                     <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3">
                       <p className="text-sm text-red-200">{error}</p>
-                      {!ELEVENLABS_API_KEY && (
-                        <button
-                          onClick={() => {
-                            setUseIframe(true);
-                            setError(null);
-                          }}
-                          className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
-                        >
-                          Use web interface instead
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setUseIframe(true);
+                          setError(null);
+                        }}
+                        className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
+                      >
+                        Use web interface instead
+                      </button>
                     </div>
                   )}
 

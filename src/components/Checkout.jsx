@@ -168,10 +168,71 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
     }
   };
 
+  // Validation helper
+  const validateForm = () => {
+    // Validate shipping info
+    if (!formData.firstName?.trim()) {
+      return 'First name is required';
+    }
+    if (!formData.lastName?.trim()) {
+      return 'Last name is required';
+    }
+    if (!formData.email?.trim()) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      return 'Please enter a valid email address';
+    }
+    if (!formData.phone?.trim()) {
+      return 'Phone number is required';
+    }
+    if (!formData.address?.trim()) {
+      return 'Address is required';
+    }
+    if (!formData.city?.trim()) {
+      return 'City is required';
+    }
+    if (!formData.zipCode?.trim()) {
+      return 'Zip code is required';
+    }
+    
+    // Validate payment info
+    if (formData.paymentMethod === 'card') {
+      if (!formData.cardNumber?.trim() || formData.cardNumber.replace(/\s/g, '').length < 13) {
+        return 'Please enter a valid card number';
+      }
+      if (!formData.cardName?.trim()) {
+        return 'Cardholder name is required';
+      }
+      if (!formData.expiryDate?.trim() || !/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
+        return 'Please enter a valid expiry date (MM/YY)';
+      }
+      if (!formData.cvv?.trim() || formData.cvv.length < 3) {
+        return 'Please enter a valid CVV';
+      }
+    }
+    
+    // Validate cart
+    if (!cartItems || cartItems.length === 0) {
+      return 'Your cart is empty';
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
     setError('');
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       // Prepare order data
@@ -180,25 +241,30 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
           productId: item.id,
           name: item.name,
           price: normalizePrice(item.price),
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
           image: item.image,
         })),
         shippingInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          zipCode: formData.zipCode,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          address: formData.address.trim(),
+          city: formData.city.trim(),
+          zipCode: formData.zipCode.trim(),
           country: formData.country,
         },
         paymentInfo: {
           method: formData.paymentMethod,
-          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber : undefined,
-          cardName: formData.paymentMethod === 'card' ? formData.cardName : undefined,
+          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber.replace(/\s/g, '') : undefined,
+          cardName: formData.paymentMethod === 'card' ? formData.cardName.trim() : undefined,
+          expiryDate: formData.paymentMethod === 'card' ? formData.expiryDate : undefined,
+          cvv: formData.paymentMethod === 'card' ? formData.cvv : undefined,
         },
-        total,
+        total: parseFloat(total.toFixed(2)),
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        shipping: parseFloat(shippingCost.toFixed(2)),
+        tax: parseFloat(tax.toFixed(2)),
       };
 
       // Create order via API
@@ -208,7 +274,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         setIsProcessing(false);
         if (onOrderComplete) {
           onOrderComplete({
-            orderId: response.data.order.orderNumber || `BO-${Date.now()}`,
+            orderId: response.data?.order?.orderNumber || response.data?.order?.id || `BO-${Date.now()}`,
             items: cartItems,
             total,
             shipping: formData,
@@ -221,7 +287,23 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
       }
     } catch (err) {
       console.error('Order creation error:', err);
-      setError(err.message || 'Failed to create order. Please try again.');
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to create order. Please try again.';
+      
+      if (err.message) {
+        if (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('Failed to fetch')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+        } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
+          errorMessage = 'Please sign in to complete your order.';
+        } else if (err.message.includes('400') || err.message.includes('validation')) {
+          errorMessage = err.message;
+        } else if (err.message.length < 150) {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
       setIsProcessing(false);
     }
   };

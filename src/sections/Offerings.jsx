@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useInView } from 'framer-motion';
 import { downloadRitualMenu } from '../utils/generateRitualMenu.js';
 
-export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
+export function Offerings({ onBookStrategyCall, onDownloadMenu, onViewSpaStorefront }) {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
@@ -135,6 +135,21 @@ export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
             <div className="flex flex-wrap gap-3">
               <Button 
                 onClick={() => {
+                  if (onViewSpaStorefront) {
+                    onViewSpaStorefront();
+                  } else {
+                    // Fallback: scroll to contact section or open contact modal
+                    const contactSection = document.getElementById('cta');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
+              >
+                View Storefront
+              </Button>
+              <Button 
+                onClick={() => {
                   if (onBookStrategyCall) {
                     onBookStrategyCall();
                   } else {
@@ -145,6 +160,7 @@ export function Offerings({ onBookStrategyCall, onDownloadMenu }) {
                     }
                   }
                 }}
+                variant="secondary"
               >
                 Book spa strategy call
               </Button>

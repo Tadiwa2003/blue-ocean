@@ -20,7 +20,7 @@ export const initializeDefaultUsers = async () => {
   const defaultUsers = [
     {
       id: 'user_owner_001',
-      name: 'Kim Chokutaura ',
+      name: 'Kim Chokutaura',
       email: 'founder@blueocean.co',
       role: 'owner',
       password: ownerPassword || (process.env.NODE_ENV === 'production' ? crypto.randomBytes(32).toString('hex') : 'blueocean2024'),
