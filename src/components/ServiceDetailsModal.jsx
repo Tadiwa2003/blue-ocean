@@ -6,7 +6,7 @@ import {
   getYouTubeThumbnailUrl,
   getYouTubeVideoId,
 } from '../utils/youtube.js';
-import { ChevronLeft, ChevronRight, Star, Check, Clock, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Check, Clock, Sparkles, Calendar, AlertCircle, X } from 'lucide-react';
 
 const fallbackImage =
   'data:image/svg+xml;utf8,' +
@@ -44,6 +44,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   const [videoEmbedUrl, setVideoEmbedUrl] = useState(null);
   const [videoThumbnail, setVideoThumbnail] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showRequirementsModal, setShowRequirementsModal] = useState(false);
   const containerRef = useRef(null);
 
   const imageGallery = useMemo(() => {
@@ -60,12 +61,26 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
       setSelectedImage(imageGallery[0] || fallbackImage);
       setCurrentImageIndex(0);
       setImageError(false);
-      setSelectedDate(service.bookableDates?.[0]?.value || '');
-      setSelectedTime(service.timeSlots?.[0] || '');
+      // Initialize date and time with first available options
+      const initialDate = service.bookableDates?.[0]?.value || '';
+      const initialTime = service.timeSlots?.[0] || '';
+      setSelectedDate(initialDate);
+      setSelectedTime(initialTime);
       setSelectedAddOns(new Set());
       setGuestNote('');
       setVideoError(false);
       setActiveTab('overview');
+      setShowRequirementsModal(false);
+      
+      console.log('📅 ServiceDetailsModal initialized', {
+        serviceName: service.name,
+        hasBookableDates: !!service.bookableDates?.length,
+        bookableDates: service.bookableDates,
+        hasTimeSlots: !!service.timeSlots?.length,
+        timeSlots: service.timeSlots,
+        initialDate,
+        initialTime,
+      });
 
       if (service.videoUrl) {
         const origin =
@@ -80,6 +95,22 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
       }
     }
   }, [service, open, imageGallery]);
+
+  // Handle Escape key for requirements modal
+  useEffect(() => {
+    if (!showRequirementsModal) return;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setShowRequirementsModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showRequirementsModal]);
 
   // GSAP animations
   useEffect(() => {
@@ -288,29 +319,56 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
     e?.preventDefault();
     e?.stopPropagation();
 
+    console.log('🔵 handleBook called', {
+      service: service?.name,
+      selectedDate,
+      selectedTime,
+      onBook: typeof onBook,
+    });
+
     // Validate required fields
     if (!service) {
       console.error('❌ Cannot book: Service is missing');
+      alert('Error: Service information is missing. Please try again.');
       return;
     }
 
     if (!selectedDate || !selectedTime) {
-      console.warn('⚠️ Please select both date and time before booking');
+      console.warn('⚠️ Please select both date and time before booking', {
+        selectedDate,
+        selectedTime,
+      });
+      alert('Please select both a date and time for your booking.');
       return;
     }
 
+    // Prepare booking data
+    const bookingData = {
+      date: selectedDate,
+      time: selectedTime,
+      addOns: Array.from(selectedAddOns),
+      notes: guestNote.trim(),
+      addOnTotal,
+      totalPrice,
+    };
+
+    console.log('📦 Booking data prepared:', bookingData);
+
     // Call the onBook handler with booking data
-    if (onBook) {
-      onBook(service, {
-        date: selectedDate,
-        time: selectedTime,
-        addOns: Array.from(selectedAddOns),
-        notes: guestNote.trim(),
-        addOnTotal,
-        totalPrice,
-      });
+    if (onBook && typeof onBook === 'function') {
+      try {
+        onBook(service, bookingData);
+        console.log('✅ onBook handler called successfully');
+      } catch (error) {
+        console.error('❌ Error calling onBook handler:', error);
+        alert('An error occurred while processing your booking. Please try again.');
+      }
     } else {
-      console.error('❌ onBook handler is not provided');
+      console.error('❌ onBook handler is not provided or is not a function', {
+        onBook,
+        type: typeof onBook,
+      });
+      alert('Error: Booking functionality is not available. Please refresh the page and try again.');
     }
   };
 
@@ -664,7 +722,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
               </section>
             )}
 
-            <section className="treatment-booking rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
+            <section id="booking-section" className="treatment-booking rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
               <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-lg font-semibold uppercase tracking-[0.25em] text-white">
                   Reserve Your Session
@@ -758,17 +816,41 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
 
               <div className="mt-6 space-y-3">
                 <Button
-                  onClick={handleBook}
-                  className="w-full justify-center py-4 text-base font-semibold"
-                  disabled={!selectedDate || !selectedTime || !service}
+                  onClick={(e) => {
+                    console.log('🔘 Confirm Booking button clicked', {
+                      selectedDate,
+                      selectedTime,
+                      hasService: !!service,
+                    });
+                    
+                    // If date/time not selected, show requirements modal
+                    if (!selectedDate || !selectedTime) {
+                      e?.preventDefault();
+                      e?.stopPropagation();
+                      setShowRequirementsModal(true);
+                      return;
+                    }
+                    
+                    // If date/time are selected, proceed with booking
+                    handleBook(e);
+                  }}
+                  className={`w-full justify-center py-4 text-base font-semibold ${
+                    (!selectedDate || !selectedTime) 
+                      ? 'cursor-pointer hover:opacity-90' 
+                      : ''
+                  }`}
                   type="button"
                   aria-label={intent === 'book' ? 'Confirm your booking' : 'Reserve this service'}
                 >
-                  {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
+                  {(!selectedDate || !selectedTime) ? 'Select Date & Time' : (intent === 'book' ? 'Confirm Booking' : 'Reserve This Service')}
                 </Button>
                 <Button 
                   variant="secondary" 
-                  onClick={onClose} 
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    onClose();
+                  }} 
                   className="w-full justify-center py-4 text-base font-semibold"
                   aria-label="Close and decide later"
                 >
@@ -779,6 +861,203 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
           </div>
         </div>
       </div>
+
+      {/* Requirements Modal */}
+      {showRequirementsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            onClick={() => setShowRequirementsModal(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-slate-800/95 backdrop-blur-md border border-white/10 p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setShowRequirementsModal(false)}
+              className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="mb-6">
+              <div className="mb-4 flex items-center gap-3">
+                <Calendar className="w-6 h-6 text-white" strokeWidth={2} />
+                <h3 className="text-xl font-bold uppercase tracking-wide text-white">
+                  COMPLETE YOUR BOOKING
+                </h3>
+              </div>
+              <p className="text-sm text-white/90">
+                Select your preferred date and time to proceed with your booking.
+              </p>
+            </div>
+
+            {/* Date Selection */}
+            {service?.bookableDates?.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">
+                  Preferred Date
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {service.bookableDates.map((dateOption) => {
+                    const isActive = selectedDate === dateOption.value;
+                    return (
+                      <button
+                        key={`modal-${service.id}-${dateOption.value}`}
+                        type="button"
+                        onClick={() => setSelectedDate(dateOption.value)}
+                        className={[
+                          'rounded-xl px-4 py-2 text-sm font-semibold transition-all',
+                          isActive
+                            ? 'bg-white text-slate-800 shadow-lg'
+                            : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
+                        ].join(' ')}
+                      >
+                        {dateOption.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Time Selection */}
+            {service?.timeSlots?.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">
+                  Preferred Time
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {service.timeSlots.map((timeOption) => {
+                    const isActive = selectedTime === timeOption;
+                    return (
+                      <button
+                        key={`modal-${service.id}-${timeOption}`}
+                        type="button"
+                        onClick={() => setSelectedTime(timeOption)}
+                        className={[
+                          'rounded-xl px-4 py-2 text-sm font-semibold transition-all',
+                          isActive
+                            ? 'bg-white text-slate-800 shadow-lg'
+                            : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
+                        ].join(' ')}
+                      >
+                        {timeOption}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Pricing Summary */}
+            {(selectedDate && selectedTime) && (
+              <div className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/80 backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <span>Service Investment</span>
+                  <span>{formatCurrency(service?.basePrice || 0, service?.currency || 'USD')}</span>
+                </div>
+                {addOnTotal > 0 && (
+                  <div className="mt-2 flex items-center justify-between text-white/75">
+                    <span>Enhancements</span>
+                    <span>{formatCurrency(addOnTotal, service?.currency || 'USD')}</span>
+                  </div>
+                )}
+                <div className="mt-3 flex items-center justify-between text-base font-semibold text-white border-t border-white/10 pt-3">
+                  <span>Total Due</span>
+                  <span>{formatCurrency(totalPrice, service?.currency || 'USD')}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              {(!selectedDate || !selectedTime) ? (
+                <button
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    
+                    // Close the requirements modal first
+                    setShowRequirementsModal(false);
+                    
+                    // Scroll to booking section after a brief delay to ensure modal is closed
+                    setTimeout(() => {
+                      const bookingSection = document.getElementById('booking-section') || document.querySelector('.treatment-booking');
+                      if (bookingSection) {
+                        // Scroll the modal container to show the booking section
+                        const modalContainer = bookingSection.closest('.service-modal-container');
+                        if (modalContainer) {
+                          // Calculate the position relative to the modal container
+                          const containerRect = modalContainer.getBoundingClientRect();
+                          const sectionRect = bookingSection.getBoundingClientRect();
+                          const scrollTop = modalContainer.scrollTop;
+                          const targetScroll = scrollTop + (sectionRect.top - containerRect.top) - 100; // 100px offset from top
+                          
+                          modalContainer.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                          });
+                          
+                          // Add highlight effect
+                          bookingSection.style.transition = 'box-shadow 0.3s ease';
+                          bookingSection.style.boxShadow = '0 0 0 3px rgba(29, 160, 230, 0.5), 0_32px_80px_rgba(29,160,230,0.28)';
+                          setTimeout(() => {
+                            bookingSection.style.boxShadow = '';
+                          }, 2000);
+                        } else {
+                          // Fallback: scroll the section into view
+                          bookingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          // Add highlight effect
+                          bookingSection.style.transition = 'box-shadow 0.3s ease';
+                          bookingSection.style.boxShadow = '0 0 0 3px rgba(29, 160, 230, 0.5), 0_32px_80px_rgba(29,160,230,0.28)';
+                          setTimeout(() => {
+                            bookingSection.style.boxShadow = '';
+                          }, 2000);
+                        }
+                      }
+                    }, 150);
+                  }}
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-4 text-base transition-all duration-200 shadow-lg"
+                  type="button"
+                  aria-label="Go to date and time selection"
+                >
+                  Select Date & Time
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    
+                    if (!service) {
+                      console.error('❌ Cannot book: Service is missing');
+                      return;
+                    }
+                    
+                    // Process the booking
+                    // handleBook will call onBook which will close the service modal
+                    // The requirements modal will be closed when the service modal closes
+                    handleBook(e);
+                  }}
+                  disabled={!selectedDate || !selectedTime || !service}
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-4 text-base transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  aria-label="Confirm your booking"
+                >
+                  Confirm Booking
+                </button>
+              )}
+              <button
+                onClick={() => setShowRequirementsModal(false)}
+                className="w-full rounded-xl bg-slate-700/80 hover:bg-slate-700 border border-white/20 text-white font-semibold py-3 px-4 text-sm transition-all duration-200"
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -128,7 +128,141 @@ export function BeautySpaStorefront({ onClose }) {
     }, 3200);
   };
 
+  // Quick book handler - directly adds service to bookings without opening modal
+  const handleQuickBook = (service) => {
+    console.log('⚡ handleQuickBook called', {
+      service: service?.name,
+      hasService: !!service,
+      bookableDates: service?.bookableDates,
+      timeSlots: service?.timeSlots,
+    });
+
+    // Validate service
+    if (!service) {
+      console.error('❌ Cannot book: Service is missing');
+      showNotification('Error: Service information is missing. Please try again.');
+      return;
+    }
+
+    // Auto-select first available date and time, or use placeholders
+    let defaultDate = service.bookableDates?.[0]?.value || '';
+    let defaultTime = service.timeSlots?.[0] || '';
+    let dateLabel = service.bookableDates?.[0]?.label || '';
+    
+    // If no date/time available, use placeholder values so booking can still be created
+    // User can edit these in the booking drawer
+    if (!defaultDate) {
+      // Use today's date as placeholder
+      const today = new Date();
+      defaultDate = today.toISOString().split('T')[0];
+      dateLabel = 'To be confirmed';
+      console.log('⚠️ No date available, using placeholder:', defaultDate);
+    }
+    
+    if (!defaultTime) {
+      // Use a default time slot
+      defaultTime = '10:00 AM';
+      console.log('⚠️ No time available, using placeholder:', defaultTime);
+    }
+    
+    if (!dateLabel && service.bookableDates?.[0]) {
+      dateLabel = service.bookableDates[0].label;
+    }
+    if (!dateLabel) {
+      dateLabel = defaultDate;
+    }
+
+    // Generate unique booking ID
+    const bookingId = `${service.id || service._id || 'service'}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    // Create booking entry with default values
+    const bookingEntry = {
+      bookingId,
+      serviceId: service.id || service._id,
+      name: service.name || 'Spa Service',
+      serviceCategory: service.serviceCategory || 'General',
+      duration: service.duration || 60,
+      basePrice: service.basePrice || 0,
+      currency: service.currency || 'USD',
+      therapistLevel: service.therapistLevel || 'Standard',
+      image: service.image || null,
+      date: defaultDate,
+      dateLabel: dateLabel,
+      time: defaultTime,
+      addOns: [],
+      addOnTotal: 0,
+      totalPrice: service.basePrice || 0,
+      notes: '',
+    };
+
+    console.log('📝 Creating booking entry:', bookingEntry);
+
+    // Add booking to state using functional update
+    setBookings((prev) => {
+      // Ensure prev is an array
+      const prevBookings = Array.isArray(prev) ? prev : [];
+
+      // Check for duplicates (same service, date, and time)
+      const isDuplicate = prevBookings.some(
+        (booking) =>
+          booking.serviceId === bookingEntry.serviceId &&
+          booking.date === bookingEntry.date &&
+          booking.time === bookingEntry.time
+      );
+
+      if (isDuplicate) {
+        showNotification(`⚠️ This booking already exists: ${bookingEntry.name} on ${bookingEntry.dateLabel} at ${bookingEntry.time}`);
+        // Still open drawer to show existing booking
+        setTimeout(() => {
+          setIsBookingOpen(true);
+          setBookingIntent('view');
+        }, 100);
+        return prevBookings;
+      }
+
+      const updatedBookings = [...prevBookings, bookingEntry];
+      
+      // Log successful addition
+      console.log('✅ Quick booking added successfully:', {
+        bookingId: bookingEntry.bookingId,
+        serviceName: bookingEntry.name,
+        date: bookingEntry.dateLabel,
+        time: bookingEntry.time,
+        totalBookings: updatedBookings.length,
+        bookingEntry: bookingEntry,
+      });
+      
+      // Save to localStorage
+      try {
+        saveBookingsToLocalStorage(updatedBookings);
+        console.log('💾 Quick booking saved to localStorage, total bookings:', updatedBookings.length);
+      } catch (error) {
+        console.warn('⚠️ Failed to save quick booking to localStorage:', error);
+      }
+
+      // Open booking drawer after state update
+      // Use setTimeout to ensure state is updated before opening drawer
+      setTimeout(() => {
+        setIsBookingOpen(true);
+        setBookingIntent('view');
+        console.log('📂 Opening booking drawer with quick booking, total bookings:', updatedBookings.length);
+      }, 150);
+
+      return updatedBookings;
+    });
+
+    // Show success notification
+    showNotification(`✅ Added: ${service.name} · ${dateLabel} at ${defaultTime}`);
+  };
+
   const handleBookService = (service, bookingData) => {
+    console.log('📞 handleBookService called', {
+      service: service?.name,
+      bookingData,
+      hasService: !!service,
+      hasBookingData: !!bookingData,
+    });
+
     // Validate inputs
     if (!service) {
       console.error('❌ Cannot book: Service is missing');
@@ -136,8 +270,18 @@ export function BeautySpaStorefront({ onClose }) {
       return;
     }
 
-    if (!bookingData || !bookingData.date || !bookingData.time) {
-      console.error('❌ Cannot book: Booking data is incomplete', bookingData);
+    if (!bookingData) {
+      console.error('❌ Cannot book: Booking data is missing');
+      showNotification('Error: Booking data is missing. Please try again.');
+      return;
+    }
+
+    if (!bookingData.date || !bookingData.time) {
+      console.error('❌ Cannot book: Booking data is incomplete', {
+        date: bookingData.date,
+        time: bookingData.time,
+        bookingData,
+      });
       showNotification('Error: Please select both date and time for your booking.');
       return;
     }
@@ -183,7 +327,7 @@ export function BeautySpaStorefront({ onClose }) {
     setBookings((prev) => {
       // Ensure prev is an array
       const prevBookings = Array.isArray(prev) ? prev : [];
-      
+
       // Check for duplicates (same service, date, and time)
       const isDuplicate = prevBookings.some(
         (booking) =>
@@ -230,6 +374,7 @@ export function BeautySpaStorefront({ onClose }) {
     // Use setTimeout to ensure React state update completes before opening drawer
     setTimeout(() => {
       setIsBookingOpen(true);
+      setBookingIntent('view');
       console.log('📂 Opening booking drawer with updated bookings');
     }, 350);
   };
@@ -574,38 +719,43 @@ export function BeautySpaStorefront({ onClose }) {
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block">
-              <BeautySpaLogo className="scale-50 sm:scale-75" size={120} showText={false} />
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+            {/* Logo - optimized for header */}
+            <div className="flex items-center justify-center flex-shrink-0">
+              <BeautySpaLogo 
+                className="h-12 w-auto sm:h-16 md:h-20 transition-transform duration-200 hover:scale-105" 
+                showText={false} 
+              />
             </div>
-            <div className="sm:hidden">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-400 bg-gradient-to-br from-purple-600 to-purple-400">
-                <span className="text-2xl">💆</span>
-              </div>
-            </div>
-            <div className="hidden md:block">
+            {/* Brand name - visible on medium screens and up */}
+            <div className="hidden lg:block ml-1 flex-shrink-0">
               <p
-                className="text-sm font-serif font-semibold"
+                className="text-sm md:text-base font-serif font-semibold whitespace-nowrap leading-tight"
                 style={{
-                  background: 'linear-gradient(180deg, #FCD34D 0%, #D97706 100%)',
+                  background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
+                  letterSpacing: '0.05em',
+                  filter: 'drop-shadow(0 1px 2px rgba(217, 119, 6, 0.2))',
                 }}
               >
                 Tana's Beauty Boost Spa
               </p>
             </div>
           </div>
-          <div className="ml-auto flex items-center gap-2 text-sm text-white/70 sm:gap-3">
-            <span className="hidden sm:inline">Luxury spa services & wellness itineraries</span>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <span className="hidden lg:inline text-xs sm:text-sm text-white/70 whitespace-nowrap">
+              Luxury spa services & wellness itineraries
+            </span>
             <button
               type="button"
               onClick={() => setIsBookingOpen(true)}
-              className="relative rounded-full border border-white/20 bg-white/10 px-4 py-2 transition backdrop-blur-sm hover:bg-white/20"
+              className="relative flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-3 py-2 sm:px-4 sm:py-2 transition-all duration-200 backdrop-blur-sm hover:bg-white/20 hover:scale-105 active:scale-95"
+              aria-label="View bookings"
             >
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -614,12 +764,16 @@ export function BeautySpaStorefront({ onClose }) {
                 />
               </svg>
               {bookings.length > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-400 text-xs font-bold text-white">
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-400 text-xs font-bold text-white shadow-lg animate-pulse">
                   {bookings.length > 9 ? '9+' : bookings.length}
                 </span>
               )}
             </button>
-            <Button variant="secondary" onClick={onClose}>
+            <Button 
+              variant="secondary" 
+              onClick={onClose}
+              className="text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2 whitespace-nowrap"
+            >
               Exit Preview
             </Button>
           </div>
@@ -665,52 +819,49 @@ export function BeautySpaStorefront({ onClose }) {
                 }}
               />
             )}
-            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-r from-amber-900/40 via-orange-800/30 to-amber-800/40 z-10" />
+            <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-b from-amber-900/30 via-orange-800/20 to-amber-800/30 z-10" />
           </div>
-          <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
-              <BeautySpaLogo className="h-24 w-auto sm:h-32 md:h-40" size={180} showText={false} />
+          <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-16 sm:py-24 md:py-32 text-center z-20">
+            {/* Logo with text - displayed directly on background */}
+            <div className="storefront-hero-text mb-8 sm:mb-10 md:mb-12 flex justify-center" style={{ animationDelay: '0s' }}>
+              <BeautySpaLogo className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80" showText={true} />
             </div>
-            <div className="storefront-hero-text mb-6 w-full max-w-4xl mx-auto" style={{ animationDelay: '0.1s' }}>
-              <div className="rounded-xl border border-white/30 bg-white/10 backdrop-blur-md px-6 py-3 flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+            
+            {/* Text boxes */}
+            <div className="storefront-hero-text flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6" style={{ animationDelay: '0.1s' }}>
+              <div className="rounded-lg bg-white/20 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-3.5 border border-white/30 shadow-lg">
+                <span className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-white whitespace-nowrap drop-shadow-lg">
                   TANA'S BEAUTY BOOST SPA
                 </span>
-                <span className="text-xs sm:text-sm font-light uppercase tracking-[0.2em] text-white/90">
+              </div>
+              <div className="rounded-lg bg-white/20 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-3.5 border border-white/30 shadow-lg">
+                <span className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-white whitespace-nowrap drop-shadow-lg">
                   WELLNESS 2026
                 </span>
               </div>
             </div>
-            <h1 
-              className="storefront-hero-text font-serif text-5xl sm:text-6xl md:text-7xl font-bold leading-tight" 
-              style={{ 
-                animationDelay: '0.2s',
-                background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                filter: 'drop-shadow(0 4px 8px rgba(217, 119, 6, 0.4))',
-                textShadow: '0 2px 4px rgba(217, 119, 6, 0.3)',
-              }}
-            >
-              Tana's Beauty Boost Spa
-            </h1>
-            <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
+            
+            {/* Description text */}
+            <p className="storefront-hero-text max-w-2xl text-sm sm:text-base md:text-lg text-white/95 leading-relaxed mt-8 sm:mt-10 drop-shadow-lg" style={{ animationDelay: '0.2s' }}>
               Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
             </p>
-            <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
+            
+            {/* Action buttons */}
+            <div className="storefront-hero-text flex flex-wrap justify-center gap-3 sm:gap-4 mt-6 sm:mt-8" style={{ animationDelay: '0.3s' }}>
               <Button 
                 onClick={() => {
                   if (allServices && allServices.length > 0) {
                     handleShowService(allServices[0], 'book');
                   }
                 }}
+                className="text-sm sm:text-base px-6 py-3"
               >
                 Book Treatment
               </Button>
               <Button 
                 variant="secondary"
                 onClick={() => setIsBookingOpen(true)}
+                className="text-sm sm:text-base px-6 py-3"
               >
                 View Itinerary
               </Button>
@@ -856,7 +1007,7 @@ export function BeautySpaStorefront({ onClose }) {
                   <ServiceCard
                     service={service}
                     onViewDetails={(selected) => handleShowService(selected, 'view')}
-                    onBook={(selected) => handleShowService(selected, 'book')}
+                    onBook={(selected) => handleQuickBook(selected)}
                   />
                 </motion.div>
               ))
