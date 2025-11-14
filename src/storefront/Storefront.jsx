@@ -231,6 +231,49 @@ export function Storefront({ onClose }) {
     setIsCheckoutOpen(true);
   };
 
+  const handleBuyNow = (product, color = '', size = '', quantity = 1) => {
+    // Close the product modal first
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+    
+    // Add product to cart using functional update
+    setCartItems((prevItems) => {
+      // Check if item with same product ID, color, and size already exists
+      const existingItemIndex = prevItems.findIndex(
+        (item) => item.id === product.id && item.color === color && item.size === size
+      );
+
+      if (existingItemIndex >= 0) {
+        // Item exists, increment quantity by the specified amount
+        return prevItems.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      } else {
+        // New item, add to cart with specified quantity
+        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+          ? crypto.randomUUID().substring(0, 8)
+          : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const cartId = `${product.id}-${color}-${size}-${uniqueId}`;
+        const newItem = {
+          cartId,
+          ...product,
+          color,
+          size,
+          quantity,
+        };
+        return [...prevItems, newItem];
+      }
+    });
+    
+    // Open checkout after a short delay to ensure state updates complete
+    // and modal is fully closed
+    setTimeout(() => {
+      setIsCheckoutOpen(true);
+    }, 250);
+  };
+
   const handleOrderComplete = (orderData) => {
     setCartItems([]);
     setIsCheckoutOpen(false);
@@ -1145,6 +1188,7 @@ export function Storefront({ onClose }) {
         onClose={handleCloseModal}
         onViewProduct={handleViewRelatedProduct}
         onAddToCart={addToCart}
+        onBuyNow={handleBuyNow}
       />
 
       {/* Cart */}

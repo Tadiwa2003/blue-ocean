@@ -125,7 +125,7 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
         password: password,
       });
 
-      if (response.success) {
+      if (response && response.success && response.data && response.data.user) {
         // Success - pass user data to onSuccess callback
         setError('');
         setIsSubmitting(false);
@@ -134,9 +134,9 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
         await new Promise((resolve) => setTimeout(resolve, 300));
         
         onSuccess({
-          name: response.data.user.name,
-          email: response.data.user.email,
-          role: response.data.user.role,
+          name: response.data.user.name || name.trim(),
+          email: response.data.user.email || email.toLowerCase().trim(),
+          role: response.data.user.role || 'user',
         });
 
         // Reset form
@@ -144,10 +144,17 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+      } else {
+        // Handle case where response exists but success is false
+        setError(response?.message || 'An error occurred during sign-up. Please try again.');
+        setIsSubmitting(false);
       }
     } catch (err) {
-      setError(err.message || 'An error occurred during sign-up. Please try again.');
+      // Enhanced error handling
+      const errorMessage = err?.message || 'Unable to connect to server. Please check your connection and try again.';
+      setError(errorMessage);
       setIsSubmitting(false);
+      console.error('Sign-up error:', err);
     }
   };
 
@@ -184,22 +191,29 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
       // Call backend API
       const response = await api.auth.signIn(email.toLowerCase().trim(), password);
 
-      if (response.success) {
+      if (response && response.success && response.data && response.data.user) {
         // Success - pass user data to onSuccess callback
         onSuccess({
-          name: response.data.user.name,
-          email: response.data.user.email,
-          role: response.data.user.role,
+          name: response.data.user.name || 'User',
+          email: response.data.user.email || email.toLowerCase().trim(),
+          role: response.data.user.role || 'user',
         });
 
         // Reset form
         setEmail('');
         setPassword('');
         setIsSubmitting(false);
+      } else {
+        // Handle case where response exists but success is false
+        setError(response?.message || 'Invalid email or password. Please try again.');
+        setIsSubmitting(false);
       }
     } catch (err) {
-      setError(err.message || 'Invalid email or password. Please try again.');
+      // Enhanced error handling
+      const errorMessage = err?.message || 'Unable to connect to server. Please check your connection and try again.';
+      setError(errorMessage);
       setIsSubmitting(false);
+      console.error('Sign-in error:', err);
     }
   };
 

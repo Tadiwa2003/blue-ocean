@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5174",
+    "dev": "vite --port 5178",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
@@ -24,8 +24,8 @@
     "@splinetool/runtime": "^1.10.99",
     "animejs": "^4.2.2",
     "bcryptjs": "^3.0.3",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -44,7 +44,8 @@
     "react-dom": "^18.3.1",
     "react-typed": "^2.0.12",
     "recharts": "^3.4.1",
-    "tailwind-merge": "^2.5.2",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
     "three": "^0.181.0"
   },
   "devDependencies": {

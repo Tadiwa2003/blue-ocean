@@ -61,8 +61,19 @@ export function BookingDrawer({
 
   if (!isOpen) return null;
 
-  const totalInvestment = bookings.reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
-  const currency = bookings[0]?.currency || 'USD';
+  // Ensure bookings is an array
+  const bookingsArray = Array.isArray(bookings) ? bookings : [];
+  
+  // Debug logging in development
+  if (import.meta.env.DEV && isOpen) {
+    console.log('📋 BookingDrawer opened with bookings:', {
+      count: bookingsArray.length,
+      bookings: bookingsArray,
+    });
+  }
+  
+  const totalInvestment = bookingsArray.reduce((sum, booking) => sum + (booking.totalPrice || booking.basePrice || 0), 0);
+  const currency = bookingsArray[0]?.currency || 'USD';
 
   return (
     <div className="fixed inset-0 z-[1001] flex items-end justify-end sm:items-center sm:justify-center">
@@ -96,7 +107,7 @@ export function BookingDrawer({
           <div>
             <h2 className="font-display text-2xl text-white">Booking Summary</h2>
             <p className="mt-1 text-sm text-white/60">
-              {bookings.length} {bookings.length === 1 ? 'service reserved' : 'services reserved'}
+              {bookingsArray.length} {bookingsArray.length === 1 ? 'service reserved' : 'services reserved'}
             </p>
           </div>
           <Button
@@ -110,14 +121,14 @@ export function BookingDrawer({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
-          {bookings.length === 0 ? (
+          {bookingsArray.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-12 text-center">
               <div className="mb-4 text-6xl">🧘‍♀️</div>
               <p className="text-lg font-semibold text-white">No sessions reserved yet</p>
               <p className="mt-1 text-sm text-white/60">Select a treatment to begin your spa itinerary.</p>
             </div>
           ) : (
-            bookings.map((booking) => (
+            bookingsArray.map((booking) => (
               <div
                 key={booking.bookingId}
                 className="flex gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10"
@@ -189,7 +200,7 @@ export function BookingDrawer({
           )}
         </div>
 
-        {bookings.length > 0 && (
+        {bookingsArray.length > 0 && (
           <div className="space-y-4 border-t border-white/10 bg-gradient-to-t from-midnight/60 to-transparent p-6">
             <div className="flex items-center justify-between text-sm text-white/70">
               <span>Service Subtotal</span>
@@ -201,18 +212,43 @@ export function BookingDrawer({
             <div className="flex gap-3">
               <Button 
                 variant="secondary" 
-                onClick={onClearBookings} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isConfirming && onClearBookings) {
+                    onClearBookings();
+                  }
+                }} 
                 className="flex-1"
                 disabled={isConfirming}
+                type="button"
+                aria-label="Clear all bookings"
               >
                 Clear All
               </Button>
               <Button 
-                onClick={onConfirmBookings} 
-                className="flex-1"
-                disabled={isConfirming}
+                variant="default"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isConfirming && bookingsArray && bookingsArray.length > 0 && onConfirmBookings) {
+                    onConfirmBookings();
+                  }
+                }} 
+                className="flex-1 font-semibold text-base py-3 !bg-gradient-to-r !from-brand-500 !via-brand-400 !to-brand-600 !text-white !shadow-lg !shadow-brand-500/40 hover:!from-brand-400 hover:!via-brand-500 hover:!to-brand-600 hover:!shadow-glow hover:!shadow-brand-500/50 active:scale-[0.98] transition-all duration-200 disabled:!opacity-50 disabled:!cursor-not-allowed"
+                disabled={isConfirming || !bookingsArray || bookingsArray.length === 0}
+                type="button"
+                aria-label={isConfirming ? 'Confirming bookings...' : 'Confirm booking'}
+                aria-busy={isConfirming}
               >
-                {isConfirming ? 'Confirming...' : 'Confirm Appointments'}
+                {isConfirming ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    Confirming...
+                  </span>
+                ) : (
+                  'Confirm Booking'
+                )}
               </Button>
             </div>
           </div>

@@ -113,7 +113,7 @@ export const validateContactForm = [
 ];
 
 // Product validation middleware
-const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sandals', 'Clothing', 'Accessories'];
+const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sandals', 'Clothing', 'Accessories', 'Jewelry'];
 
 export const validateProduct = [
   body('name')

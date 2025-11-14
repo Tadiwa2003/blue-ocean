@@ -23,6 +23,7 @@ import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
 import { downloadRitualMenu } from './utils/generateRitualMenu.js';
 import api from './services/api.js';
+import { ElevenLabsAgent } from './components/ElevenLabsAgent.jsx';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,13 +112,23 @@ export default function App() {
     setIsAuthenticated(true);
   };
 
-  const handleSignOut = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setSubscriptionRequired(false);
-    setSubscription(null);
-    setTrialExpired(false);
-    closeStorefront();
+  const handleSignOut = async () => {
+    try {
+      await api.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Continue with sign out even if API call fails
+    } finally {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setSubscriptionRequired(false);
+      setSubscription(null);
+      setTrialExpired(false);
+      closeStorefront();
+      // Clear all auth-related data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+    }
   };
 
   const handleSubscribeSuccess = async (newSubscription) => {
@@ -127,6 +138,38 @@ export default function App() {
     // Refresh subscription status
     await checkSubscriptionStatus();
   };
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          const user = await api.auth.getCurrentUser();
+          if (user) {
+            setCurrentUser({
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            });
+            setIsAuthenticated(true);
+            await checkSubscriptionStatus();
+          } else {
+            // Invalid token, clear it
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        // Clear invalid tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // Check subscription status periodically and on mount
   useEffect(() => {
@@ -251,6 +294,7 @@ export default function App() {
           <Footer />
         </ContainerScrollAnimation>
       )}
+      <ElevenLabsAgent />
     </div>
     </GradientBackground>
   );

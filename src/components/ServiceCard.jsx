@@ -35,11 +35,14 @@ export function ServiceCard({ service, onViewDetails, onBook }) {
     }
   };
 
-  const handleBook = () => {
+  const handleBook = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     if (onBook) {
       onBook(service);
     } else if (onViewDetails) {
-      onViewDetails(service, { intent: 'book' });
+      onViewDetails(service, 'book');
     }
   };
 
@@ -106,7 +109,12 @@ export function ServiceCard({ service, onViewDetails, onBook }) {
               View Treatment
             </Button>
           </div>
-          <Button onClick={handleBook} className="w-full justify-center">
+          <Button 
+            onClick={handleBook} 
+            className="w-full justify-center"
+            type="button"
+            aria-label={`Book ${service.name} session`}
+          >
             Book Session
           </Button>
         </div>

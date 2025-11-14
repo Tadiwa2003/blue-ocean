@@ -11,6 +11,31 @@ if (!JWT_SECRET) {
 }
 const JWT_EXPIRES_IN = '7d';
 
+// Fallback users for development when database is offline
+const FALLBACK_USERS = [
+  {
+    id: 'user_owner_001',
+    name: 'Kim Moyo',
+    email: 'founder@blueocean.co',
+    role: 'owner',
+    password: 'blueocean2024',
+  },
+  {
+    id: 'user_admin_001',
+    name: 'Admin User',
+    email: 'admin@blueocean.co',
+    role: 'admin',
+    password: 'admin123',
+  },
+  {
+    id: 'user_user_001',
+    name: 'Test User',
+    email: 'user@blueocean.co',
+    role: 'user',
+    password: 'user123',
+  },
+];
+
 // Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
@@ -81,6 +106,27 @@ export const signIn = async (req, res) => {
 
     // Check if database is connected
     if (!getConnectionStatus()) {
+      // In development, allow fallback users when database is offline
+      if (process.env.NODE_ENV !== 'production') {
+        const fallbackUser = FALLBACK_USERS.find(
+          (user) => user.email.toLowerCase() === email.toLowerCase().trim(),
+        );
+
+        if (fallbackUser && password === fallbackUser.password) {
+          const { password: _, ...userWithoutPassword } = fallbackUser;
+          const token = generateToken(userWithoutPassword);
+          return res.status(200).json({
+            success: true,
+            message: 'Signed in using fallback credentials (database offline).',
+            data: {
+              user: userWithoutPassword,
+              token,
+              isFallbackUser: true,
+            },
+          });
+        }
+      }
+
       return res.status(503).json({
         success: false,
         message: 'Database is not available. Please ensure MongoDB is running. See DATABASE_SETUP.md for instructions.',

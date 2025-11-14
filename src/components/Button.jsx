@@ -45,6 +45,46 @@ export const Button = React.forwardRef(function Button({
     ? { ...props, type: type ?? 'button' }
     : props;
   
+  // When asChild is true, Slot expects a single child, so we need to handle icon differently
+  if (asChild) {
+    // Slot expects exactly one child element
+    const child = React.Children.only(children);
+    
+    // If there's an icon, we need to clone the child and add the icon to its children
+    if (Icon) {
+      return (
+        <Comp
+          ref={ref}
+          className={cn(buttonVariants({ variant, size, className }))}
+          {...buttonProps}
+        >
+          {React.cloneElement(child, {
+            className: cn(buttonVariants({ variant, size }), child.props.className, className),
+            children: (
+              <>
+                <Icon className="h-4 w-4 mr-2" aria-hidden="true" />
+                {child.props.children}
+              </>
+            )
+          })}
+        </Comp>
+      );
+    }
+    
+    // No icon, just pass through with className merged
+    return (
+      <Comp
+        ref={ref}
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...buttonProps}
+      >
+        {React.cloneElement(child, {
+          className: cn(buttonVariants({ variant, size }), child.props.className, className)
+        })}
+      </Comp>
+    );
+  }
+  
   return (
     <Comp
       ref={ref}
