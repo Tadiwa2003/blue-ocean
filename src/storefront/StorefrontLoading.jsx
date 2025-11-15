@@ -13,7 +13,7 @@ export function StorefrontLoading() {
       </div>
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.35em] text-brand-200">Loading storefront</p>
-        <h2 className="mt-3 font-display text-3xl">Preparing Blue Ocean experience…</h2>
+        <h2 className="mt-3 font-display text-3xl">Preparing BrightPath experience…</h2>
         <p className="mt-2 max-w-md text-sm text-white/70">
           We are setting the tide—importing featured products, styling ambient visuals, and warming the buying journey.
         </p>

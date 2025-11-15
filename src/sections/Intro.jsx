@@ -23,7 +23,7 @@ export function Intro() {
           transition={{ duration: 0.6 }}
         >
           <SectionTitle
-            eyebrow="Three ways to grow with Blue Ocean"
+            eyebrow="Three ways to grow with BrightPath"
             title="Tana's Beauty Boost Spa, Merchant Store, and Marketplace Rental Platform"
             description="We operate Tana's Beauty Boost Spa for premium wellness services, run our own merchant store for product sales, and offer our platform as a rental service for other merchants to sell their goods through our marketplace."
           />
@@ -35,7 +35,7 @@ export function Intro() {
           className="rounded-[32px] border border-brand-500/30 bg-ocean/40 p-8 backdrop-blur"
         >
           <p className="text-sm text-white/70">
-            Blue Ocean Marketplace is a comprehensive platform that powers three key business models: our own beauty spa services, our product merchant store, and a rental marketplace where other businesses can leverage our platform to sell their products and services.
+            BrightPath Marketplace is a comprehensive platform that powers three key business models: our own beauty spa services, our product merchant store, and a rental marketplace where other businesses can leverage our platform to sell their products and services.
           </p>
           <ul className="mt-8 grid grid-cols-2 gap-6 text-white">
             {stats.map((stat, index) => (

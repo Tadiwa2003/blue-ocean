@@ -1,5 +1,6 @@
 import { getAllProducts, getProductById as getProductByIdDB, createProduct as createProductDB, updateProduct as updateProductDB, deleteProduct as deleteProductDB } from '../db/products.js';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 
 // Allowed product categories
 const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sandals', 'Clothing', 'Accessories', 'Jewelry'];
@@ -57,6 +58,24 @@ function isValidUrl(urlString) {
 // Get all products
 export const getProducts = async (req, res) => {
   try {
+    // Get storefrontId from query parameter if provided
+    const storefrontId = req.query.storefrontId;
+    let parsedStorefrontId = undefined; // undefined = don't filter, null = platform only, ObjectId = specific storefront
+    if (storefrontId !== undefined && storefrontId !== null && storefrontId !== 'undefined') {
+      if (storefrontId === 'null' || storefrontId === '') {
+        parsedStorefrontId = null; // Explicitly request platform products
+      } else {
+        try {
+          parsedStorefrontId = new mongoose.Types.ObjectId(storefrontId);
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid storefrontId format.',
+          });
+        }
+      }
+    }
+    
     // If user is authenticated, filter by role
     if (req.user) {
       const userRole = req.user.role;
@@ -64,7 +83,7 @@ export const getProducts = async (req, res) => {
       const isOwner = userRole === 'owner';
       
       // Owners see all products, regular users see ONLY their own (excludes platform products)
-      const products = await getAllProducts(userId, isOwner);
+      const products = await getAllProducts(userId, isOwner, parsedStorefrontId);
       const formattedProducts = products.map((product) => ({
         ...product,
         price: typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price,
@@ -78,8 +97,8 @@ export const getProducts = async (req, res) => {
       });
     }
     
-    // Public access (for storefronts) - show all products
-    const products = await getAllProducts(null, false);
+    // Public access (for storefronts) - filter by storefrontId if provided
+    const products = await getAllProducts(null, false, parsedStorefrontId);
     const formattedProducts = products.map((product) => ({
       ...product,
       price: typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price,
@@ -136,7 +155,7 @@ export const getProductById = async (req, res) => {
 // Create new product
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, price, image, description, badges } = req.body;
+    const { name, category, price, image, description, badges, storefrontId } = req.body;
 
     // Validation: Required fields
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -240,9 +259,23 @@ export const createProduct = async (req, res) => {
     // Associate product with user (owners can create platform products without userId)
     const userId = req.user?.role === 'owner' ? null : req.user?.id;
     
+    // Validate and parse storefrontId if provided
+    let parsedStorefrontId = null;
+    if (storefrontId) {
+      try {
+        parsedStorefrontId = new mongoose.Types.ObjectId(storefrontId);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid storefrontId format.',
+        });
+      }
+    }
+    
     const newProduct = await createProductDB({
       id,
       userId,
+      storefrontId: parsedStorefrontId,
       name: sanitizedName,
       category,
       price: parsedPrice, // Store as number in DB

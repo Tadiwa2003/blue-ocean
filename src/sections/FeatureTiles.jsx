@@ -41,7 +41,7 @@ export function FeatureTiles() {
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-200">Three core business models</p>
         <h2 className="font-display text-3xl text-white sm:text-4xl">Beauty Spa, Merchant Store, and Marketplace Platform Rental</h2>
         <p className="text-sm text-white/70 sm:max-w-2xl">
-          Blue Ocean Marketplace powers Tana's Beauty Boost Spa for wellness services, our merchant store for product sales, and offers platform rental for other merchants to sell their goods through our marketplace.
+          BrightPath Marketplace powers Tana's Beauty Boost Spa for wellness services, our merchant store for product sales, and offers platform rental for other merchants to sell their goods through our marketplace.
         </p>
       </motion.div>
 

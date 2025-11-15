@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
+import { PhoneInput } from './PhoneInput.jsx';
 import api from '../services/api.js';
 
 const fallbackImage =
@@ -20,7 +21,7 @@ const fallbackImage =
       </defs>
       <rect width="400" height="400" fill="url(#grad)" />
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="32" fill="rgba(255,255,255,0.85)">
-        Blue Ocean
+        BrightPath
       </text>
     </svg>
   `);
@@ -168,10 +169,71 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
     }
   };
 
+  // Validation helper
+  const validateForm = () => {
+    // Validate shipping info
+    if (!formData.firstName?.trim()) {
+      return 'First name is required';
+    }
+    if (!formData.lastName?.trim()) {
+      return 'Last name is required';
+    }
+    if (!formData.email?.trim()) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      return 'Please enter a valid email address';
+    }
+    if (!formData.phone?.trim()) {
+      return 'Phone number is required';
+    }
+    if (!formData.address?.trim()) {
+      return 'Address is required';
+    }
+    if (!formData.city?.trim()) {
+      return 'City is required';
+    }
+    if (!formData.zipCode?.trim()) {
+      return 'Zip code is required';
+    }
+    
+    // Validate payment info
+    if (formData.paymentMethod === 'card') {
+      if (!formData.cardNumber?.trim() || formData.cardNumber.replace(/\s/g, '').length < 13) {
+        return 'Please enter a valid card number';
+      }
+      if (!formData.cardName?.trim()) {
+        return 'Cardholder name is required';
+      }
+      if (!formData.expiryDate?.trim() || !/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
+        return 'Please enter a valid expiry date (MM/YY)';
+      }
+      if (!formData.cvv?.trim() || formData.cvv.length < 3) {
+        return 'Please enter a valid CVV';
+      }
+    }
+    
+    // Validate cart
+    if (!cartItems || cartItems.length === 0) {
+      return 'Your cart is empty';
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
     setError('');
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       // Prepare order data
@@ -180,25 +242,30 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
           productId: item.id,
           name: item.name,
           price: normalizePrice(item.price),
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
           image: item.image,
         })),
         shippingInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          zipCode: formData.zipCode,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          address: formData.address.trim(),
+          city: formData.city.trim(),
+          zipCode: formData.zipCode.trim(),
           country: formData.country,
         },
         paymentInfo: {
           method: formData.paymentMethod,
-          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber : undefined,
-          cardName: formData.paymentMethod === 'card' ? formData.cardName : undefined,
+          cardNumber: formData.paymentMethod === 'card' ? formData.cardNumber.replace(/\s/g, '') : undefined,
+          cardName: formData.paymentMethod === 'card' ? formData.cardName.trim() : undefined,
+          expiryDate: formData.paymentMethod === 'card' ? formData.expiryDate : undefined,
+          cvv: formData.paymentMethod === 'card' ? formData.cvv : undefined,
         },
-        total,
+        total: parseFloat(total.toFixed(2)),
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        shipping: parseFloat(shippingCost.toFixed(2)),
+        tax: parseFloat(tax.toFixed(2)),
       };
 
       // Create order via API
@@ -208,7 +275,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         setIsProcessing(false);
         if (onOrderComplete) {
           onOrderComplete({
-            orderId: response.data.order.orderNumber || `BO-${Date.now()}`,
+            orderId: response.data?.order?.orderNumber || response.data?.order?.id || `BO-${Date.now()}`,
             items: cartItems,
             total,
             shipping: formData,
@@ -221,7 +288,23 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
       }
     } catch (err) {
       console.error('Order creation error:', err);
-      setError(err.message || 'Failed to create order. Please try again.');
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to create order. Please try again.';
+      
+      if (err.message) {
+        if (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('Failed to fetch')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.';
+        } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
+          errorMessage = 'Please sign in to complete your order.';
+        } else if (err.message.includes('400') || err.message.includes('validation')) {
+          errorMessage = err.message;
+        } else if (err.message.length < 150) {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
       setIsProcessing(false);
     }
   };
@@ -420,18 +503,15 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-white/80">Phone</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                      <input
-                        type="tel"
+                    <PhoneInput
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                        placeholder="+263 77 123 4567"
+                      placeholder="Phone number"
                         required
+                      defaultCountry="ZW"
+                      className="w-full"
                       />
-                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-white/80">Address</label>
@@ -609,18 +689,15 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
                   {formData.paymentMethod === 'ecocash' && (
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-white/80">EcoCash Number</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                        <input
-                          type="tel"
+                      <PhoneInput
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className="w-full h-11 pl-10 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                          placeholder="077 123 4567"
+                        placeholder="EcoCash number"
                           required
+                        defaultCountry="ZW"
+                        className="w-full"
                         />
-                      </div>
                     </div>
                   )}
                   {formData.paymentMethod === 'omari' && (

@@ -1,5 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './Button.jsx';
+import { AlertCircle } from 'lucide-react';
+import { PhoneInput } from './PhoneInput.jsx';
+import { convertDateLabelToISO, isPastDateTime, getRelativeDateLabel } from '../utils/dateHelpers.js';
 
 const fallbackImage =
   'data:image/svg+xml;utf8,' +
@@ -33,7 +36,16 @@ export function BookingDrawer({
   onClearBookings,
   onConfirmBookings,
   isConfirming = false,
+  onUpdateGuestInfo,
 }) {
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestError, setGuestError] = useState('');
+
+  // Ensure bookings is an array
+  const bookingsArray = Array.isArray(bookings) ? bookings : [];
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -50,6 +62,14 @@ export function BookingDrawer({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Initialize guest info from first booking if available, or from existing bookings
+      const firstBooking = bookingsArray[0];
+      if (firstBooking) {
+        setGuestName(firstBooking.guestName || '');
+        setGuestEmail(firstBooking.guestEmail || '');
+        setGuestPhone(firstBooking.guestPhone || '');
+      }
+      setGuestError('');
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -57,12 +77,9 @@ export function BookingDrawer({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, bookings, bookingsArray]);
 
   if (!isOpen) return null;
-
-  // Ensure bookings is an array
-  const bookingsArray = Array.isArray(bookings) ? bookings : [];
   
   // Debug logging in development
   if (import.meta.env.DEV && isOpen) {
@@ -160,10 +177,21 @@ export function BookingDrawer({
 
                   <div className="mt-3 space-y-2 text-xs text-white/65">
                     <p>
-                      <span className="font-semibold text-white/80">Date:</span> {booking.dateLabel || booking.date}
+                      <span className="font-semibold text-white/80">Date:</span>{' '}
+                      {(() => {
+                        // Ensure we display a valid date label
+                        const dateValue = booking.date || '';
+                        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                        if (dateRegex.test(dateValue)) {
+                          return booking.dateLabel || getRelativeDateLabel(dateValue);
+                        }
+                        // If date is not valid ISO, try to convert it
+                        const isoDate = convertDateLabelToISO(dateValue || booking.dateLabel);
+                        return isoDate ? getRelativeDateLabel(isoDate) : (booking.dateLabel || booking.date || 'Please select a date');
+                      })()}
                     </p>
                     <p>
-                      <span className="font-semibold text-white/80">Time:</span> {booking.time}
+                      <span className="font-semibold text-white/80">Time:</span> {booking.time || 'Please select a time'}
                     </p>
                     {booking.addOns?.length ? (
                       <p>
@@ -176,6 +204,16 @@ export function BookingDrawer({
                     {booking.notes ? (
                       <p>
                         <span className="font-semibold text-white/80">Notes:</span> {booking.notes}
+                      </p>
+                    ) : null}
+                    {booking.guestEmail ? (
+                      <p>
+                        <span className="font-semibold text-white/80">Guest Email:</span> {booking.guestEmail}
+                      </p>
+                    ) : null}
+                    {booking.guestPhone ? (
+                      <p>
+                        <span className="font-semibold text-white/80">Guest Phone:</span> {booking.guestPhone}
                       </p>
                     ) : null}
                   </div>
@@ -202,6 +240,66 @@ export function BookingDrawer({
 
         {bookingsArray.length > 0 && (
           <div className="space-y-4 border-t border-white/10 bg-gradient-to-t from-midnight/60 to-transparent p-6">
+            {/* Guest Contact Information */}
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+                Your Contact Information
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => {
+                    setGuestName(e.target.value);
+                    setGuestError('');
+                    if (onUpdateGuestInfo) {
+                      onUpdateGuestInfo({ name: e.target.value, email: guestEmail, phone: guestPhone });
+                    }
+                  }}
+                  placeholder="Your name *"
+                  required
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                />
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(e) => {
+                    setGuestEmail(e.target.value);
+                    setGuestError('');
+                    if (onUpdateGuestInfo) {
+                      onUpdateGuestInfo({ name: guestName, email: e.target.value, phone: guestPhone });
+                    }
+                  }}
+                  placeholder="Your email address *"
+                  required
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                />
+                <PhoneInput
+                  value={guestPhone}
+                  onChange={(e) => {
+                    setGuestPhone(e.target.value);
+                    setGuestError('');
+                    if (onUpdateGuestInfo) {
+                      onUpdateGuestInfo({ name: guestName, email: guestEmail, phone: e.target.value });
+                    }
+                  }}
+                  placeholder="Phone number *"
+                  required
+                  defaultCountry="ZW"
+                  className="w-full"
+                />
+              </div>
+              {guestError && (
+                <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
+                  <AlertCircle className="h-4 w-4 text-red-300 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-200">{guestError}</p>
+                </div>
+              )}
+              <p className="text-xs text-white/50">
+                We'll send booking confirmation to your email address. All fields marked with * are required.
+              </p>
+            </div>
+
             <div className="flex items-center justify-between text-sm text-white/70">
               <span>Service Subtotal</span>
               <span>{formatCurrency(totalInvestment, currency)}</span>
@@ -231,6 +329,81 @@ export function BookingDrawer({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  
+                  // Validate name, email, and phone before confirming
+                  if (!guestName || !guestName.trim()) {
+                    setGuestError('Please enter your name to confirm your booking.');
+                    return;
+                  }
+                  
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!guestEmail || !emailRegex.test(guestEmail.trim())) {
+                    setGuestError('Please enter a valid email address to receive booking confirmation.');
+                    return;
+                  }
+                  
+                  if (!guestPhone || !guestPhone.trim()) {
+                    setGuestError('Please enter your phone number to confirm your booking.');
+                    return;
+                  }
+                  
+                  // Validate all bookings have valid dates and times
+                  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                  const validationErrors = [];
+                  
+                  bookingsArray.forEach((booking, index) => {
+                    const bookingNum = index + 1;
+                    let bookingDate = booking.date || '';
+                    
+                    // Convert date if not in ISO format
+                    if (!dateRegex.test(bookingDate)) {
+                      bookingDate = convertDateLabelToISO(bookingDate || booking.dateLabel);
+                      if (!bookingDate || !dateRegex.test(bookingDate)) {
+                        validationErrors.push(`Booking ${bookingNum}: Please select a valid date.`);
+                        return;
+                      }
+                    }
+                    
+                    // Validate time exists
+                    if (!booking.time || booking.time.trim() === '') {
+                      validationErrors.push(`Booking ${bookingNum}: Please select a time.`);
+                      return;
+                    }
+                    
+                    // Validate date is not in the past
+                    if (bookingDate && booking.time) {
+                      if (isPastDateTime(bookingDate, booking.time)) {
+                        // Try to auto-fix by using tomorrow
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        const tomorrowISO = tomorrow.toISOString().split('T')[0];
+                        
+                        // Check if tomorrow with the same time would work
+                        if (!isPastDateTime(tomorrowISO, booking.time)) {
+                          // Auto-fix is possible - update the booking
+                          booking.date = tomorrowISO;
+                          booking.dateLabel = getRelativeDateLabel(tomorrowISO);
+                          console.log(`⚠️ Auto-fixed booking ${bookingNum} date to tomorrow in drawer`);
+                        } else {
+                          // Can't auto-fix - time is too early even for tomorrow
+                          validationErrors.push(`Booking ${bookingNum}: The selected time is too early. Please select a later time.`);
+                        }
+                      }
+                    }
+                  });
+                  
+                  if (validationErrors.length > 0) {
+                    setGuestError(validationErrors[0] + (validationErrors.length > 1 ? ` (and ${validationErrors.length - 1} more)` : ''));
+                    return;
+                  }
+                  
+                  setGuestError('');
+                  
+                  // Update all bookings with guest info before confirming
+                  if (onUpdateGuestInfo) {
+                    onUpdateGuestInfo({ name: guestName, email: guestEmail, phone: guestPhone });
+                  }
+                  
                   if (!isConfirming && bookingsArray && bookingsArray.length > 0 && onConfirmBookings) {
                     onConfirmBookings();
                   }

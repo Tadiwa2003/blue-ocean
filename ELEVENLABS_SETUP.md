@@ -12,7 +12,7 @@ This app includes an ElevenLabs AI voice agent that provides conversational AI a
 2. **Configure the API Key**:
    - Create a `.env` file in the project root (if it doesn't exist)
    - Add your API key:
-     ```
+     ```env
      VITE_ELEVENLABS_API_KEY=your_api_key_here
      ```
 

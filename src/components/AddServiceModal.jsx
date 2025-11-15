@@ -12,7 +12,7 @@ const SERVICE_CATEGORIES = [
   'Spa Package',
 ];
 
-export function AddServiceModal({ isOpen, onClose, onSuccess }) {
+export function AddServiceModal({ isOpen, onClose, onSuccess, storefrontId = null }) {
   const [formData, setFormData] = useState({
     name: '',
     serviceCategory: '',
@@ -198,6 +198,7 @@ export function AddServiceModal({ isOpen, onClose, onSuccess }) {
         headline: formData.headline ? formData.headline.trim() : undefined,
         description: formData.description ? formData.description.trim() : undefined,
         badges: validatedBadges,
+        storefrontId: storefrontId || undefined,
       };
 
       const response = await api.services.createService(serviceData);

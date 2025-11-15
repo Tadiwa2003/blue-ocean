@@ -14,12 +14,14 @@ import serviceRoutes from './routes/services.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import bookingRoutes from './routes/bookings.js';
 import storefrontRoutes from './routes/storefronts.js';
+import elevenlabsRoutes from './routes/elevenlabs.js';
+import adminRoutes from './routes/admin.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from server/.env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -68,7 +70,7 @@ app.use((req, res, next) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Blue Ocean API is running',
+    message: 'BrightPath API is running',
     timestamp: new Date().toISOString(),
     database: getConnectionStatus() ? 'connected' : 'disconnected',
   });
@@ -87,6 +89,8 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/storefronts', storefrontRoutes);
+app.use('/api/elevenlabs', elevenlabsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -113,7 +117,7 @@ const startServer = async () => {
     await connectDB();
     
     app.listen(PORT, () => {
-      console.log(`🚀 Blue Ocean API server running on http://localhost:${PORT}`);
+      console.log(`🚀 BrightPath API server running on http://localhost:${PORT}`);
       console.log(`📡 Frontend URL: ${FRONTEND_URL}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`💾 Database: ${getConnectionStatus() ? 'MongoDB Connected' : 'MongoDB Not Connected'}`);

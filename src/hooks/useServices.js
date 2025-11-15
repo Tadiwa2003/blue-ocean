@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api.js';
 
-export function useServices() {
+export function useServices(storefrontId = null) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,9 +11,9 @@ export function useServices() {
       setLoading(true);
       setError(null);
       if (process.env.NODE_ENV === 'development') {
-        console.log('💆 Fetching services from API...');
+        console.log('💆 Fetching services from API...', storefrontId ? `(storefront: ${storefrontId})` : '');
       }
-      const response = await api.services.getServices();
+      const response = await api.services.getServices(storefrontId);
       if (process.env.NODE_ENV === 'development') {
         console.log('💆 Services response:', response.success ? `✅ ${response.data?.services?.length || 0} services` : '❌ Failed');
       }
@@ -36,7 +36,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [storefrontId]);
 
   useEffect(() => {
     fetchServices();

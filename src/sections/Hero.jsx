@@ -1,4 +1,3 @@
-import { BlurTextAnimation } from '../components/ui/blur-text-animation.jsx';
 import { Button } from '../components/Button.jsx';
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
@@ -46,31 +45,17 @@ export function Hero() {
       <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">
           <div className="space-y-8">
-            <BlurTextAnimation
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur"
-              text="Blue Ocean · Tana's Beauty Boost Spa"
-              fontSize="text-xs"
-              fontFamily="font-sans"
-              textColor="text-brand-100"
-              animationDelay={7000}
-              textClassName="font-semibold uppercase tracking-[0.35em] m-0"
-            />
-            <BlurTextAnimation
-              className="text-left max-w-3xl"
-              text="Your Complete Marketplace Platform: Beauty Spa Services & Product Store"
-              fontSize="font-display text-[2.75rem] leading-tight sm:text-[3.1rem]"
-              animationDelay={6000}
-              textClassName="font-semibold sm:font-medium tracking-tight m-0"
-            />
-            <BlurTextAnimation
-              className="max-w-2xl text-left"
-              text="Blue Ocean Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace."
-              fontSize="text-base md:text-lg"
-              fontFamily="font-sans"
-              textColor="text-white/80"
-              animationDelay={6500}
-              textClassName="font-normal leading-relaxed m-0"
-            />
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur">
+              <p className="text-xs font-sans text-brand-100 font-semibold uppercase tracking-[0.35em] m-0">
+                BrightPath · Tana's Beauty Boost Spa
+              </p>
+            </div>
+            <h1 className="text-left max-w-3xl font-display text-[2.75rem] leading-tight sm:text-[3.1rem] font-semibold sm:font-medium tracking-tight m-0 text-white">
+              Your Complete Marketplace Platform: Beauty Spa Services & Product Store
+            </h1>
+            <p className="max-w-2xl text-left text-base md:text-lg font-sans text-white/80 font-normal leading-relaxed m-0">
+              BrightPath Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace.
+            </p>
             <div className="grid gap-3 sm:flex sm:flex-wrap">
               <Button onClick={() => {
                 const retailSection = document.getElementById('retail');
@@ -78,7 +63,7 @@ export function Hero() {
                   retailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }}>
-                Explore Blue Ocean Capsules
+                Explore BrightPath Capsules
               </Button>
               <Button
                 variant="secondary"
@@ -117,7 +102,7 @@ export function Hero() {
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/20 hover:text-white"
               >
                 <span className="text-lg">▶</span>
-                <span>Get it on Blue Ocean Play</span>
+                <span>Get it on BrightPath Play</span>
               </a>
             </div>
           </div>
@@ -127,7 +112,7 @@ export function Hero() {
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
               <div className="relative space-y-4 text-left text-white">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
-                  Blue Ocean Marketplace
+                  BrightPath Marketplace
                 </span>
                 <h2 className="font-display text-2xl">Merchant Store: Sell Your Products</h2>
                 <p className="text-sm text-white/80 leading-relaxed">

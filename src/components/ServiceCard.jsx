@@ -39,10 +39,20 @@ export function ServiceCard({ service, onViewDetails, onBook }) {
     e?.preventDefault();
     e?.stopPropagation();
     
+    console.log('🔘 Book Session button clicked', {
+      serviceName: service?.name,
+      hasOnBook: !!onBook,
+      hasOnViewDetails: !!onViewDetails,
+    });
+    
     if (onBook) {
+      console.log('📞 Calling onBook handler');
       onBook(service);
     } else if (onViewDetails) {
+      console.log('📞 Falling back to onViewDetails');
       onViewDetails(service, 'book');
+    } else {
+      console.warn('⚠️ No booking handler available');
     }
   };
 

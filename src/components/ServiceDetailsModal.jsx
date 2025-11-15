@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
+import { PhoneInput } from './PhoneInput.jsx';
 import {
   buildYouTubeEmbedUrl,
   getYouTubeThumbnailUrl,
   getYouTubeVideoId,
 } from '../utils/youtube.js';
-import { ChevronLeft, ChevronRight, Star, Check, Clock, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Check, Clock, Sparkles, Calendar, AlertCircle, X } from 'lucide-react';
+import { logger } from '../utils/logger.js';
+import { convertDateLabelToISO, isPastDateTime, getRelativeDateLabel } from '../utils/dateHelpers.js';
 
 const fallbackImage =
   'data:image/svg+xml;utf8,' +
@@ -40,10 +43,15 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedAddOns, setSelectedAddOns] = useState(() => new Set());
   const [guestNote, setGuestNote] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
   const [videoError, setVideoError] = useState(false);
   const [videoEmbedUrl, setVideoEmbedUrl] = useState(null);
   const [videoThumbnail, setVideoThumbnail] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showRequirementsModal, setShowRequirementsModal] = useState(false);
+  const [bookingError, setBookingError] = useState('');
   const containerRef = useRef(null);
 
   const imageGallery = useMemo(() => {
@@ -60,12 +68,81 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
       setSelectedImage(imageGallery[0] || fallbackImage);
       setCurrentImageIndex(0);
       setImageError(false);
-      setSelectedDate(service.bookableDates?.[0]?.value || '');
-      setSelectedTime(service.timeSlots?.[0] || '');
+      // Initialize date and time with first available options
+      let initialDate = service.bookableDates?.[0]?.value || '';
+      let initialTime = service.timeSlots?.[0] || '';
+      
+      // Convert date label to ISO format
+      if (initialDate) {
+        const isoDate = convertDateLabelToISO(initialDate);
+        if (isoDate) {
+          initialDate = isoDate;
+        }
+      }
+      
+      // Always default to tomorrow to avoid past dates
+      // Check if the initial date/time would be in the past
+      if (!initialDate || (initialDate && initialTime && isPastDateTime(initialDate, initialTime))) {
+        // Use tomorrow as default
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        initialDate = tomorrow.toISOString().split('T')[0];
+        
+        // If we had a time but it's in the past, keep the time (it will be valid for tomorrow)
+        // If no time, use first available or default
+        if (!initialTime) {
+          initialTime = service.timeSlots?.[0] || '10:00 AM';
+        }
+      } else {
+        // Even if date seems valid, double-check it's not today with a past time
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const checkDate = new Date(initialDate + 'T00:00:00');
+        checkDate.setHours(0, 0, 0, 0);
+        
+        // If it's today, check if the time is in the past
+        if (checkDate.getTime() === today.getTime() && initialTime && isPastDateTime(initialDate, initialTime)) {
+          // Use tomorrow instead
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          initialDate = tomorrow.toISOString().split('T')[0];
+        }
+      }
+      
+      // Final validation: ensure we have a valid date
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(initialDate)) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        initialDate = tomorrow.toISOString().split('T')[0];
+      }
+      
+      // Ensure we have a valid time
+      if (!initialTime) {
+        initialTime = service.timeSlots?.[0] || '10:00 AM';
+      }
+      
+      setSelectedDate(initialDate);
+      setSelectedTime(initialTime);
       setSelectedAddOns(new Set());
       setGuestNote('');
+      setGuestName('');
+      setGuestEmail('');
+      setGuestPhone('');
       setVideoError(false);
       setActiveTab('overview');
+      setShowRequirementsModal(false);
+      setBookingError('');
+      
+      logger.debug('ServiceDetailsModal initialized', {
+        serviceName: service.name,
+        hasBookableDates: !!service.bookableDates?.length,
+        bookableDates: service.bookableDates,
+        hasTimeSlots: !!service.timeSlots?.length,
+        timeSlots: service.timeSlots,
+        initialDate,
+        initialTime,
+      });
 
       if (service.videoUrl) {
         const origin =
@@ -80,6 +157,23 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
       }
     }
   }, [service, open, imageGallery]);
+
+  // Handle Escape key for requirements modal
+  useEffect(() => {
+    if (!showRequirementsModal) return;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        event.stopImmediatePropagation(); // Prevent other Escape handlers from running
+        setShowRequirementsModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape, true); // Use capture phase
+    return () => {
+      document.removeEventListener('keydown', handleEscape, true);
+    };
+  }, [showRequirementsModal]);
 
   // GSAP animations
   useEffect(() => {
@@ -284,33 +378,121 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
     });
   };
 
-  const handleBook = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    // Validate required fields
+  // Validation helper function
+  const validateBooking = (service, selectedDate, selectedTime, guestEmailValue, guestNameValue, guestPhoneValue) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!service) {
-      console.error('❌ Cannot book: Service is missing');
-      return;
+      return {
+        valid: false,
+        error: 'Service information is missing. Please try again.',
+      };
+    }
+
+    if (!guestNameValue || !guestNameValue.trim()) {
+      return {
+        valid: false,
+        error: 'Please enter your name to complete your booking.',
+      };
+    }
+
+    if (!guestPhoneValue || !guestPhoneValue.trim()) {
+      return {
+        valid: false,
+        error: 'Please enter your phone number to complete your booking.',
+      };
     }
 
     if (!selectedDate || !selectedTime) {
-      console.warn('⚠️ Please select both date and time before booking');
+      return {
+        valid: false,
+        error: 'Please select both a date and time for your booking.',
+      };
+    }
+    
+    // Convert date to ISO format for validation
+    let isoDate = selectedDate;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(isoDate)) {
+      isoDate = convertDateLabelToISO(isoDate);
+      if (!isoDate) {
+        return {
+          valid: false,
+          error: 'Invalid date format. Please select a valid date.',
+        };
+      }
+    }
+    
+    // Validate that date/time is not in the past
+    if (isPastDateTime(isoDate, selectedTime)) {
+      return {
+        valid: false,
+        error: 'Cannot book a date and time in the past. Please select a future date and time.',
+      };
+    }
+
+    if (!guestEmailValue || !emailRegex.test(guestEmailValue.trim())) {
+      return {
+        valid: false,
+        error: 'Please provide a valid email address for booking confirmations.',
+      };
+    }
+
+    return { valid: true, error: null };
+  };
+
+  const handleBook = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setBookingError('');
+
+    // Validate booking
+    const validation = validateBooking(service, selectedDate, selectedTime, guestEmail, guestName, guestPhone);
+    if (!validation.valid) {
+      setBookingError(validation.error);
       return;
     }
 
+    // Convert date to ISO format
+    let isoDate = selectedDate;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(isoDate)) {
+      isoDate = convertDateLabelToISO(isoDate);
+      if (!isoDate) {
+        setBookingError('Invalid date format. Please select a valid date.');
+        return;
+      }
+    }
+    
+    // Prepare booking data
+    const bookingData = {
+      date: isoDate,
+      time: selectedTime,
+      addOns: Array.from(selectedAddOns),
+      notes: guestNote.trim(),
+      addOnTotal,
+      totalPrice,
+      guestName: guestName.trim(),
+      guestEmail: guestEmail.trim(),
+      guestPhone: guestPhone.trim(),
+    };
+
+    logger.debug('Booking data prepared:', bookingData);
+
     // Call the onBook handler with booking data
-    if (onBook) {
-      onBook(service, {
-        date: selectedDate,
-        time: selectedTime,
-        addOns: Array.from(selectedAddOns),
-        notes: guestNote.trim(),
-        addOnTotal,
-        totalPrice,
-      });
+    if (typeof onBook === 'function') {
+      try {
+        onBook(service, bookingData);
+        logger.debug('onBook handler called successfully');
+      } catch (error) {
+        logger.error('Error calling onBook handler:', error);
+        setBookingError('An error occurred while processing your booking. Please try again.');
+      }
     } else {
-      console.error('❌ onBook handler is not provided');
+      logger.error('onBook handler is not provided or is not a function', {
+        onBook,
+        type: typeof onBook,
+      });
+      setBookingError('Booking functionality is not available. Please refresh the page and try again.');
     }
   };
 
@@ -664,7 +846,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
               </section>
             )}
 
-            <section className="treatment-booking rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
+            <section id="booking-section" className="treatment-booking rounded-[32px] border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6 shadow-[0_32px_80px_rgba(29,160,230,0.28)]">
               <header className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="text-lg font-semibold uppercase tracking-[0.25em] text-white">
                   Reserve Your Session
@@ -679,15 +861,39 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Preferred Date</p>
                     <div className="flex flex-wrap gap-3">
                     {service.bookableDates.map((dateOption) => {
-                      const isActive = selectedDate === dateOption.value;
+                      // Convert date to ISO for comparison
+                      const dateValue = convertDateLabelToISO(dateOption.value) || dateOption.value;
+                      const isActive = selectedDate === dateValue || selectedDate === dateOption.value;
+                      
+                      // Check if this date/time combination is in the past
+                      // If no time selected yet, allow the date (time will be validated later)
+                      const isPast = dateValue && selectedTime ? isPastDateTime(dateValue, selectedTime) : false;
+                      
                       return (
                         <button
                           key={`${service.id}-${dateOption.value}`}
                           type="button"
-                          onClick={() => setSelectedDate(dateOption.value)}
+                          onClick={() => {
+                            const isoDate = convertDateLabelToISO(dateOption.value) || dateOption.value;
+                            
+                            // If the selected date with current time would be in the past, adjust time
+                            if (isoDate && selectedTime && isPastDateTime(isoDate, selectedTime)) {
+                              // Keep the date but the time validation will catch it
+                              // Or we could auto-adjust to next available time
+                              setSelectedDate(isoDate);
+                              // Show a warning or auto-adjust time
+                              setBookingError('Selected time may be in the past. Please select a future time.');
+                            } else {
+                              setSelectedDate(isoDate);
+                              setBookingError(''); // Clear any previous errors
+                            }
+                          }}
+                          disabled={isPast}
                           className={[
                             'rounded-2xl px-4 py-2 text-sm font-semibold transition-all',
-                            isActive
+                            isPast
+                              ? 'border border-white/10 bg-white/5 text-white/30 cursor-not-allowed opacity-50'
+                              : isActive
                               ? 'bg-white text-brand-700 shadow-[0_12px_30px_rgba(255,255,255,0.35)]'
                               : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
                           ].join(' ')}
@@ -706,14 +912,28 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                     <div className="flex flex-wrap gap-3">
                     {service.timeSlots.map((timeOption) => {
                       const isActive = selectedTime === timeOption;
+                      // Check if this time with selected date would be in the past
+                      const isPast = selectedDate && isPastDateTime(selectedDate, timeOption);
+                      
                       return (
                         <button
                           key={`${service.id}-${timeOption}`}
                           type="button"
-                          onClick={() => setSelectedTime(timeOption)}
+                          onClick={() => {
+                            // Validate the time is not in the past
+                            if (selectedDate && isPastDateTime(selectedDate, timeOption)) {
+                              setBookingError('This time is in the past. Please select a future time.');
+                            } else {
+                              setSelectedTime(timeOption);
+                              setBookingError(''); // Clear any previous errors
+                            }
+                          }}
+                          disabled={isPast}
                           className={[
                             'rounded-2xl px-4 py-2 text-sm font-semibold transition-all',
-                            isActive
+                            isPast
+                              ? 'border border-white/10 bg-white/5 text-white/30 cursor-not-allowed opacity-50'
+                              : isActive
                               ? 'bg-white text-brand-700 shadow-[0_12px_30px_rgba(255,255,255,0.35)]'
                               : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
                           ].join(' ')}
@@ -725,6 +945,53 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                     </div>
                   </div>
                 )}
+
+              <div className="mt-5 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+                  Guest Details
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(event) => setGuestName(event.target.value)}
+                      required
+                      className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+                      Phone *
+                    </label>
+                    <PhoneInput
+                      value={guestPhone}
+                      onChange={(event) => setGuestPhone(event.target.value)}
+                      placeholder="Phone number *"
+                      required
+                      defaultCountry="ZA"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+                    Email (required for confirmation)
+                  </label>
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(event) => setGuestEmail(event.target.value)}
+                    className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
+                    placeholder="guest@example.com"
+                    required
+                  />
+                </div>
+              </div>
 
               <div className="mt-5 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
@@ -756,19 +1023,46 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                 </div>
               </div>
 
+              {bookingError && (
+                <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-300 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-200">{bookingError}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 space-y-3">
                 <Button
-                  onClick={handleBook}
-                  className="w-full justify-center py-4 text-base font-semibold"
-                  disabled={!selectedDate || !selectedTime || !service}
+                  onClick={(e) => {
+                    // If date/time not selected, show requirements modal
+                    if (!selectedDate || !selectedTime) {
+                      e?.preventDefault();
+                      e?.stopPropagation();
+                      setShowRequirementsModal(true);
+                      return;
+                    }
+                    
+                    // If date/time are selected, proceed with booking
+                    handleBook(e);
+                  }}
+                  className={`w-full justify-center py-4 text-base font-semibold ${
+                    (!selectedDate || !selectedTime) 
+                      ? 'cursor-pointer hover:opacity-90' 
+                      : ''
+                  }`}
                   type="button"
                   aria-label={intent === 'book' ? 'Confirm your booking' : 'Reserve this service'}
                 >
-                  {intent === 'book' ? 'Confirm Booking' : 'Reserve This Service'}
+                  {(!selectedDate || !selectedTime) ? 'Select Date & Time' : (intent === 'book' ? 'Confirm Booking' : 'Reserve This Service')}
                 </Button>
                 <Button 
                   variant="secondary" 
-                  onClick={onClose} 
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    onClose();
+                  }} 
                   className="w-full justify-center py-4 text-base font-semibold"
                   aria-label="Close and decide later"
                 >
@@ -779,6 +1073,208 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
           </div>
         </div>
       </div>
+
+      {/* Requirements Modal */}
+      {showRequirementsModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="requirements-modal-title"
+        >
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+            onClick={() => setShowRequirementsModal(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-slate-800/95 backdrop-blur-md border border-white/10 p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setShowRequirementsModal(false)}
+              className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="mb-6">
+              <div className="mb-4 flex items-center gap-3">
+                <Calendar className="w-6 h-6 text-white" strokeWidth={2} />
+                <h3 id="requirements-modal-title" className="text-xl font-bold uppercase tracking-wide text-white">
+                  COMPLETE YOUR BOOKING
+                </h3>
+              </div>
+              <p className="text-sm text-white/90">
+                Select your preferred date and time to proceed with your booking.
+              </p>
+            </div>
+
+            {/* Date Selection */}
+            {service?.bookableDates?.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">
+                  Preferred Date
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {service.bookableDates.map((dateOption) => {
+                    const isActive = selectedDate === dateOption.value;
+                    return (
+                      <button
+                        key={`modal-${service.id}-${dateOption.value}`}
+                        type="button"
+                        onClick={() => setSelectedDate(dateOption.value)}
+                        className={[
+                          'rounded-xl px-4 py-2 text-sm font-semibold transition-all',
+                          isActive
+                            ? 'bg-white text-slate-800 shadow-lg'
+                            : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
+                        ].join(' ')}
+                      >
+                        {dateOption.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Time Selection */}
+            {service?.timeSlots?.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70 mb-2">
+                  Preferred Time
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {service.timeSlots.map((timeOption) => {
+                    const isActive = selectedTime === timeOption;
+                    return (
+                      <button
+                        key={`modal-${service.id}-${timeOption}`}
+                        type="button"
+                        onClick={() => setSelectedTime(timeOption)}
+                        className={[
+                          'rounded-xl px-4 py-2 text-sm font-semibold transition-all',
+                          isActive
+                            ? 'bg-white text-slate-800 shadow-lg'
+                            : 'border border-white/25 bg-white/10 text-white/75 hover:border-white/40 hover:text-white',
+                        ].join(' ')}
+                      >
+                        {timeOption}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Pricing Summary */}
+            {(selectedDate && selectedTime) && (
+              <div className="mb-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/80 backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <span>Service Investment</span>
+                  <span>{formatCurrency(service?.basePrice || 0, service?.currency || 'USD')}</span>
+                </div>
+                {addOnTotal > 0 && (
+                  <div className="mt-2 flex items-center justify-between text-white/75">
+                    <span>Enhancements</span>
+                    <span>{formatCurrency(addOnTotal, service?.currency || 'USD')}</span>
+                  </div>
+                )}
+                <div className="mt-3 flex items-center justify-between text-base font-semibold text-white border-t border-white/10 pt-3">
+                  <span>Total Due</span>
+                  <span>{formatCurrency(totalPrice, service?.currency || 'USD')}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              {(!selectedDate || !selectedTime) ? (
+                <button
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    
+                    // Close the requirements modal first
+                    setShowRequirementsModal(false);
+                    
+                    // Scroll to booking section after a brief delay to ensure modal is closed
+                    setTimeout(() => {
+                      const bookingSection = document.getElementById('booking-section') || document.querySelector('.treatment-booking');
+                      if (bookingSection) {
+                        // Scroll the modal container to show the booking section
+                        const modalContainer = bookingSection.closest('.service-modal-container');
+                        if (modalContainer) {
+                          // Calculate the position relative to the modal container
+                          const containerRect = modalContainer.getBoundingClientRect();
+                          const sectionRect = bookingSection.getBoundingClientRect();
+                          const scrollTop = modalContainer.scrollTop;
+                          const targetScroll = scrollTop + (sectionRect.top - containerRect.top) - 100; // 100px offset from top
+                          
+                          modalContainer.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                          });
+                          
+                          // Add highlight effect
+                          bookingSection.style.transition = 'box-shadow 0.3s ease';
+                          bookingSection.style.boxShadow = '0 0 0 3px rgba(29, 160, 230, 0.5), 0_32px_80px_rgba(29,160,230,0.28)';
+                          setTimeout(() => {
+                            bookingSection.style.boxShadow = '';
+                          }, 2000);
+                        } else {
+                          // Fallback: scroll the section into view
+                          bookingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          // Add highlight effect
+                          bookingSection.style.transition = 'box-shadow 0.3s ease';
+                          bookingSection.style.boxShadow = '0 0 0 3px rgba(29, 160, 230, 0.5), 0_32px_80px_rgba(29,160,230,0.28)';
+                          setTimeout(() => {
+                            bookingSection.style.boxShadow = '';
+                          }, 2000);
+                        }
+                      }
+                    }, 150);
+                  }}
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-4 text-base transition-all duration-200 shadow-lg"
+                  type="button"
+                  aria-label="Go to date and time selection"
+                >
+                  Select Date & Time
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    
+                    if (!service) {
+                      logger.error('Cannot book: Service is missing');
+                      return;
+                    }
+                    
+                    // Process the booking
+                    // handleBook will call onBook which will close the service modal
+                    // The requirements modal will be closed when the service modal closes
+                    handleBook(e);
+                  }}
+                  disabled={!selectedDate || !selectedTime || !service}
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-4 text-base transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  aria-label="Confirm your booking"
+                >
+                  Confirm Booking
+                </button>
+              )}
+              <button
+                onClick={() => setShowRequirementsModal(false)}
+                className="w-full rounded-xl bg-slate-700/80 hover:bg-slate-700 border border-white/20 text-white font-semibold py-3 px-4 text-sm transition-all duration-200"
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

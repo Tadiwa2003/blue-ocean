@@ -163,7 +163,7 @@ export function CounterLoader({ onComplete, duration = 2000 }) {
 
         <div className="text-center">
           <p className="text-lg font-semibold text-brand-200 sm:text-xl">Loading Dashboard</p>
-          <p className="mt-2 text-sm text-white/60">Preparing your Blue Ocean experience...</p>
+          <p className="mt-2 text-sm text-white/60">Preparing your BrightPath experience...</p>
         </div>
 
         {/* Progress Bar */}
@@ -182,7 +182,7 @@ export function CounterLoader({ onComplete, duration = 2000 }) {
       <div className="absolute bottom-8 z-10">
         <div className="flex items-center gap-2 text-sm text-white/40">
           <span className="h-px w-12 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <span>Blue Ocean</span>
+          <span>BrightPath</span>
           <span className="h-px w-12 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
       </div>
