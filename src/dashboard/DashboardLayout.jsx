@@ -285,7 +285,7 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   }, [isOwner]);
 
   return (
-    <aside className="relative flex w-full max-w-[230px] flex-col gap-8 rounded-[32px] border border-white/10 bg-ocean/75 px-4 py-6 backdrop-blur-xl">
+    <aside className="relative flex w-full max-w-[280px] flex-col gap-8 rounded-[32px] border border-white/10 bg-ocean/75 px-6 py-6 backdrop-blur-xl">
       <div className="px-2">
         <Logo className="text-sm" />
         <p className="mt-4 text-xs uppercase tracking-[0.3em] text-white/40">Signed in as</p>
@@ -3241,7 +3241,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
 
   return (
     <>
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1200px] gap-6 px-6 py-10">
+    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] gap-8 px-6 py-10">
       <Sidebar
         activeSection={activeSection}
         onSelect={setActiveSection}
