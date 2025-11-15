@@ -279,7 +279,7 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
                 className="text-white/70"
               >
                 {mode === 'signup'
-                  ? 'Join Blue Ocean and start managing your retail and spa operations.'
+                  ? 'Join BrightPath and start managing your retail and spa operations.'
                   : 'Sign in to access your dashboard, storefront tools, and analytics.'}
               </motion.p>
             </div>
@@ -585,7 +585,7 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
                 transition={{ delay: 0.5 }}
                 className="text-3xl lg:text-4xl font-bold text-white"
               >
-                {mode === 'signup' ? 'Join Blue Ocean' : 'Secure Authentication'}
+                {mode === 'signup' ? 'Join BrightPath' : 'Secure Authentication'}
               </motion.h2>
               <motion.p
                 initial={{ y: 20, opacity: 0 }}

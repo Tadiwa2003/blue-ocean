@@ -23,7 +23,7 @@ export function Founder({ onBookStrategySession, onReadJournal }) {
           <span className="text-xs uppercase tracking-[0.35em] text-brand-200">Founder insight</span>
           <h2 className="font-display text-3xl">Kim Moyo · Founder & Creative Director</h2>
           <p className="text-sm text-white/70">
-            Raised along the Mozambican shoreline, Kim launched Blue Ocean to bridge artisan excellence with modern retail.
+            Raised along the Mozambican shoreline, Kim launched BrightPath to bridge artisan excellence with modern retail.
             She leads a collective of merchandisers, scent designers, and logistics partners that translate ocean energy into
             retail theatre.
           </p>

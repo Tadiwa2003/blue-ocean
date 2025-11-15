@@ -287,7 +287,7 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   }, [isOwner]);
 
   return (
-    <aside className="relative flex w-full max-w-[230px] flex-col gap-8 rounded-[32px] border border-white/10 bg-ocean/75 px-4 py-6 backdrop-blur-xl">
+    <aside className="relative flex w-full max-w-[280px] flex-col gap-8 rounded-[32px] border border-white/10 bg-ocean/75 px-6 py-6 backdrop-blur-xl">
       <div className="px-2">
         <Logo className="text-sm" />
         <p className="mt-4 text-xs uppercase tracking-[0.3em] text-white/40">Signed in as</p>
@@ -373,7 +373,7 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-brand-200/80">Hello, {currentUser?.name ?? 'Merchant'}</p>
-          <h1 className="mt-2 font-display text-3xl">Welcome back to Blue Ocean HQ</h1>
+          <h1 className="mt-2 font-display text-3xl">Welcome back to BrightPath HQ</h1>
           <p className="mt-2 text-sm text-white/70">
             Review capsule performance, publish storefront changes, and monitor guest experience all in one tide dashboard.
           </p>
@@ -384,7 +384,7 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
                   ⚠️ <strong>Subscription Required</strong>
                 </p>
                 <p className="text-xs text-amber-200/80">
-                  Subscribe to start selling and advertising your goods on Blue Ocean Marketplace.
+                  Subscribe to start selling and advertising your goods on BrightPath Marketplace.
                 </p>
               </div>
               {onNavigateToSubscription && (
@@ -426,7 +426,7 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
               <button
                 type="button"
                 className="flex w-full items-center gap-2 rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white"
-                onClick={onViewStorefront}
+                onClick={() => onViewStorefront?.('products', null)}
               >
                 <span className="text-lg">🛍️</span>
                 Products Storefront
@@ -435,7 +435,7 @@ function DashboardHero({ currentUser, onViewStorefront, onViewSpaStorefront, sub
                 <button
                   type="button"
                   className="mt-1 flex w-full items-center gap-2 rounded-xl px-4 py-2 transition hover:bg-white/10 hover:text-white"
-                  onClick={onViewSpaStorefront}
+                  onClick={() => onViewSpaStorefront?.('spa', null)}
                 >
                   <span className="text-lg">💆</span>
                   Beauty Spa Storefront
@@ -1293,7 +1293,7 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, 
               !hasSubscription 
                 ? 'Subscription required to add products'
                 : isOwner 
-                  ? 'Create a new Blue Ocean product'
+                  ? 'Create a new BrightPath product'
                   : 'Create a new product for your storefront'
             }
           >
@@ -1343,6 +1343,10 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
   const [userStorefronts, setUserStorefronts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
+  const [selectedStorefrontForProduct, setSelectedStorefrontForProduct] = useState(null);
+  const [selectedStorefrontForService, setSelectedStorefrontForService] = useState(null);
   const isOwner = currentUser?.role === 'owner';
 
   useEffect(() => {
@@ -1384,19 +1388,19 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
   };
 
   const handleViewUserStorefront = (storefront) => {
-    // Navigate to user's custom storefront
+    // Navigate to user's custom storefront with storefront data
+    // For mixed storefronts, default to products view (user can navigate to spa from there)
     if (storefront.type === 'products' || storefront.type === 'mixed') {
-      onViewStorefront?.();
-    }
-    if (storefront.type === 'spa' || storefront.type === 'mixed') {
-      onViewSpaStorefront?.();
+      onViewStorefront?.('products', storefront);
+    } else if (storefront.type === 'spa') {
+      onViewSpaStorefront?.('spa', storefront);
     }
   };
 
   const platformStorefronts = [
     {
       id: 'platform-products',
-      name: 'Blue Ocean Products',
+      name: 'BrightPath Products',
       type: 'products',
       isPlatform: true,
       description: 'Our main products storefront showcasing all available products.',
@@ -1463,43 +1467,74 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
             {isOwner && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-white mb-4">Platform Storefronts</h3>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   {platformStorefronts.map((storefront) => (
-                    <div key={storefront.id} className="rounded-xl border border-brand-400/30 bg-gradient-to-br from-brand-500/20 to-brand-600/10 p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-1">{storefront.name}</h4>
-                          <p className="text-xs text-white/60 mb-2">
-                            {storefront.type === 'products' ? '🛍️ Products' : storefront.type === 'spa' ? '💆 Beauty Spa' : '🛍️💆 Mixed'}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-brand-500/30 px-3 py-1 text-xs font-semibold text-brand-200">
+                    <motion.div
+                      key={storefront.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="group relative overflow-hidden rounded-2xl border border-brand-400/30 bg-gradient-to-br from-brand-500/20 via-brand-500/15 to-brand-600/10 backdrop-blur-sm transition-all duration-300 hover:border-brand-400/50 hover:shadow-2xl hover:shadow-brand-500/20"
+                    >
+                      {/* Platform Badge Glow */}
+                      <div className="absolute top-4 right-4 z-10">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/30 border border-brand-400/40 px-3 py-1.5 text-xs font-bold text-brand-100 backdrop-blur-sm shadow-lg">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
                           Platform
                         </span>
                       </div>
-                      <p className="text-sm text-white/70 mb-4">{storefront.description}</p>
-                      <Button
-                        onClick={() => {
-                          if (storefront.type === 'products') {
-                            onViewStorefront?.();
-                          } else if (storefront.type === 'spa') {
-                            onViewSpaStorefront?.();
-                          }
-                        }}
-                        variant="secondary"
-                        className="w-full"
-                      >
-                        View Storefront
-                      </Button>
-          </div>
-        ))}
-      </div>
-    </div>
+
+                      <div className="relative p-6">
+                        <div className="flex items-start justify-between mb-4 pr-20">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xl font-display font-bold text-white mb-2 group-hover:text-brand-100 transition-colors">
+                              {storefront.name}
+                            </h4>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+                              {storefront.type === 'products' ? (
+                                <>🛍️ <span>Products</span></>
+                              ) : storefront.type === 'spa' ? (
+                                <>💆 <span>Beauty Spa</span></>
+                              ) : (
+                                <>🛍️💆 <span>Mixed</span></>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-white/70 mb-6 leading-relaxed">{storefront.description}</p>
+                        <Button
+                          onClick={() => {
+                            if (storefront.type === 'products') {
+                              onViewStorefront?.('products', null); // null = platform storefront
+                            } else if (storefront.type === 'spa') {
+                              onViewSpaStorefront?.('spa', null); // null = platform storefront
+                            }
+                          }}
+                          className="w-full bg-gradient-to-r from-brand-500/90 to-brand-600/90 hover:from-brand-500 hover:to-brand-600 text-white font-medium text-sm py-2.5 shadow-lg shadow-brand-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/40 hover:scale-[1.02]"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Storefront
+                          </span>
+                        </Button>
+                      </div>
+
+                      {/* Hover Glow Effect */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-brand-500/10 via-transparent to-transparent" />
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* User Storefronts */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">{isOwner ? 'Platform Storefronts' : 'Your Storefronts'}</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Your Storefronts</h3>
               {loading ? (
                 <div className="text-center text-white/60 py-8">Loading storefronts...</div>
               ) : userStorefronts.length === 0 ? (
@@ -1513,57 +1548,201 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                   </Button>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {userStorefronts.map((storefront) => (
-                    <div key={storefront._id || storefront.id} className="rounded-xl border border-white/10 bg-white/5 p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-1">{storefront.name}</h4>
-                          <p className="text-xs text-white/60 mb-2">
-                            {storefront.type === 'products' ? '🛍️ Products' : storefront.type === 'spa' ? '💆 Beauty Spa' : '🛍️💆 Mixed'}
-                          </p>
-                        </div>
-                        {storefront.isPublished && (
-                          <span className="rounded-full bg-emerald-500/30 px-2 py-1 text-xs font-semibold text-emerald-200">
-                            Published
-                          </span>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {userStorefronts.map((storefront) => {
+                    const primaryColor = storefront.design?.colors?.primary || '#1da0e6';
+                    const secondaryColor = storefront.design?.colors?.secondary || '#0b233e';
+                    const backgroundImage = storefront.design?.hero?.backgroundImage;
+                    const backgroundColor = storefront.design?.hero?.backgroundColor || secondaryColor;
+                    
+                    return (
+                      <motion.div
+                        key={storefront._id || storefront.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-brand-500/10"
+                      >
+                        {/* Background Preview */}
+                        {backgroundImage ? (
+                          <div 
+                            className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity duration-300"
+                            style={{
+                              backgroundImage: `url(${backgroundImage})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
+                            style={{ backgroundColor }}
+                          />
                         )}
-                      </div>
-                      {storefront.design?.branding?.tagline && (
-                        <p className="text-sm text-white/70 mb-4">{storefront.design.branding.tagline}</p>
-                      )}
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleViewUserStorefront(storefront)}
-                          variant="secondary"
-                          className="flex-1 text-xs"
-                        >
-                          View
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            // TODO: Open edit modal
-                            console.log('Edit storefront:', storefront);
+                        
+                        <div className="relative p-6">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-xl font-display font-bold text-white mb-2 truncate group-hover:text-brand-200 transition-colors">
+                                {storefront.name}
+                              </h4>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+                                  {storefront.type === 'products' ? (
+                                    <>🛍️ <span>Products</span></>
+                                  ) : storefront.type === 'spa' ? (
+                                    <>💆 <span>Beauty Spa</span></>
+                                  ) : (
+                                    <>🛍️💆 <span>Mixed</span></>
+                                  )}
+                                </span>
+                                {storefront.isPublished && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-sm">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    Published
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Tagline */}
+                          {storefront.design?.branding?.tagline && (
+                            <p className="text-sm text-white/60 mb-5 line-clamp-2 leading-relaxed">
+                              {storefront.design.branding.tagline}
+                            </p>
+                          )}
+
+                          {/* Store Name if different from storefront name */}
+                          {storefront.design?.branding?.storeName && storefront.design.branding.storeName !== storefront.name && (
+                            <div className="mb-4">
+                              <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Store Name</p>
+                              <p className="text-sm font-medium text-white/80">{storefront.design.branding.storeName}</p>
+                            </div>
+                          )}
+
+                          {/* Color Preview */}
+                          <div className="flex items-center gap-2 mb-5">
+                            <span className="text-xs text-white/40 uppercase tracking-wider">Colors</span>
+                            <div className="flex gap-1.5">
+                              <div 
+                                className="w-6 h-6 rounded-full border-2 border-white/20 shadow-lg"
+                                style={{ backgroundColor: primaryColor }}
+                                title="Primary Color"
+                              />
+                              <div 
+                                className="w-6 h-6 rounded-full border-2 border-white/20 shadow-lg"
+                                style={{ backgroundColor: secondaryColor }}
+                                title="Secondary Color"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="space-y-2 pt-4 border-t border-white/10">
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleViewUserStorefront(storefront)}
+                                className="flex-1 bg-gradient-to-r from-brand-500/80 to-brand-600/80 hover:from-brand-500 hover:to-brand-600 text-white font-medium text-sm py-2.5 shadow-lg shadow-brand-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/30 hover:scale-[1.02]"
+                              >
+                                <span className="flex items-center justify-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                  View
+                                </span>
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  // TODO: Open edit modal
+                                  console.log('Edit storefront:', storefront);
+                                }}
+                                variant="ghost"
+                                className="px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300 font-medium text-sm"
+                              >
+                                <span className="flex items-center justify-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                  Edit
+                                </span>
+                              </Button>
+                            </div>
+                            {/* Add Products/Services buttons */}
+                            {(storefront.type === 'products' || storefront.type === 'mixed') && (
+                              <Button
+                                onClick={() => {
+                                  setSelectedStorefrontForProduct(storefront);
+                                  setIsAddProductModalOpen(true);
+                                }}
+                                variant="ghost"
+                                className="w-full text-xs py-2 text-white/60 hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/10"
+                              >
+                                + Add Product
+                              </Button>
+                            )}
+                            {(storefront.type === 'spa' || storefront.type === 'mixed') && (
+                              <Button
+                                onClick={() => {
+                                  setSelectedStorefrontForService(storefront);
+                                  setIsAddServiceModalOpen(true);
+                                }}
+                                variant="ghost"
+                                className="w-full text-xs py-2 text-white/60 hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/10"
+                              >
+                                + Add Service
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Hover Glow Effect */}
+                        <div 
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 70%)`,
                           }}
-                          variant="ghost"
-                          className="text-xs"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           </>
         )}
       </div>
-      <CreateStorefrontModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleStorefrontCreated}
-      />
+        <CreateStorefrontModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={handleStorefrontCreated}
+        />
+        <AddProductModal
+          isOpen={isAddProductModalOpen}
+          onClose={() => {
+            setIsAddProductModalOpen(false);
+            setSelectedStorefrontForProduct(null);
+          }}
+          onSuccess={() => {
+            setIsAddProductModalOpen(false);
+            setSelectedStorefrontForProduct(null);
+          }}
+          storefrontId={selectedStorefrontForProduct?._id || selectedStorefrontForProduct?.id || null}
+        />
+        <AddServiceModal
+          isOpen={isAddServiceModalOpen}
+          onClose={() => {
+            setIsAddServiceModalOpen(false);
+            setSelectedStorefrontForService(null);
+          }}
+          onSuccess={() => {
+            setIsAddServiceModalOpen(false);
+            setSelectedStorefrontForService(null);
+          }}
+          storefrontId={selectedStorefrontForService?._id || selectedStorefrontForService?.id || null}
+        />
     </>
   );
 }
@@ -1655,7 +1834,7 @@ function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isO
             <Button 
               onClick={() => {
                 if (onViewSpaStorefront) {
-                  onViewSpaStorefront();
+                  onViewSpaStorefront('spa', null);
                 } else {
                   // Fallback: show message or navigate
                   alert('Opening spa storefront...');
@@ -1783,7 +1962,7 @@ function SpaBookingsTable({ onSelect, onViewSpaStorefront }) {
           </Button>
           <Button onClick={() => {
             if (onViewSpaStorefront) {
-              onViewSpaStorefront();
+              onViewSpaStorefront('spa', null);
             } else if (onSelect) {
               onSelect('spaServices');
             }
@@ -3068,8 +3247,39 @@ function OwnerStorefrontAnalytics() {
   );
 }
 
-function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription, onViewOrders }) {
+function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, subscription, onNavigateToSubscription, onViewOrders, onNavigateToStorefronts }) {
   const isOwner = currentUser?.role === 'owner';
+  const [userStorefronts, setUserStorefronts] = useState([]);
+  const [storefrontsLoading, setStorefrontsLoading] = useState(true);
+
+  useEffect(() => {
+    if (subscription) {
+      const fetchStorefronts = async () => {
+        try {
+          const response = await api.storefronts.getUserStorefronts();
+          if (response.success) {
+            setUserStorefronts(response.data.storefronts || []);
+          }
+        } catch (error) {
+          console.error('Error fetching storefronts:', error);
+        } finally {
+          setStorefrontsLoading(false);
+        }
+      };
+      fetchStorefronts();
+    } else {
+      setStorefrontsLoading(false);
+    }
+  }, [subscription]);
+
+  const handleViewUserStorefront = (storefront) => {
+    // Navigate to user's custom storefront with storefront data
+    if (storefront.type === 'products' || storefront.type === 'mixed') {
+      onViewStorefront?.('products', storefront);
+    } else if (storefront.type === 'spa') {
+      onViewSpaStorefront?.('spa', storefront);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -3084,6 +3294,141 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
       <AnalyticsSummary isOwner={isOwner} />
       <SalesTrend isOwner={isOwner} />
       {isOwner && <OwnerStorefrontAnalytics />}
+      
+      {/* User Storefronts Section - Only show user-created storefronts, no create button */}
+      {subscription && (
+        <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="font-display text-2xl">My Storefronts</h2>
+              <p className="mt-2 text-sm text-white/70">
+                View and manage your custom storefronts.
+              </p>
+            </div>
+            {onNavigateToStorefronts && (
+              <Button
+                onClick={onNavigateToStorefronts}
+                variant="ghost"
+                className="text-brand-200 hover:text-brand-100"
+              >
+                Manage All →
+              </Button>
+            )}
+          </div>
+          
+          {storefrontsLoading ? (
+            <div className="text-center text-white/60 py-8">Loading storefronts...</div>
+          ) : userStorefronts.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
+              <p className="text-white/70 mb-4">You haven't created any storefronts yet.</p>
+              {onNavigateToStorefronts && (
+                <Button
+                  onClick={onNavigateToStorefronts}
+                  className="bg-brand-500/80 hover:bg-brand-500"
+                >
+                  Create Your First Storefront
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {userStorefronts.slice(0, 6).map((storefront) => {
+                const primaryColor = storefront.design?.colors?.primary || '#1da0e6';
+                const secondaryColor = storefront.design?.colors?.secondary || '#0b233e';
+                const backgroundImage = storefront.design?.hero?.backgroundImage;
+                const backgroundColor = storefront.design?.hero?.backgroundColor || secondaryColor;
+                
+                return (
+                  <motion.div
+                    key={storefront._id || storefront.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:shadow-2xl hover:shadow-brand-500/10"
+                  >
+                    {/* Background Preview */}
+                    {backgroundImage ? (
+                      <div 
+                        className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity duration-300"
+                        style={{
+                          backgroundImage: `url(${backgroundImage})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      />
+                    ) : (
+                      <div 
+                        className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
+                        style={{ backgroundColor }}
+                      />
+                    )}
+                    
+                    <div className="relative p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xl font-display font-bold text-white mb-2 truncate group-hover:text-brand-200 transition-colors">
+                            {storefront.name}
+                          </h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+                              {storefront.type === 'products' ? (
+                                <>🛍️ <span>Products</span></>
+                              ) : storefront.type === 'spa' ? (
+                                <>💆 <span>Beauty Spa</span></>
+                              ) : (
+                                <>🛍️💆 <span>Mixed</span></>
+                              )}
+                            </span>
+                            {storefront.isPublished && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Published
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tagline */}
+                      {storefront.design?.branding?.tagline && (
+                        <p className="text-sm text-white/60 mb-5 line-clamp-2 leading-relaxed">
+                          {storefront.design.branding.tagline}
+                        </p>
+                      )}
+
+                      {/* Actions */}
+                      <div className="pt-4 border-t border-white/10">
+                        <Button
+                          onClick={() => handleViewUserStorefront(storefront)}
+                          className="w-full bg-gradient-to-r from-brand-500/80 to-brand-600/80 hover:from-brand-500 hover:to-brand-600 text-white font-medium text-sm py-2.5 shadow-lg shadow-brand-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/30 hover:scale-[1.02]"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Storefront
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Hover Glow Effect */}
+                    <div 
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 70%)`,
+                      }}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+      
       <RecentOrders onViewAll={onViewOrders} />
     </div>
   );
@@ -3097,6 +3442,21 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [productRefreshTrigger, setProductRefreshTrigger] = useState(0);
   const isOwner = currentUser?.role === 'owner';
+
+  // Wrap handlers to support custom storefront data
+  const handleViewStorefront = (type, storefrontData) => {
+    if (typeof onViewStorefront === 'function') {
+      // If storefrontData is provided, pass it; otherwise pass null for platform storefront
+      onViewStorefront(type || 'products', storefrontData || null);
+    }
+  };
+
+  const handleViewSpaStorefront = (type, storefrontData) => {
+    if (typeof onViewSpaStorefront === 'function') {
+      // If storefrontData is provided, pass it; otherwise pass null for platform storefront
+      onViewSpaStorefront(type || 'spa', storefrontData || null);
+    }
+  };
 
   // Fetch subscription status
   useEffect(() => {
@@ -3183,8 +3543,8 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
       case 'storefront':
         return <StorefrontPanel 
           subscription={subscription}
-          onViewStorefront={onViewStorefront}
-          onViewSpaStorefront={onViewSpaStorefront}
+          onViewStorefront={handleViewStorefront}
+          onViewSpaStorefront={handleViewSpaStorefront}
           onNavigateToSubscription={() => setActiveSection('subscription')}
           currentUser={currentUser}
         />;
@@ -3240,20 +3600,21 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         );
       case 'dashboard':
       default:
-        return <DashboardPanel 
-          currentUser={currentUser} 
-          onViewStorefront={onViewStorefront} 
-          onViewSpaStorefront={onViewSpaStorefront} 
-          subscription={subscription}
-          onNavigateToSubscription={() => setActiveSection('subscription')}
-          onViewOrders={() => setActiveSection('orders')}
-        />;
+        return       <DashboardPanel 
+        currentUser={currentUser} 
+        onViewStorefront={handleViewStorefront} 
+        onViewSpaStorefront={handleViewSpaStorefront} 
+        subscription={subscription}
+        onNavigateToSubscription={() => setActiveSection('subscription')}
+        onViewOrders={() => setActiveSection('orders')}
+        onNavigateToStorefronts={() => setActiveSection('storefront')}
+      />;
     }
   };
 
   return (
     <>
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1200px] gap-6 px-6 py-10">
+    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] gap-8 px-6 py-10">
       <Sidebar
         activeSection={activeSection}
         onSelect={setActiveSection}

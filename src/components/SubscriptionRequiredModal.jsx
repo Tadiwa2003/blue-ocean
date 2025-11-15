@@ -69,8 +69,8 @@ export function SubscriptionRequiredModal({ isOpen, onSubscribeSuccess, trialExp
                       </h2>
                       <p className="text-sm text-white/60 mt-1">
                         {trialExpired 
-                          ? 'Your free trial has ended. Subscribe to continue using Blue Ocean Marketplace.'
-                          : 'Subscribe to access all features and start selling on Blue Ocean Marketplace.'}
+                          ? 'Your free trial has ended. Subscribe to continue using BrightPath Marketplace.'
+                          : 'Subscribe to access all features and start selling on BrightPath Marketplace.'}
                       </p>
                     </div>
                   </div>
@@ -89,7 +89,7 @@ export function SubscriptionRequiredModal({ isOpen, onSubscribeSuccess, trialExp
                         <Clock className="h-12 w-12 text-amber-200 mx-auto mb-4" />
                         <h3 className="text-xl font-semibold text-white mb-2">Your Trial Has Ended</h3>
                         <p className="text-white/70">
-                          Your 14-day free trial period has expired. To continue using Blue Ocean Marketplace and access all features, please subscribe to a plan.
+                          Your 14-day free trial period has expired. To continue using BrightPath Marketplace and access all features, please subscribe to a plan.
                         </p>
                       </motion.div>
                     ) : (

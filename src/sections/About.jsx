@@ -9,7 +9,7 @@ const pillars = [
   {
     title: 'Beauty Spa Rituals',
     description:
-      'Our aestheticians design signature facials, body treatments, and scent ceremonies using Blue Ocean botanicals and soundscapes.',
+      'Our aestheticians design signature facials, body treatments, and scent ceremonies using BrightPath botanicals and soundscapes.',
   },
   {
     title: 'White-Glove Fulfilment',
@@ -23,7 +23,7 @@ export function About() {
     <section id="about" className="mx-auto mt-24 max-w-6xl px-6">
       <SectionTitle
         eyebrow="What we do"
-        title="Blue Ocean sells high-conversion retail capsules and beauty spa services inspired by the shoreline."
+        title="BrightPath sells high-conversion retail capsules and beauty spa services inspired by the shoreline."
         description="From stocked product assortments to on-site ritual menus, we help boutiques, spas, and hospitality groups launch offerings that guests crave."
       />
       <div className="mt-12 grid gap-6 md:grid-cols-3">

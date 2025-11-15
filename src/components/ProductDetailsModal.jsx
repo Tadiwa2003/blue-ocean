@@ -17,7 +17,7 @@ const fallbackImage =
       </defs>
       <rect width="400" height="400" fill="url(#grad)" />
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="32" fill="rgba(255,255,255,0.85)">
-        Blue Ocean
+        BrightPath
       </text>
     </svg>
   `);

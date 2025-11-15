@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
-const conciergeFallbackEmail = "tadiwachoga2003@gmail.com";
-const conciergeEmail = process.env.SPA_CONCIERGE_EMAIL || conciergeFallbackEmail;
+// Always use tadiwachoga2003@gmail.com as the concierge email
+const CONCIERGE_EMAIL = "tadiwachoga2003@gmail.com";
 
 // Check if email is configured (not using placeholder values)
 const emailConfigAvailable =
@@ -32,7 +32,7 @@ if (emailConfigAvailable) {
       console.error('[Email] Please check your EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASS settings.');
     } else {
       console.log('[Email] ✅ Email transporter configured successfully');
-      console.log(`[Email] 📧 Concierge email: ${conciergeEmail}`);
+      console.log(`[Email] 📧 Concierge email: ${CONCIERGE_EMAIL}`);
       console.log(`[Email] 📧 From address: ${process.env.EMAIL_FROM || process.env.EMAIL_USER}`);
     }
   });
@@ -92,11 +92,12 @@ export const sendBookingNotifications = async (booking) => {
     date: booking.date,
     time: booking.time,
     totalPrice: booking.totalPrice,
-    conciergeEmail: conciergeEmail,
+    status: booking.status || 'pending',
+    conciergeEmail: CONCIERGE_EMAIL,
   });
 
-  // Ensure concierge email is set (always use tadiwachoga2003@gmail.com)
-  const targetConciergeEmail = 'tadiwachoga2003@gmail.com';
+  // Always use tadiwachoga2003@gmail.com as the concierge email
+  const targetConciergeEmail = CONCIERGE_EMAIL;
   console.log('[Email] 📧 Target concierge email:', targetConciergeEmail);
 
   if (!transporter) {
@@ -253,6 +254,156 @@ export const sendBookingNotifications = async (booking) => {
     console.error('[Email] ❌❌❌ CRITICAL ERROR sending booking notifications:', error.message);
     console.error('[Email] ❌ Full error stack:', error.stack);
     // Don't throw - booking is already created, email failure shouldn't break the flow
+  }
+};
+
+// Send booking confirmation email when booking is confirmed
+export const sendBookingConfirmation = async (booking) => {
+  // Validate booking data
+  if (!booking) {
+    console.error('[Email] ❌ No booking data provided for confirmation');
+    return;
+  }
+
+  // Only send confirmation email if status is "confirmed"
+  if (booking.status !== 'confirmed') {
+    console.log('[Email] 📧 Booking status is not "confirmed", skipping confirmation email');
+    return;
+  }
+
+  console.log('[Email] 📧 Sending booking confirmation email...');
+  console.log('[Email] 📋 Confirmed booking details:', {
+    id: booking.id || booking._id,
+    name: booking.name,
+    guestName: booking.guestName,
+    guestEmail: booking.guestEmail,
+    date: booking.date,
+    time: booking.time,
+    status: booking.status,
+  });
+
+  // Always use tadiwachoga2003@gmail.com as the concierge email
+  const targetConciergeEmail = CONCIERGE_EMAIL;
+
+  if (!transporter) {
+    console.error(
+      '[Email] ❌ CRITICAL: Transporter is not configured!\n' +
+      '[Email] Cannot send confirmation email. Update server/.env with email credentials.'
+    );
+    return;
+  }
+
+  const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const bookingSummary = formatBookingSummary(booking);
+  
+  // Ensure we have required booking fields
+  if (!booking.name || !booking.date || !booking.time) {
+    console.error('[Email] ❌ Missing required booking fields for confirmation email');
+    return;
+  }
+  
+  // Confirmation email to concierge
+  const conciergeConfirmationMessage = {
+    from: fromAddress,
+    to: targetConciergeEmail,
+    subject: `✅ Booking Confirmed: ${booking.name} (${booking.date})`,
+    text: `A booking has been confirmed:\n\n${bookingSummary}\n\nBooking ID: ${booking.id || 'N/A'}\nStatus: ${booking.status}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4CAF50;">✅ Booking Confirmed</h2>
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+          <h3 style="margin-top: 0; color: #2e7d32;">${booking.name}</h3>
+          <p><strong>Guest:</strong> ${booking.guestName || 'Guest'}</p>
+          <p><strong>Email:</strong> ${booking.guestEmail || 'N/A'}</p>
+          ${booking.guestPhone ? `<p><strong>Phone:</strong> ${booking.guestPhone}</p>` : ''}
+          <p><strong>Date:</strong> ${booking.date} at ${booking.time}</p>
+          <p><strong>Duration:</strong> ${booking.duration || 60} minutes</p>
+          <p><strong>Total:</strong> ${booking.currency || 'USD'} ${booking.totalPrice}</p>
+          ${booking.addOns?.length ? `<p><strong>Add-ons:</strong> ${booking.addOns.map((addOn) => addOn.name).join(', ')}</p>` : ''}
+          ${booking.notes ? `<p><strong>Notes:</strong> ${booking.notes}</p>` : ''}
+          <p><strong>Booking ID:</strong> ${booking.id || 'N/A'}</p>
+          <p><strong>Status:</strong> <span style="color: #4CAF50; font-weight: bold;">${booking.status.toUpperCase()}</span></p>
+        </div>
+        <p style="color: #666; font-size: 12px;">This booking has been confirmed and is ready for the scheduled appointment.</p>
+      </div>
+    `,
+  };
+
+  // Confirmation email to guest
+  const guestConfirmationMessage = booking.guestEmail ? {
+    from: fromAddress,
+    to: booking.guestEmail,
+    subject: `✅ Booking Confirmed: ${booking.name} - Tana's Beauty Boost`,
+    text: `Hi ${booking.guestName || 'there'},\n\nGreat news! Your booking with Tana's Beauty Boost Spa has been confirmed.\n\nHere are your confirmed booking details:\n\n${bookingSummary}\n\nWe look forward to seeing you on ${booking.date} at ${booking.time}!\n\nIf you have any questions or need to make changes, please contact us at:\n📞 Phone: +27 788637252\n📧 Email: tadiwachoga2003@gmail.com\n\nBest regards,\nTana's Beauty Boost Spa Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4CAF50;">✅ Booking Confirmed!</h2>
+        <p>Hi ${booking.guestName || 'there'},</p>
+        <p>Great news! Your booking with <strong>Tana's Beauty Boost Spa</strong> has been confirmed.</p>
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+          <h3 style="margin-top: 0; color: #2e7d32;">${booking.name}</h3>
+          <p><strong>Date:</strong> ${booking.date}</p>
+          <p><strong>Time:</strong> ${booking.time}</p>
+          <p><strong>Duration:</strong> ${booking.duration || 60} minutes</p>
+          <p><strong>Total:</strong> ${booking.currency || 'USD'} ${booking.totalPrice}</p>
+          ${booking.addOns?.length ? `<p><strong>Add-ons:</strong> ${booking.addOns.map((addOn) => addOn.name).join(', ')}</p>` : ''}
+          ${booking.notes ? `<p><strong>Your Notes:</strong> ${booking.notes}</p>` : ''}
+          <p><strong>Status:</strong> <span style="color: #4CAF50; font-weight: bold;">CONFIRMED</span></p>
+        </div>
+        <p><strong>We look forward to seeing you on ${booking.date} at ${booking.time}!</strong></p>
+        <p>If you have any questions or need to make changes, please contact us at:</p>
+        <p>📞 Phone: +27 788637252<br>📧 Email: tadiwachoga2003@gmail.com</p>
+        <p>Best regards,<br><strong>Tana's Beauty Boost Spa Team</strong></p>
+      </div>
+    `,
+  } : null;
+
+  try {
+    console.log('[Email] 📤 Sending confirmation email to concierge:', targetConciergeEmail);
+    console.log('[Email] 📤 Subject:', conciergeConfirmationMessage.subject);
+    
+    // Send emails in parallel
+    const emailPromises = [
+      transporter.sendMail(conciergeConfirmationMessage).then((info) => {
+        console.log(`[Email] ✅✅✅ SUCCESS: Confirmation email sent to concierge: ${targetConciergeEmail}`);
+        console.log(`[Email] 📧 Message ID: ${info.messageId}`);
+        return { type: 'concierge', success: true, email: targetConciergeEmail, messageId: info.messageId };
+      }).catch((error) => {
+        console.error('[Email] ❌❌❌ FAILED to send confirmation to concierge:', error.message);
+        console.error('[Email] ❌ Full error:', error);
+        return { type: 'concierge', success: false, email: targetConciergeEmail, error: error.message };
+      })
+    ];
+
+    if (guestConfirmationMessage) {
+      console.log('[Email] 📤 Sending confirmation email to guest:', booking.guestEmail);
+      emailPromises.push(
+        transporter.sendMail(guestConfirmationMessage).then((info) => {
+          console.log(`[Email] ✅ Guest confirmation sent to: ${booking.guestEmail}`);
+          console.log(`[Email] 📧 Message ID: ${info.messageId}`);
+          return { type: 'guest', success: true, email: booking.guestEmail, messageId: info.messageId };
+        }).catch((error) => {
+          console.error(`[Email] ❌ Failed to send confirmation to guest ${booking.guestEmail}:`, error.message);
+          return { type: 'guest', success: false, email: booking.guestEmail, error: error.message };
+        })
+      );
+    }
+
+    const results = await Promise.all(emailPromises);
+    
+    // Log summary
+    const successCount = results.filter(r => r && r.success).length;
+    const failCount = results.filter(r => r && !r.success).length;
+    
+    console.log(`[Email] 📊 Confirmation email summary: ${successCount} succeeded, ${failCount} failed`);
+    
+    if (successCount > 0) {
+      console.log('[Email] ✅✅✅ All confirmation emails processed successfully!');
+    }
+  } catch (error) {
+    console.error('[Email] ❌❌❌ CRITICAL ERROR sending confirmation emails:', error.message);
+    console.error('[Email] ❌ Full error stack:', error.stack);
+    // Don't throw - email failure shouldn't break the flow
   }
 };
 

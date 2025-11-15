@@ -9,7 +9,7 @@ const extendedTestimonials = [
     name: 'Naledi S.',
     title: 'Retail sell-through in days',
     testimonial:
-      'Our boutique pop-ups sold out twice as fast once the Blue Ocean capsule kits arrived with visuals, pricing, and display suggestions ready to go.',
+      'Our boutique pop-ups sold out twice as fast once the BrightPath capsule kits arrived with visuals, pricing, and display suggestions ready to go.',
   },
   {
     id: 'client-06',

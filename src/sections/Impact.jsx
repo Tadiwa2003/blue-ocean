@@ -11,7 +11,7 @@ const stories = [
   },
   {
     title: 'Retail uplift',
-    copy: 'Partners see an average 28% uplift in basket value during Blue Ocean drops thanks to layered storytelling and sensory cues.',
+    copy: 'Partners see an average 28% uplift in basket value during BrightPath drops thanks to layered storytelling and sensory cues.',
   },
   {
     title: 'Community glow',
@@ -27,7 +27,7 @@ export function Impact() {
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-brand-200">Impact</p>
             <h2 className="mt-3 font-display text-3xl">
-              Blue Ocean empowers coastal makers and elevates the retail experiences they inspire.
+              BrightPath empowers coastal makers and elevates the retail experiences they inspire.
             </h2>
             <p className="mt-4 text-sm text-white/70">
               Every partnership we accept is measured by its community impact and guest delight. From artisan collectives in

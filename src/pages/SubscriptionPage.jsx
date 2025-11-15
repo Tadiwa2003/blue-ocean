@@ -193,7 +193,7 @@ export function SubscriptionPage({ onBack, onSubscribeSuccess }) {
                     No Active Subscription
                   </h3>
                   <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
-                    Subscribe to a plan below to start selling and advertising your goods on Blue Ocean Marketplace.
+                    Subscribe to a plan below to start selling and advertising your goods on BrightPath Marketplace.
                   </p>
                 </div>
               </div>

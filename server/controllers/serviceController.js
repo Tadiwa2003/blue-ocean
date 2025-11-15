@@ -1,10 +1,29 @@
 import { getAllServices, getServiceById as getServiceByIdDB, createService as createServiceDB } from '../db/services.js';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 
 
 // Get all services
 export const getServices = async (req, res) => {
   try {
+    // Get storefrontId from query parameter if provided
+    const storefrontId = req.query.storefrontId;
+    let parsedStorefrontId = undefined; // undefined = don't filter, null = platform only, ObjectId = specific storefront
+    if (storefrontId !== undefined && storefrontId !== null && storefrontId !== 'undefined') {
+      if (storefrontId === 'null' || storefrontId === '') {
+        parsedStorefrontId = null; // Explicitly request platform services
+      } else {
+        try {
+          parsedStorefrontId = new mongoose.Types.ObjectId(storefrontId);
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid storefrontId format.',
+          });
+        }
+      }
+    }
+    
     // If user is authenticated, filter by role
     if (req.user) {
       const userRole = req.user.role;
@@ -12,7 +31,7 @@ export const getServices = async (req, res) => {
       const isOwner = userRole === 'owner';
       
       // Owners see all services, regular users see ONLY their own (excludes platform services)
-      const services = await getAllServices(userId, isOwner);
+      const services = await getAllServices(userId, isOwner, parsedStorefrontId);
       
       return res.json({
         success: true,
@@ -22,8 +41,8 @@ export const getServices = async (req, res) => {
       });
     }
     
-    // Public access (for storefronts) - show all services
-    const services = await getAllServices(null, false);
+    // Public access (for storefronts) - filter by storefrontId if provided
+    const services = await getAllServices(null, false, parsedStorefrontId);
     res.json({
       success: true,
       data: {
@@ -81,6 +100,7 @@ export const createService = async (req, res) => {
       headline,
       description,
       badges,
+      storefrontId,
     } = req.body;
 
     // Validation
@@ -102,10 +122,24 @@ export const createService = async (req, res) => {
     // Associate service with user (owners can create platform services without userId)
     const userId = req.user?.role === 'owner' ? null : req.user?.id;
     
+    // Validate and parse storefrontId if provided
+    let parsedStorefrontId = null;
+    if (storefrontId) {
+      try {
+        parsedStorefrontId = new mongoose.Types.ObjectId(storefrontId);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid storefrontId format.',
+        });
+      }
+    }
+    
     // Create service in database
     const createdService = await createServiceDB({
       id,
       userId,
+      storefrontId: parsedStorefrontId,
       name: name.trim(),
       serviceCategory,
       description: description || '',

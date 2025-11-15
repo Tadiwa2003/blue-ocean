@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
+import { PhoneInput } from './PhoneInput.jsx';
 import api from '../services/api.js';
 
 const fallbackImage =
@@ -20,7 +21,7 @@ const fallbackImage =
       </defs>
       <rect width="400" height="400" fill="url(#grad)" />
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="32" fill="rgba(255,255,255,0.85)">
-        Blue Ocean
+        BrightPath
       </text>
     </svg>
   `);
@@ -502,18 +503,15 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-white/80">Phone</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                      <input
-                        type="tel"
+                    <PhoneInput
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                        placeholder="+263 77 123 4567"
+                      placeholder="Phone number"
                         required
+                      defaultCountry="ZW"
+                      className="w-full"
                       />
-                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-white/80">Address</label>
@@ -691,18 +689,15 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
                   {formData.paymentMethod === 'ecocash' && (
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-white/80">EcoCash Number</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-                        <input
-                          type="tel"
+                      <PhoneInput
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className="w-full h-11 pl-10 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                          placeholder="077 123 4567"
+                        placeholder="EcoCash number"
                           required
+                        defaultCountry="ZW"
+                        className="w-full"
                         />
-                      </div>
                     </div>
                   )}
                   {formData.paymentMethod === 'omari' && (

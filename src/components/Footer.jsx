@@ -250,7 +250,7 @@ export function Footer() {
               <Logo />
             </a>
             <p className="text-sm text-white/65">
-              Blue Ocean &amp; Tana&apos;s Beauty Boost Spa deliver coastal-luxury retail capsules and sensory spa rituals
+              BrightPath &amp; Tana&apos;s Beauty Boost Spa deliver coastal-luxury retail capsules and sensory spa rituals
               with a single platform for teams and guests.
             </p>
             <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-white/40">
@@ -296,7 +296,7 @@ export function Footer() {
               ))}
             </div>
             <p className="md:max-w-sm">
-              Blue Ocean Holdings Ltd is registered in Zimbabwe. Tana&apos;s Beauty Boost Spa is licensed under coastal wellness
+              BrightPath Holdings Ltd is registered in Zimbabwe. Tana&apos;s Beauty Boost Spa is licensed under coastal wellness
               regulation 2025/04. Compliance statements available upon request.
             </p>
           </div>
@@ -304,7 +304,7 @@ export function Footer() {
 
         <div ref={copyrightRef} className="border-t border-white/5 pt-6 text-xs text-white/40">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} Blue Ocean &amp; Tana&apos;s Beauty Boost Spa. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} BrightPath &amp; Tana&apos;s Beauty Boost Spa. All rights reserved.</p>
             <div className="flex gap-4">
               <a href="#privacy" className="transition hover:text-white">
                 Privacy

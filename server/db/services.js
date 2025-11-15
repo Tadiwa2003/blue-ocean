@@ -1,10 +1,24 @@
 import Service from '../models/Service.js';
 
-export const getAllServices = async (userId = null, isOwner = false) => {
+export const getAllServices = async (userId = null, isOwner = false, storefrontId = undefined) => {
+  // Build query based on filters
+  const query = {};
+  
+  // If storefrontId is explicitly provided (not undefined), filter by it
+  // undefined = don't filter by storefront (show all)
+  // null = show only platform services (storefrontId is null)
+  // ObjectId = show only services for that storefront
+  if (storefrontId !== undefined) {
+    query.storefrontId = storefrontId;
+  }
+  
   // If userId is provided and user is not owner, ONLY show services with that userId
   // This excludes platform services (without userId) from user dashboards
   // Owners see all services (including platform services without userId)
-  const query = userId && !isOwner ? { userId } : {};
+  if (userId && !isOwner) {
+    query.userId = userId;
+  }
+  
   return await Service.find(query).sort({ createdAt: -1 }).lean();
 };
 

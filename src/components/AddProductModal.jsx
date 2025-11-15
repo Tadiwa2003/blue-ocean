@@ -14,7 +14,7 @@ const PRODUCT_CATEGORIES = [
   'Jewelry',
 ];
 
-export function AddProductModal({ isOpen, onClose, onSuccess }) {
+export function AddProductModal({ isOpen, onClose, onSuccess, storefrontId = null }) {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -147,6 +147,7 @@ export function AddProductModal({ isOpen, onClose, onSuccess }) {
         badges: formData.badges
           ? formData.badges.split(',').map((b) => b.trim()).filter(Boolean)
           : [],
+        storefrontId: storefrontId || undefined,
       };
 
       if (process.env.NODE_ENV === 'development') {

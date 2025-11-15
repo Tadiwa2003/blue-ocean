@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 export function BlurTextAnimation({
-  text = 'Blue Ocean curates coastal luxury and spa rituals for elevated retail experiences.',
+  text = 'BrightPath curates coastal luxury and spa rituals for elevated retail experiences.',
   words,
   className = '',
   fontSize = 'text-4xl md:text-5xl lg:text-6xl',
