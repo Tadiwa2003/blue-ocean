@@ -311,15 +311,16 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
           <h2
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold"
             style={{
-              background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 45%, #D97706 100%)',
+              background: 'linear-gradient(180deg, #C084FC 0%, #9333EA 45%, #7C3AED 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              color: '#9333EA',
               letterSpacing: '0.1em',
-              filter: 'drop-shadow(0 2px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 -2px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 4px 8px rgba(217, 119, 6, 0.6)) drop-shadow(0 8px 16px rgba(217, 119, 6, 0.4)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3))',
+              filter: 'drop-shadow(0 2px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 -2px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 4px 8px rgba(147, 51, 234, 0.6)) drop-shadow(0 8px 16px rgba(147, 51, 234, 0.4)) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3))',
               lineHeight: '1.1',
               position: 'relative',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(217, 119, 6, 0.2)',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(147, 51, 234, 0.2)',
             }}
           >
             TANA'S BEAUTY BOOST
@@ -327,14 +328,15 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
           <p
             className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-semibold"
             style={{
-              background: 'linear-gradient(180deg, #F59E0B 0%, #D97706 100%)',
+              background: 'linear-gradient(180deg, #A855F7 0%, #9333EA 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              color: '#9333EA',
               letterSpacing: '0.12em',
-              filter: 'drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8)) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.4)) drop-shadow(0 3px 6px rgba(217, 119, 6, 0.5)) drop-shadow(0 6px 12px rgba(217, 119, 6, 0.3)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25))',
+              filter: 'drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8)) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.4)) drop-shadow(0 3px 6px rgba(147, 51, 234, 0.5)) drop-shadow(0 6px 12px rgba(147, 51, 234, 0.3)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25))',
               lineHeight: '1.2',
-              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(217, 119, 6, 0.2)',
+              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(147, 51, 234, 0.2)',
             }}
           >
             BEAUTY SPA

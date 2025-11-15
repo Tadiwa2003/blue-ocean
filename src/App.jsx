@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { Header } from './components/Header.jsx';
 import { Footer } from './components/Footer.jsx';
 import { Hero } from './sections/Hero.jsx';
@@ -14,6 +15,7 @@ import { ContactModal } from './components/ContactModal.jsx';
 import { SubscriptionRequiredModal } from './components/SubscriptionRequiredModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
+import { UserStorefront } from './storefront/UserStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
 import { CounterLoader } from './components/CounterLoader.jsx';
 import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
@@ -25,12 +27,13 @@ import { downloadRitualMenu } from './utils/generateRitualMenu.js';
 import api from './services/api.js';
 import { ElevenLabsAgent } from './components/ElevenLabsAgent.jsx';
 
-export default function App() {
+function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('signin'); // 'signin' or 'signup'
   const [isViewingStorefront, setIsViewingStorefront] = useState(false);
   const [storefrontType, setStorefrontType] = useState('products'); // 'products' or 'spa'
+  const [currentStorefront, setCurrentStorefront] = useState(null); // Custom storefront data
   const [isStorefrontLoading, setIsStorefrontLoading] = useState(false);
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -185,33 +188,104 @@ export default function App() {
   // Verify 21st.dev extension is loaded and monitor connection
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('✅ 21st.dev Extension Status:', {
-        toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
-        reactPluginAvailable: typeof ReactPlugin !== 'undefined',
-        port: window.location.port || 'default',
-        host: window.location.hostname,
-        message: '21st.dev toolbar initialized. If it shows "Not Connected", install the 21st.dev extension in Cursor/VSCode',
-      });
-      
-      // Monitor for connection status changes
-      const checkConnection = () => {
-        const toolbar = document.querySelector('[data-21st-toolbar]') || 
-                       document.querySelector('*[class*="21st"]') ||
-                       document.querySelector('*[id*="21st"]');
-        if (toolbar) {
-          console.log('✅ 21st.dev Toolbar element found in DOM');
-        }
+      // Initial connection status log
+      const logConnectionStatus = () => {
+        const status = {
+          toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
+          reactPluginAvailable: typeof ReactPlugin !== 'undefined',
+          port: window.location.port || '5178',
+          host: window.location.hostname,
+          protocol: window.location.protocol,
+          url: window.location.href,
+          environment: process.env.NODE_ENV,
+          timestamp: new Date().toISOString(),
+        };
+        
+        console.log('%c✅ 21st.dev Extension Status', 'color: #4CAF50; font-weight: bold; font-size: 14px;', status);
+        console.log('%c🔗 Connection Info', 'color: #2196F3; font-weight: bold;', {
+          extensionInstalled: 'Check Cursor Extensions (Cmd+Shift+X)',
+          extensionEnabled: 'Make sure 21st extension is enabled',
+          devServerRunning: `http://localhost:${status.port}`,
+          browserOpen: status.url,
+          connectionPort: '5178',
+          extensionHostPort: '5747 (Cursor)',
+        });
       };
       
-      // Check after a short delay to allow toolbar to render
-      const timeoutId = setTimeout(checkConnection, 1000);
+      // Log initial status
+      logConnectionStatus();
       
-      return () => clearTimeout(timeoutId);
+      // Enhanced toolbar detection with multiple strategies
+      const detectToolbar = () => {
+        const selectors = [
+          '[data-21st-toolbar]',
+          '[data-21st]',
+          '[class*="21st"]',
+          '[id*="21st"]',
+          '[class*="toolbar"]',
+          'div[data-extension="21st"]',
+          'div[class*="TwentyFirst"]',
+        ];
+        
+        for (const selector of selectors) {
+          try {
+            const element = document.querySelector(selector);
+            if (element && (element.offsetParent !== null || element.style.display !== 'none')) {
+              return { found: true, selector, element };
+            }
+          } catch (e) {
+            // Ignore selector errors
+          }
+        }
+        
+        return { found: false, selector: null, element: null };
+      };
+      
+      // Monitor toolbar with extended retry logic
+      let checkCount = 0;
+      const maxChecks = 15; // Increased attempts
+      const checkInterval = 2000; // Check every 2 seconds
+      let connectionEstablished = false;
+      
+      const monitorToolbar = setInterval(() => {
+        checkCount++;
+        const result = detectToolbar();
+        
+        if (result.found && !connectionEstablished) {
+          connectionEstablished = true;
+          console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+          console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
+            status: 'Connected',
+            selector: result.selector,
+            timestamp: new Date().toISOString(),
+          });
+          clearInterval(monitorToolbar);
+        } else if (checkCount >= maxChecks && !connectionEstablished) {
+          console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
+          console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
+            step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
+            step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
+            step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
+            step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
+            step5: '5. Verify dev server is running: npm run dev',
+            step6: '6. Check browser is at: http://localhost:5178',
+            step7: '7. Hard refresh browser: Cmd+Shift+R',
+            step8: '8. Check console for connection status',
+          });
+          clearInterval(monitorToolbar);
+        }
+      }, checkInterval);
+      
+      // Cleanup on unmount
+      return () => {
+        clearInterval(monitorToolbar);
+      };
     }
   }, []);
 
-  const openStorefront = (type = 'products') => {
+  const openStorefront = (type = 'products', storefrontData = null) => {
     setStorefrontType(type);
+    setCurrentStorefront(storefrontData); // Set custom storefront data if provided
     setIsViewingStorefront(true);
     setIsStorefrontLoading(true);
     if (storefrontTimeoutRef.current) {
@@ -225,6 +299,7 @@ export default function App() {
 
   const closeStorefront = () => {
     setIsViewingStorefront(false);
+    setCurrentStorefront(null); // Clear storefront data when closing
     setIsStorefrontLoading(false);
     if (storefrontTimeoutRef.current) {
       clearTimeout(storefrontTimeoutRef.current);
@@ -243,9 +318,25 @@ export default function App() {
           <TwentyFirstToolbar 
             config={{ 
               plugins: [ReactPlugin],
-              // Enable auto-connect
+              // Connection settings - enable auto-connect
               autoConnect: true,
+              // Development mode settings
+              devMode: process.env.NODE_ENV === 'development',
+              // Connection retry settings
+              reconnect: true,
+              reconnectInterval: 3000,
+              maxReconnectAttempts: 10,
+              // Enable debugging in development
+              debug: process.env.NODE_ENV === 'development',
+              // Connection timeout
+              connectionTimeout: 10000,
+              // Server configuration
+              server: {
+                port: 5178,
+                host: 'localhost',
+              },
             }} 
+            key="21st-toolbar" // Stable key for consistent rendering
           />
         )}
       <SignInModal
@@ -270,9 +361,14 @@ export default function App() {
       ) : isViewingStorefront ? (
         isStorefrontLoading ? (
           <StorefrontLoading />
+        ) : currentStorefront ? (
+          // User's custom storefront - use dedicated component
+          <UserStorefront onClose={closeStorefront} customStorefront={currentStorefront} />
         ) : storefrontType === 'spa' ? (
+          // Platform spa storefront
           <BeautySpaStorefront onClose={closeStorefront} />
         ) : (
+          // Platform products storefront
           <Storefront onClose={closeStorefront} />
         )
       ) : isAuthenticated ? (
@@ -335,5 +431,13 @@ export default function App() {
       <ElevenLabsAgent />
     </div>
     </GradientBackground>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <AppContent />
+    </ThemeProvider>
   );
 }

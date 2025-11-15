@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
+import { PhoneInput } from './PhoneInput.jsx';
 import {
   buildYouTubeEmbedUrl,
   getYouTubeThumbnailUrl,
@@ -378,12 +379,26 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
   };
 
   // Validation helper function
-  const validateBooking = (service, selectedDate, selectedTime, guestEmailValue) => {
+  const validateBooking = (service, selectedDate, selectedTime, guestEmailValue, guestNameValue, guestPhoneValue) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!service) {
       return {
         valid: false,
         error: 'Service information is missing. Please try again.',
+      };
+    }
+
+    if (!guestNameValue || !guestNameValue.trim()) {
+      return {
+        valid: false,
+        error: 'Please enter your name to complete your booking.',
+      };
+    }
+
+    if (!guestPhoneValue || !guestPhoneValue.trim()) {
+      return {
+        valid: false,
+        error: 'Please enter your phone number to complete your booking.',
       };
     }
 
@@ -431,7 +446,7 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
     setBookingError('');
 
     // Validate booking
-    const validation = validateBooking(service, selectedDate, selectedTime, guestEmail);
+    const validation = validateBooking(service, selectedDate, selectedTime, guestEmail, guestName, guestPhone);
     if (!validation.valid) {
       setBookingError(validation.error);
       return;
@@ -938,26 +953,28 @@ export function ServiceDetailsModal({ service, open, onClose, onBook, intent = '
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1">
                     <label className="text-[11px] uppercase tracking-[0.2em] text-white/60">
-                      Full Name (optional)
+                      Full Name *
                     </label>
                     <input
                       type="text"
                       value={guestName}
                       onChange={(event) => setGuestName(event.target.value)}
+                      required
                       className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
-                      placeholder="Tana Beauty"
+                      placeholder="Your full name"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] uppercase tracking-[0.2em] text-white/60">
-                      Phone (optional)
+                      Phone *
                     </label>
-                    <input
-                      type="tel"
+                    <PhoneInput
                       value={guestPhone}
                       onChange={(event) => setGuestPhone(event.target.value)}
-                      className="w-full rounded-2xl border border-white/30 bg-white/10 p-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none focus:ring-1 focus:ring-white"
-                      placeholder="+27 00 000 0000"
+                      placeholder="Phone number *"
+                      required
+                      defaultCountry="ZA"
+                      className="w-full"
                     />
                   </div>
                 </div>

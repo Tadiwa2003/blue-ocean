@@ -11,6 +11,12 @@ const serviceSchema = new mongoose.Schema({
     required: false, // Optional for backward compatibility with platform services
     index: true,
   },
+  storefrontId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Storefront',
+    required: false, // Optional - null means platform service
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -64,6 +70,8 @@ const serviceSchema = new mongoose.Schema({
 serviceSchema.index({ serviceCategory: 1 });
 serviceSchema.index({ id: 1 });
 serviceSchema.index({ userId: 1 });
+serviceSchema.index({ storefrontId: 1 });
+serviceSchema.index({ storefrontId: 1, serviceCategory: 1 }); // Compound index for filtering
 
 const Service = mongoose.model('Service', serviceSchema);
 

@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Blue Ocean API is running',
+    message: 'BrightPath API is running',
     timestamp: new Date().toISOString(),
     database: getConnectionStatus() ? 'connected' : 'disconnected',
   });
@@ -117,7 +117,7 @@ const startServer = async () => {
     await connectDB();
     
     app.listen(PORT, () => {
-      console.log(`🚀 Blue Ocean API server running on http://localhost:${PORT}`);
+      console.log(`🚀 BrightPath API server running on http://localhost:${PORT}`);
       console.log(`📡 Frontend URL: ${FRONTEND_URL}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`💾 Database: ${getConnectionStatus() ? 'MongoDB Connected' : 'MongoDB Not Connected'}`);

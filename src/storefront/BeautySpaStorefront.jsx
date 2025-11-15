@@ -8,10 +8,13 @@ import { BookingDrawer } from '../components/BookingDrawer.jsx';
 import { CartNotification } from '../components/CartNotification.jsx';
 import { Button } from '../components/Button.jsx';
 import { BeautySpaLogo } from '../components/BeautySpaLogo.jsx';
+import { PackagesPage } from '../components/PackagesPage.jsx';
+import { ContactSpaConcierge } from '../components/ContactSpaConcierge.jsx';
 import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimations.jsx';
 import { SplineBackground } from '../components/SplineBackground.jsx';
 import DataGridHero from '../components/ui/DataGridHero.jsx';
 import { motion } from 'framer-motion';
+import ImageTrail from '../components/ui/ImageTrail.jsx';
 import api from '../services/api.js';
 import { convertDateLabelToISO, isPastDateTime, getRelativeDateLabel } from '../utils/dateHelpers.js';
 
@@ -20,7 +23,17 @@ gsap.registerPlugin(ScrollTrigger);
 const FALLBACK_GRADIENT =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
-export function BeautySpaStorefront({ onClose }) {
+export function BeautySpaStorefront({ onClose, customStorefront = null }) {
+  // Extract custom storefront branding and design
+  const storefrontName = customStorefront?.design?.branding?.storeName || customStorefront?.name || "Tana's Beauty Boost Spa";
+  const storefrontTagline = customStorefront?.design?.branding?.tagline || '';
+  const heroTitle = customStorefront?.design?.hero?.title || '';
+  const heroSubtitle = customStorefront?.design?.hero?.subtitle || '';
+  const primaryColor = customStorefront?.design?.colors?.primary || '#9333EA';
+  const secondaryColor = customStorefront?.design?.colors?.secondary || '#0b233e';
+  const heroBackgroundColor = customStorefront?.design?.hero?.backgroundColor || secondaryColor;
+  const heroBackgroundImage = customStorefront?.design?.hero?.backgroundImage || null;
+
   // Fetch services from backend
   const { services: allServices, loading: servicesLoading, error: servicesError } = useServices();
   
@@ -30,6 +43,7 @@ export function BeautySpaStorefront({ onClose }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isPackagesOpen, setIsPackagesOpen] = useState(false);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -817,6 +831,31 @@ export function BeautySpaStorefront({ onClose }) {
     }
   };
 
+  // Image trail items - spa and wellness related images from Unsplash
+  const imageTrailItems = useMemo(() => [
+    // Spa and wellness treatments
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1600334128875-592d8fc6b3f2?w=400&h=400&fit=crop',
+    // Beauty and skincare products
+    'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&h=400&fit=crop',
+    // Relaxation and meditation
+    'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop',
+    // Facial treatments
+    'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1570554886113-bf63fba53583?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&h=400&fit=crop',
+    // Massage and body treatments
+    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=400&h=400&fit=crop',
+  ], []);
+
   // Parallax effect for hero section
   const heroRef = useRef(null);
   const servicesGridRef = useRef(null);
@@ -923,8 +962,46 @@ export function BeautySpaStorefront({ onClose }) {
   }, [filteredServices]);
 
   return (
-    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
+    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
+      {/* Image Trail Background - full viewport background */}
+      <div 
+        className="fixed inset-0 z-0" 
+        style={{ 
+          height: '100vh', 
+          width: '100vw', 
+          overflow: 'hidden', 
+          pointerEvents: 'none',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0
+        }}
+      >
+        <div style={{ 
+          pointerEvents: 'auto', 
+          height: '100%', 
+          width: '100%',
+          position: 'relative'
+        }}>
+          <ImageTrail
+            items={imageTrailItems}
+            variant={1}
+          />
+        </div>
+        {/* Subtle overlay to ensure content readability */}
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
+            pointerEvents: 'none',
+            zIndex: 1
+          }} 
+        />
+      </div>
+      
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl relative">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
             {/* Logo - optimized for header */}
@@ -939,15 +1016,16 @@ export function BeautySpaStorefront({ onClose }) {
               <p
                 className="text-sm md:text-base font-serif font-semibold whitespace-nowrap leading-tight"
                 style={{
-                  background: 'linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
+                  background: 'linear-gradient(180deg, #C084FC 0%, #9333EA 50%, #7C3AED 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
+                  color: '#9333EA',
                   letterSpacing: '0.05em',
-                  filter: 'drop-shadow(0 1px 2px rgba(217, 119, 6, 0.2))',
+                  filter: 'drop-shadow(0 1px 2px rgba(147, 51, 234, 0.2)) drop-shadow(0 2px 4px rgba(147, 51, 234, 0.3))',
                 }}
               >
-                Tana's Beauty Boost Spa
+                {storefrontName}
               </p>
             </div>
           </div>
@@ -986,7 +1064,7 @@ export function BeautySpaStorefront({ onClose }) {
         </div>
       </header>
 
-      <main className="pb-24">
+      <main className="pb-24 relative z-10">
         <section className="relative overflow-hidden">
           <div className="absolute inset-0" ref={heroRef}>
             {/* 3D Spline Background - can be enabled via environment variable */}
@@ -1037,7 +1115,7 @@ export function BeautySpaStorefront({ onClose }) {
             <div className="storefront-hero-text flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6" style={{ animationDelay: '0.1s' }}>
               <div className="rounded-lg bg-white/20 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-3.5 border border-white/30 shadow-lg">
                 <span className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-white whitespace-nowrap drop-shadow-lg">
-                  TANA'S BEAUTY BOOST SPA
+                  {storefrontName.toUpperCase()}
                 </span>
               </div>
               <div className="rounded-lg bg-white/20 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-3.5 border border-white/30 shadow-lg">
@@ -1159,7 +1237,7 @@ export function BeautySpaStorefront({ onClose }) {
             </div>
           </div>
 
-          <div ref={servicesGridRef} className="relative mt-10">
+          <div ref={servicesGridRef} data-services-section className="relative mt-10">
             {/* Animated Dot Grid Background */}
             <div className="absolute inset-0 -z-10">
               <DataGridHero
@@ -1242,15 +1320,8 @@ export function BeautySpaStorefront({ onClose }) {
             </a>
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button onClick={() => {
-              const email = 'Tanasbeautyboost@gmail.com';
-              const subject = encodeURIComponent('Spa Booking Inquiry');
-              const body = encodeURIComponent('Hello, I would like to inquire about booking a spa treatment package.');
-              window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-            }}>
-              Contact Spa Concierge
-            </Button>
-            <Button variant="secondary" onClick={() => setIsBookingOpen(true)}>
+            <ContactSpaConcierge variant="buttons" />
+            <Button variant="secondary" onClick={() => setIsPackagesOpen(true)}>
               View Packages
             </Button>
           </div>
@@ -1283,6 +1354,23 @@ export function BeautySpaStorefront({ onClose }) {
               guestPhone: guestInfo.phone || booking.guestPhone || '',
             }));
           });
+        }}
+      />
+
+      <PackagesPage
+        isOpen={isPackagesOpen}
+        onClose={() => setIsPackagesOpen(false)}
+        onBookPackage={(pkg) => {
+          // Show notification that user can book through services
+          showNotification(`✨ ${pkg.name} selected! Browse our services to customize your package experience.`);
+          setIsPackagesOpen(false);
+          // Optionally scroll to services section or open booking drawer
+          setTimeout(() => {
+            const servicesSection = document.querySelector('[data-services-section]');
+            if (servicesSection) {
+              servicesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 500);
         }}
       />
 

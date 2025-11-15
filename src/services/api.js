@@ -229,8 +229,11 @@ export const api = {
 
   // Products
   products: {
-    async getProducts() {
-      return await apiFetch(`${API_BASE_URL}/products`);
+    async getProducts(storefrontId = null) {
+      const url = storefrontId 
+        ? `${API_BASE_URL}/products?storefrontId=${storefrontId}`
+        : `${API_BASE_URL}/products`;
+      return await apiFetch(url);
     },
 
     async getProductById(productId) {
@@ -247,8 +250,11 @@ export const api = {
 
   // Services
   services: {
-    async getServices() {
-      return await apiFetch(`${API_BASE_URL}/services`);
+    async getServices(storefrontId = null) {
+      const url = storefrontId 
+        ? `${API_BASE_URL}/services?storefrontId=${storefrontId}`
+        : `${API_BASE_URL}/services`;
+      return await apiFetch(url);
     },
 
     async getServiceById(serviceId) {

@@ -6,7 +6,7 @@ import {
   updateBooking,
 } from '../db/bookings.js';
 import crypto from 'crypto';
-import { sendBookingNotifications } from '../utils/email.js';
+import { sendBookingNotifications, sendBookingConfirmation } from '../utils/email.js';
 
 // Create bookings (multiple bookings can be created at once)
 export const createBookings = async (req, res) => {
@@ -311,6 +311,22 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     const updatedBooking = await updateBooking({ id: booking.id, status });
+
+    // Send confirmation email if status is changed to "confirmed"
+    if (status === 'confirmed' && updatedBooking) {
+      console.log(`[Booking] ✅ Booking ${booking.id} status updated to "confirmed"`);
+      console.log(`[Booking] 📧 Preparing to send confirmation email to: tadiwachoga2003@gmail.com`);
+      
+      // Send confirmation email (fire-and-forget, don't block response)
+      sendBookingConfirmation(updatedBooking)
+        .then(() => {
+          console.log(`[Booking] ✅ Confirmation email processed for booking ${booking.id}`);
+        })
+        .catch((error) => {
+          console.error(`[Booking] ❌ Confirmation email failed for booking ${booking.id}:`, error.message);
+          // Don't throw - we want status update to succeed even if email fails
+        });
+    }
 
     res.json({
       success: true,

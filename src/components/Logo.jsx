@@ -33,9 +33,9 @@ export function Logo({ className = '' }) {
           />
         </svg>
       </span>
-      <span className="flex flex-col leading-tight">
-        <span className="font-display text-lg tracking-[0.35em] text-white">BLUE OCEAN</span>
-        <span className="text-[11px] font-medium uppercase tracking-[0.4em] text-brand-200/80">
+      <span className="flex flex-col leading-tight min-w-0">
+        <span className="font-display text-lg sm:text-xl tracking-[0.25em] text-white whitespace-nowrap">BRIGHTPATH</span>
+        <span className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.35em] text-brand-200/80 whitespace-nowrap">
           CURATED GOODS
         </span>
       </span>

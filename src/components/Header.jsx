@@ -1,12 +1,13 @@
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
+import { ThemeToggle } from './ui/theme.jsx';
 
 const navSections = [
   {
     label: 'Personal',
     type: 'menu',
     items: [
-      { name: 'Blue Ocean Capsules', href: '#retail' },
+      { name: 'BrightPath Capsules', href: '#retail' },
       { name: 'Tana’s Spa Menu', href: '#spa' },
     ],
   },
@@ -65,6 +66,7 @@ export function Header({ onSignInClick, onSignUpClick, onViewStorefront, onViewS
           )}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle variant="button" size="sm" />
           <Button variant="ghost" onClick={onSignInClick}>
             Log in
           </Button>

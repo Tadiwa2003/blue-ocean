@@ -15,13 +15,24 @@ import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimatio
 import { SplineBackground } from '../components/SplineBackground.jsx';
 import DataGridHero from '../components/ui/DataGridHero.jsx';
 import { motion } from 'framer-motion';
+import ImageTrail from '../components/ui/ImageTrail.jsx';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const FALLBACK_GRADIENT =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
-export function Storefront({ onClose }) {
+export function Storefront({ onClose, customStorefront = null }) {
+  // Extract custom storefront branding and design
+  const storefrontName = customStorefront?.design?.branding?.storeName || customStorefront?.name || 'BrightPath Products';
+  const storefrontTagline = customStorefront?.design?.branding?.tagline || 'Curated coastal luxury for people who live and shop by the tides.';
+  const heroTitle = customStorefront?.design?.hero?.title || 'Curated coastal luxury for people who live and shop by the tides.';
+  const heroSubtitle = customStorefront?.design?.hero?.subtitle || 'Shop products & accessories';
+  const primaryColor = customStorefront?.design?.colors?.primary || '#1da0e6';
+  const secondaryColor = customStorefront?.design?.colors?.secondary || '#0b233e';
+  const heroBackgroundColor = customStorefront?.design?.hero?.backgroundColor || secondaryColor;
+  const heroBackgroundImage = customStorefront?.design?.hero?.backgroundImage || null;
+
   const paymentLogos = useMemo(
     () => ({
       visa: `data:image/svg+xml,${encodeURIComponent(`
@@ -332,7 +343,7 @@ export function Storefront({ onClose }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blue Ocean Capsule - Line Sheet 2026</title>
+  <title>BrightPath Capsule - Line Sheet 2026</title>
   <style>
     * {
       margin: 0;
@@ -514,7 +525,7 @@ export function Storefront({ onClose }) {
 </head>
 <body>
   <div class="header">
-    <h1>Blue Ocean Capsule</h1>
+    <h1>BrightPath Capsule</h1>
     <p>Resort 2026 Collection</p>
     <p class="subtitle">Curated coastal luxury for people who live and shop by the tides</p>
   </div>
@@ -548,9 +559,9 @@ export function Storefront({ onClose }) {
   `).join('')}
 
   <div class="footer">
-    <p><strong>Blue Ocean Capsule</strong></p>
+    <p><strong>BrightPath Capsule</strong></p>
     <p>Curated coastal-luxury products and spa services for resort retailers and boutique partners.</p>
-    <p>© ${new Date().getFullYear()} Blue Ocean. All rights reserved.</p>
+    <p>© ${new Date().getFullYear()} BrightPath. All rights reserved.</p>
   </div>
 </body>
 </html>`;
@@ -570,6 +581,32 @@ export function Storefront({ onClose }) {
   };
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  
+  // Image trail items - product and spa related images from Unsplash
+  const imageTrailItems = useMemo(() => [
+    // Beauty products and skincare
+    'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&h=400&fit=crop',
+    // Spa and wellness
+    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=400&h=400&fit=crop',
+    // Retail products and accessories
+    'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1563906267088-b029e7101114?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop',
+    // More beauty products
+    'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1570554886113-bf63fba53583?w=400&h=400&fit=crop',
+    // Fashion accessories
+    'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1564422170191-4bd349c66836?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
+  ], []);
+
   const paymentChips = useMemo(
     () => [
       { name: 'VISA', logo: paymentLogos.visa, color: 'from-blue-600/20', bgColor: 'bg-white/95' },
@@ -689,11 +726,49 @@ export function Storefront({ onClose }) {
   }, [paginatedProducts]);
 
   return (
-    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl">
+    <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
+      {/* Image Trail Background - full viewport background */}
+      <div 
+        className="fixed inset-0 z-0" 
+        style={{ 
+          height: '100vh', 
+          width: '100vw', 
+          overflow: 'hidden', 
+          pointerEvents: 'none',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0
+        }}
+      >
+        <div style={{ 
+          pointerEvents: 'auto', 
+          height: '100%', 
+          width: '100%',
+          position: 'relative'
+        }}>
+          <ImageTrail
+            items={imageTrailItems}
+            variant={1}
+          />
+        </div>
+        {/* Subtle overlay to ensure content readability */}
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
+            pointerEvents: 'none',
+            zIndex: 1
+          }} 
+        />
+      </div>
+      
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl relative">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <Logo className="hidden sm:flex" />
-          <p className="sm:hidden text-sm uppercase tracking-[0.35em] text-brand-200">Blue Ocean Products</p>
+          <p className="sm:hidden text-sm uppercase tracking-[0.35em] text-brand-200">BrightPath Products</p>
           <div className="flex items-center gap-2 sm:gap-3 text-sm text-white/70 ml-auto">
             <span className="hidden sm:inline">Shop products & accessories</span>
             <button
@@ -722,7 +797,7 @@ export function Storefront({ onClose }) {
         </div>
       </header>
 
-      <main className="pb-24">
+      <main className="pb-24 relative z-10">
         <section className="relative overflow-hidden">
           <div className="absolute inset-0" ref={heroRef}>
             {/* 3D Spline Background - can be enabled via environment variable */}
@@ -768,10 +843,10 @@ export function Storefront({ onClose }) {
               <Logo className="h-24 w-auto sm:h-32 md:h-40" />
             </div>
             <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
-              Blue Ocean Capsule · Resort 2026
+              {heroSubtitle || 'BrightPath Capsule · Resort 2026'}
             </span>
             <h1 className="storefront-hero-text font-display text-4xl leading-tight sm:text-5xl" style={{ animationDelay: '0.2s' }}>
-              Curated coastal luxury for people who live and shop by the tides.
+              {heroTitle || storefrontTagline}
             </h1>
             <p className="storefront-hero-text max-w-2xl text-sm text-white/75 sm:text-base" style={{ animationDelay: '0.4s' }}>
               Discover limited-edition totes, resort slides, and ocean-sourced skincare crafted with our artisan partners.
@@ -800,7 +875,7 @@ export function Storefront({ onClose }) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.35em] text-brand-300">Featured Capsule</p>
-                <h2 className="mt-3 font-display text-4xl leading-tight text-white">Shop the Blue Ocean Resort Assortment</h2>
+                <h2 className="mt-3 font-display text-4xl leading-tight text-white">Shop the {storefrontName} Assortment</h2>
               </div>
               <p className="text-sm leading-relaxed text-white/65 sm:max-w-md">
                 Filter by category to preview your storefront layout and discover our curated product mix.
@@ -1008,7 +1083,7 @@ export function Storefront({ onClose }) {
             and launch strategy tailored to your retail needs.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Button onClick={handleContactBlueOcean}>Contact Blue Ocean</Button>
+            <Button onClick={handleContactBlueOcean}>Contact BrightPath</Button>
             <Button variant="secondary" onClick={handleCallOwner} icon={Phone}>
               Call Owner: +263 71 046 5531
             </Button>

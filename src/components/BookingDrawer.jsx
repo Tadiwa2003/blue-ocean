@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from './Button.jsx';
 import { AlertCircle } from 'lucide-react';
+import { PhoneInput } from './PhoneInput.jsx';
 import { convertDateLabelToISO, isPastDateTime, getRelativeDateLabel } from '../utils/dateHelpers.js';
 
 const fallbackImage =
@@ -255,7 +256,8 @@ export function BookingDrawer({
                       onUpdateGuestInfo({ name: e.target.value, email: guestEmail, phone: guestPhone });
                     }
                   }}
-                  placeholder="Your name (optional)"
+                  placeholder="Your name *"
+                  required
                   className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 />
                 <input
@@ -272,8 +274,7 @@ export function BookingDrawer({
                   required
                   className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 />
-                <input
-                  type="tel"
+                <PhoneInput
                   value={guestPhone}
                   onChange={(e) => {
                     setGuestPhone(e.target.value);
@@ -282,8 +283,10 @@ export function BookingDrawer({
                       onUpdateGuestInfo({ name: guestName, email: guestEmail, phone: e.target.value });
                     }
                   }}
-                  placeholder="Your phone number (optional)"
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                  placeholder="Phone number *"
+                  required
+                  defaultCountry="ZW"
+                  className="w-full"
                 />
               </div>
               {guestError && (
@@ -293,7 +296,7 @@ export function BookingDrawer({
                 </div>
               )}
               <p className="text-xs text-white/50">
-                We'll send booking confirmation to your email address.
+                We'll send booking confirmation to your email address. All fields marked with * are required.
               </p>
             </div>
 
@@ -327,10 +330,20 @@ export function BookingDrawer({
                   e.preventDefault();
                   e.stopPropagation();
                   
-                  // Validate email before confirming
+                  // Validate name, email, and phone before confirming
+                  if (!guestName || !guestName.trim()) {
+                    setGuestError('Please enter your name to confirm your booking.');
+                    return;
+                  }
+                  
                   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                   if (!guestEmail || !emailRegex.test(guestEmail.trim())) {
                     setGuestError('Please enter a valid email address to receive booking confirmation.');
+                    return;
+                  }
+                  
+                  if (!guestPhone || !guestPhone.trim()) {
+                    setGuestError('Please enter your phone number to confirm your booking.');
                     return;
                   }
                   

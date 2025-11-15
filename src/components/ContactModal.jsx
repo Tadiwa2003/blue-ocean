@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Button } from './Button.jsx';
 import { Logo } from './Logo.jsx';
+import { PhoneInput } from './PhoneInput.jsx';
 import { Mail, Phone, Building, User, MessageSquare, X, PhoneCall } from 'lucide-react';
 
 const CONTACT_PHONE = '+263 71 046 5531';
@@ -144,9 +145,9 @@ export function ContactModal({ isOpen, onClose, onSuccess }) {
 
   const formatWhatsAppMessage = () => {
     const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-    return `Hello Blue Ocean Team,
+    return `Hello BrightPath Team,
 
-I'm interested in partnering with Blue Ocean Capsule. Here are my details:
+I'm interested in partnering with BrightPath Capsule. Here are my details:
 
 👤 Name: ${fullName}
 📧 Email: ${formData.email}
@@ -228,7 +229,7 @@ Looking forward to hearing from you!`;
           <div className="flex items-center gap-4">
             <Logo className="scale-75" />
             <div>
-              <h2 className="font-display text-2xl text-white">Contact Blue Ocean</h2>
+              <h2 className="font-display text-2xl text-white">Contact BrightPath</h2>
               <p className="text-sm text-white/60 mt-1">
                 We'll connect you with our partnership team
               </p>
@@ -310,14 +311,14 @@ Looking forward to hearing from you!`;
                 <Phone className="inline h-4 w-4 mr-2" />
                 Phone Number *
               </label>
-              <input
-                type="tel"
+              <PhoneInput
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full h-11 pl-4 pr-4 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 focus:border-brand-400/50 focus:bg-white/10 transition-all duration-300"
-                placeholder="+263 77 123 4567"
+                placeholder="Phone number"
                 required
+                defaultCountry="ZW"
+                className="w-full"
               />
             </div>
 

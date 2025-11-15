@@ -144,7 +144,7 @@ export function generateRitualMenuText(services = []) {
   // Footer
   menu += '═══════════════════════════════════════════════════════════════\n';
   menu += `Generated: ${formattedDate}\n`;
-  menu += 'Tana\'s Beauty Boost Spa - Blue Ocean Capsule\n';
+  menu += 'Tana\'s Beauty Boost Spa - BrightPath Capsule\n';
   menu += 'Coastal Luxury • Therapeutic Excellence\n';
   menu += '═══════════════════════════════════════════════════════════════\n';
 
@@ -432,7 +432,7 @@ export function generateRitualMenuHTML(services = []) {
 
     <div class="footer">
       <p><strong>Generated:</strong> ${formattedDate}</p>
-      <p>Tana's Beauty Boost Spa - Blue Ocean Capsule</p>
+      <p>Tana's Beauty Boost Spa - BrightPath Capsule</p>
       <p>Coastal Luxury • Therapeutic Excellence</p>
     </div>
   </div>

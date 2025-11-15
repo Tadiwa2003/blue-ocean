@@ -11,6 +11,12 @@ const productSchema = new mongoose.Schema({
     required: false, // Optional for backward compatibility with platform products
     index: true,
   },
+  storefrontId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Storefront',
+    required: false, // Optional - null means platform product
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -60,6 +66,8 @@ productSchema.index({ category: 1 });
 productSchema.index({ id: 1 });
 productSchema.index({ slug: 1 });
 productSchema.index({ userId: 1 });
+productSchema.index({ storefrontId: 1 });
+productSchema.index({ storefrontId: 1, category: 1 }); // Compound index for filtering
 
 const Product = mongoose.model('Product', productSchema);
 
