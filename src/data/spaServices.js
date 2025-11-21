@@ -495,6 +495,7 @@ export const spaServices = [
       'Seaweed and clay wrap with thermal blanket',
       'Shower experience with aromatherapy steam',
     ],
+    
     benefits: [
       'Noticeable skin firming and detoxification',
       'Boosted circulation and mineral replenishment',

@@ -9,27 +9,9 @@ const ALLOWED_CATEGORIES = ['Totes', 'Handbags', 'Shoulder Bags', 'Slides & Sand
 const MAX_NAME_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 2000;
 
-// Load products from JSON file (preferred) or fallback to JS module
-let productsData = [];
-async function loadProducts() {
-  try {
-    // Try to load from JSON first
-    const jsonData = await fs.readFile(productsJsonPath, 'utf8');
-    productsData = JSON.parse(jsonData);
-  } catch (error) {
-    // Fallback to JS module if JSON doesn't exist
-    try {
-      const { products } = await import('../data/productsData.js');
-      productsData = products || [];
-    } catch (importError) {
-      console.error('Error loading products:', importError);
-      productsData = [];
-    }
-  }
-}
-
-// Initialize products on module load
-await loadProducts();
+// Note: Products are now loaded from the database via getAllProducts()
+// This code block has been removed as it was referencing undefined variables
+// and is no longer needed since we use MongoDB for product storage
 
 // Helper function to sanitize HTML and prevent XSS
 function sanitizeString(str) {

@@ -17,13 +17,17 @@ import api from '../services/api.js';
 import { SubscriptionPage } from '../pages/SubscriptionPage.jsx';
 import { CreateStorefrontModal } from '../components/CreateStorefrontModal.jsx';
 import { DatabaseViewer } from '../pages/DatabaseViewer.jsx';
+import { AdminDashboard } from '../components/admin/AdminDashboard.jsx';
+import { WebsiteBuilder } from '../components/website-builder/WebsiteBuilder.jsx';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'admin', label: 'Admin Panel', icon: '🎛️' },
   { id: 'products', label: 'Products', icon: '👜' },
   { id: 'spaServices', label: 'Beauty Spa', icon: '💆' },
   { id: 'bookings', label: 'Bookings', icon: '📅' },
   { id: 'storefront', label: 'Storefront', icon: '🛍️' },
+  { id: 'websiteBuilder', label: 'Website Builder', icon: '🌐' },
   { id: 'subscription', label: 'Subscription', icon: '💳' },
   { id: 'reports', label: 'Reports', icon: '📑' },
   { id: 'analytics', label: 'Analytics', icon: '📈' },
@@ -947,6 +951,8 @@ function RecentOrders({ onViewAll }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -996,12 +1002,19 @@ function RecentOrders({ onViewAll }) {
           id: order._id || order.id,
           customer: customerName,
           items: itemCount,
+          itemsData: order.items || [],
+          fullOrder: order,
           date: `${formattedDate} · ${formattedTime}`,
           amount: total,
           status: status.charAt(0).toUpperCase() + status.slice(1),
         };
       });
   }, [orders]);
+
+  const handleItemsClick = (order) => {
+    setSelectedOrder(order);
+    setIsItemsModalOpen(true);
+  };
 
   return (
     <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
@@ -1047,7 +1060,15 @@ function RecentOrders({ onViewAll }) {
               {recentOrdersList.map((order) => (
                 <tr key={order.id} className="hover:bg-white/5">
                 <td className="px-4 py-3 text-white">{order.customer}</td>
-                <td className="px-4 py-3">{order.items}</td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleItemsClick(order)}
+                    className="text-brand-400 hover:text-brand-300 underline cursor-pointer font-medium transition-colors"
+                    title="Click to view item details"
+                  >
+                    {order.items} {order.items === 1 ? 'item' : 'items'}
+                  </button>
+                </td>
                 <td className="px-4 py-3">{order.date}</td>
                 <td className="px-4 py-3">{order.amount}</td>
                 <td className="px-4 py-3">
@@ -1066,6 +1087,119 @@ function RecentOrders({ onViewAll }) {
           </tbody>
         </table>
       </div>
+      )}
+
+      {/* Order Items Modal */}
+      {isItemsModalOpen && selectedOrder && (
+        <div 
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto py-6" 
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          <div className="relative w-full max-w-2xl mx-4 bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[32px] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="font-display text-2xl text-white">Order Items</h2>
+                  <p className="text-sm text-white/60 mt-1">
+                    Order #{selectedOrder.id?.slice(-8) || 'N/A'} · {selectedOrder.customer}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsItemsModalOpen(false);
+                    setSelectedOrder(null);
+                  }}
+                  className="rounded-full border border-white/20 bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition"
+                  aria-label="Close modal"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {selectedOrder.itemsData && selectedOrder.itemsData.length > 0 ? (
+                <div className="space-y-4">
+                  {selectedOrder.itemsData.map((item, index) => (
+                    <div
+                      key={index}
+                      className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-white mb-1">
+                            {item.name || item.productName || item.title || `Item ${index + 1}`}
+                          </h3>
+                          {item.description && (
+                            <p className="text-sm text-white/60 mb-2 line-clamp-2">{item.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-3 text-sm text-white/70">
+                            {item.quantity && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-white/50">Qty:</span>
+                                <span className="font-medium text-white">{item.quantity}</span>
+                              </span>
+                            )}
+                            {item.price && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-white/50">Price:</span>
+                                <span className="font-medium text-white">
+                                  ${typeof item.price === 'string' ? item.price : parseFloat(item.price || 0).toFixed(2)}
+                                </span>
+                              </span>
+                            )}
+                            {item.size && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-white/50">Size:</span>
+                                <span className="font-medium text-white">{item.size}</span>
+                              </span>
+                            )}
+                            {item.color && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-white/50">Color:</span>
+                                <span className="font-medium text-white">{item.color}</span>
+                              </span>
+                            )}
+                          </div>
+                          {item.subtotal && (
+                            <div className="mt-2 pt-2 border-t border-white/10">
+                              <span className="text-sm text-white/50">Subtotal: </span>
+                              <span className="text-base font-semibold text-white">
+                                ${typeof item.subtotal === 'string' ? item.subtotal : parseFloat(item.subtotal || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {item.image && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={item.image}
+                              alt={item.name || item.productName || 'Product'}
+                              className="w-20 h-20 rounded-lg object-cover border border-white/10"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between text-lg">
+                      <span className="text-white/70">Total:</span>
+                      <span className="font-bold text-white text-xl">{selectedOrder.amount}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-white/60">
+                  <p>No items found for this order.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1350,15 +1484,22 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
   const isOwner = currentUser?.role === 'owner';
 
   useEffect(() => {
-    if (subscription) {
+    // Fetch storefronts for both owners and subscribed users
+    // Owners can create storefronts without subscription
+    if (subscription || isOwner) {
       const fetchStorefronts = async () => {
         try {
+          setLoading(true);
           const response = await api.storefronts.getUserStorefronts();
           if (response.success) {
             setUserStorefronts(response.data.storefronts || []);
+          } else {
+            console.error('Failed to fetch storefronts:', response.message);
+            setUserStorefronts([]);
           }
         } catch (error) {
           console.error('Error fetching storefronts:', error);
+          setUserStorefronts([]);
         } finally {
           setLoading(false);
         }
@@ -1366,8 +1507,9 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
       fetchStorefronts();
     } else {
       setLoading(false);
+      setUserStorefronts([]);
     }
-  }, [subscription]);
+  }, [subscription, isOwner]);
 
   const handleStorefrontCreated = async (newStorefront) => {
     // Refresh the storefronts list from the server to ensure we have the latest data
@@ -1376,13 +1518,18 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
       if (response.success) {
         setUserStorefronts(response.data.storefronts || []);
       } else {
+        console.error('Failed to refresh storefronts:', response.message);
         // Fallback: add the new storefront to the list
-        setUserStorefronts((prev) => [newStorefront, ...prev]);
+        if (newStorefront) {
+          setUserStorefronts((prev) => [newStorefront, ...prev]);
+        }
       }
     } catch (error) {
       console.error('Error refreshing storefronts:', error);
       // Fallback: add the new storefront to the list
-      setUserStorefronts((prev) => [newStorefront, ...prev]);
+      if (newStorefront) {
+        setUserStorefronts((prev) => [newStorefront, ...prev]);
+      }
     }
     setIsCreateModalOpen(false);
   };
@@ -1412,6 +1559,13 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
       isPlatform: true,
       description: 'Our beauty spa storefront for booking services and treatments.',
     },
+    {
+      id: 'platform-anaya-finds',
+      name: 'Anaya Finds',
+      type: 'clothing',
+      isPlatform: true,
+      description: 'Premium clothing and fashion essentials curated for the modern wardrobe.',
+    },
   ];
 
   return (
@@ -1424,7 +1578,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
               Manage your custom storefronts and access platform storefronts.
             </p>
           </div>
-          {subscription && (
+          {(subscription || isOwner) && (
             <Button
               onClick={() => setIsCreateModalOpen(true)}
               className="bg-brand-500/80 hover:bg-brand-500"
@@ -1434,7 +1588,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
           )}
         </div>
         
-        {!subscription ? (
+        {!subscription && !isOwner ? (
           <div className="mt-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-amber-500/10 p-6">
             <div className="flex items-start gap-4">
               <div className="flex-1">
@@ -1467,7 +1621,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
             {isOwner && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-white mb-4">Platform Storefronts</h3>
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {platformStorefronts.map((storefront) => (
                     <motion.div
                       key={storefront.id}
@@ -1497,6 +1651,8 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                                 <>🛍️ <span>Products</span></>
                               ) : storefront.type === 'spa' ? (
                                 <>💆 <span>Beauty Spa</span></>
+                              ) : storefront.type === 'clothing' ? (
+                                <>👕 <span>Clothing</span></>
                               ) : (
                                 <>🛍️💆 <span>Mixed</span></>
                               )}
@@ -1510,6 +1666,8 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                               onViewStorefront?.('products', null); // null = platform storefront
                             } else if (storefront.type === 'spa') {
                               onViewSpaStorefront?.('spa', null); // null = platform storefront
+                            } else if (storefront.type === 'clothing') {
+                              onViewStorefront?.('clothing', null); // Anaya Finds
                             }
                           }}
                           className="w-full bg-gradient-to-r from-brand-500/90 to-brand-600/90 hover:from-brand-500 hover:to-brand-600 text-white font-medium text-sm py-2.5 shadow-lg shadow-brand-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/40 hover:scale-[1.02]"
@@ -3253,15 +3411,21 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
   const [storefrontsLoading, setStorefrontsLoading] = useState(true);
 
   useEffect(() => {
-    if (subscription) {
+    // Fetch storefronts for both owners and subscribed users
+    if (subscription || isOwner) {
       const fetchStorefronts = async () => {
         try {
+          setStorefrontsLoading(true);
           const response = await api.storefronts.getUserStorefronts();
           if (response.success) {
             setUserStorefronts(response.data.storefronts || []);
+          } else {
+            console.error('Failed to fetch storefronts:', response.message);
+            setUserStorefronts([]);
           }
         } catch (error) {
           console.error('Error fetching storefronts:', error);
+          setUserStorefronts([]);
         } finally {
           setStorefrontsLoading(false);
         }
@@ -3269,8 +3433,9 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
       fetchStorefronts();
     } else {
       setStorefrontsLoading(false);
+      setUserStorefronts([]);
     }
-  }, [subscription]);
+  }, [subscription, isOwner]);
 
   const handleViewUserStorefront = (storefront) => {
     // Navigate to user's custom storefront with storefront data
@@ -3590,6 +3755,28 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           );
         }
         return <DatabaseViewer />;
+      case 'admin':
+        // Get storeId from user's storefronts or use a default
+        const storeId = currentUser?.storefrontId || null;
+        return (
+          <div className="rounded-[32px] border border-white/10 bg-ocean/65 overflow-hidden">
+            <AdminDashboard storeId={storeId} />
+          </div>
+        );
+      case 'websiteBuilder':
+        const builderStoreId = currentUser?.storefrontId || null;
+        return (
+          <div className="rounded-[32px] border border-white/10 bg-ocean/65 overflow-hidden">
+            <WebsiteBuilder 
+              storeId={builderStoreId}
+              onSave={async (sections) => {
+                // TODO: Save sections to backend
+                console.log('Saving website sections:', sections);
+                alert('Website saved successfully!');
+              }}
+            />
+          </div>
+        );
       case 'customers':
       case 'settings':
         return (

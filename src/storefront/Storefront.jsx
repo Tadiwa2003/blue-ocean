@@ -158,7 +158,6 @@ export function Storefront({ onClose, customStorefront = null }) {
     setSelectedProduct(relatedProduct);
     // Modal state stays open, just change the product
   };
-
   // Cart functions
   const addToCart = (product, color = '', size = '', quantity = 1) => {
     // Check if item with same product ID, color, and size already exists

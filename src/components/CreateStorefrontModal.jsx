@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './Button.jsx';
 import api from '../services/api.js';
 
 export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pillarsInput, setPillarsInput] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     type: 'products',
     design: {
+      focus: 'beauty',
       hero: {
         title: '',
         subtitle: '',
@@ -30,6 +32,8 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
         storeName: '',
         tagline: '',
         logo: '',
+        badge: '',
+        pillars: [],
       },
     },
     settings: {
@@ -78,14 +82,25 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     setError(null);
 
+    // Validate required fields
+    if (!formData.name || formData.name.trim().length === 0) {
+      setError('Storefront name is required');
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Creating storefront with data:', formData);
       const response = await api.storefronts.createStorefront(formData);
+      console.log('Storefront creation response:', response);
+      
       if (response.success) {
         // Reset form after successful creation
         setFormData({
           name: '',
           type: 'products',
           design: {
+            focus: 'beauty',
             hero: {
               title: '',
               subtitle: '',
@@ -107,6 +122,8 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
               storeName: '',
               tagline: '',
               logo: '',
+              badge: '',
+              pillars: [],
             },
           },
           settings: {
@@ -116,6 +133,7 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
             enableCheckout: true,
           },
         });
+        setPillarsInput('');
         onSuccess?.(response.data.storefront);
         onClose();
       } else {
@@ -129,11 +147,35 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
       }
     } catch (err) {
       console.error('Error creating storefront:', err);
-      setError(err.message || 'Failed to create storefront. Please try again.');
+      const errorMessage = err.message || 'Failed to create storefront. Please try again.';
+      setError(errorMessage);
+      
+      // Check if it's an authentication error
+      if (errorMessage.includes('Authentication') || errorMessage.includes('sign in')) {
+        setError('Please sign in to create a storefront. If you are signed in, try refreshing the page.');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (!isOpen) return null;
+
+  const handlePillarsInputChange = (value) => {
+    setPillarsInput(value);
+    const items = value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    handleNestedChange('design.branding.pillars', items);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setPillarsInput((formData.design.branding.pillars || []).join(', '));
+      setError(null); // Clear any previous errors when modal opens
+    }
+  }, [isOpen, formData.design.branding.pillars]);
 
   if (!isOpen) return null;
 
@@ -189,6 +231,27 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
                   <option value="spa">Beauty Spa</option>
                   <option value="mixed">Mixed (Products & Spa)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Experience Focus *
+                </label>
+                <select
+                  value={formData.design.focus}
+                  onChange={(e) => handleNestedChange('design.focus', e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-brand-400/50"
+                >
+                  <option value="beauty">Beauty & Spa Rituals</option>
+                  <option value="wellness">Wellness & Retreats</option>
+                  <option value="artisan">Artisan Goods</option>
+                  <option value="tech">Tech & Gadgets</option>
+                  <option value="lifestyle">Lifestyle Boutique</option>
+                </select>
+                <p className="mt-1 text-xs text-white/50">
+                  We’ll adapt the layout, gradients, and highlights to match this focus automatically.
+                </p>
               </div>
             </div>
 
@@ -277,6 +340,35 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
                   className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50"
                   placeholder="Your store tagline"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Badge Label
+                </label>
+                <input
+                  type="text"
+                  value={formData.design.branding.badge}
+                  onChange={(e) => handleNestedChange('design.branding.badge', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50"
+                  placeholder="e.g., Signature Rituals, Atelier Drop"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Brand Pillars (comma-separated)
+                </label>
+                <textarea
+                  rows={3}
+                  value={pillarsInput}
+                  onChange={(e) => handlePillarsInputChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50 resize-none"
+                  placeholder="e.g., Ethical sourcing, Concierge service, Limited drops"
+                />
+                <p className="mt-1 text-xs text-white/50">
+                  These appear as highlight chips to communicate your service focus instantly.
+                </p>
               </div>
             </div>
 

@@ -303,7 +303,7 @@ export function SubscriptionPlans({ onSelectPlan, currentPlan = null }) {
                     /{displayPeriod}
                   </span>
                 </div>
-
+what are the best ways of wriiting code and make sure that all is done well and working well 
                 {/* Plan Name */}
                 <h3 className="text-2xl sm:text-3xl font-semibold mb-2">{plan.name}</h3>
                 <p className={`text-sm mb-6 ${
