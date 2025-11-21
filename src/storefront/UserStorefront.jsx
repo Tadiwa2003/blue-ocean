@@ -205,12 +205,12 @@ export function UserStorefront({ onClose, customStorefront }) {
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
       {/* Image Trail Background */}
-      <div 
-        className="fixed inset-0 z-0" 
-        style={{ 
-          height: '100vh', 
-          width: '100vw', 
-          overflow: 'hidden', 
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
           pointerEvents: 'none',
           position: 'fixed',
           top: 0,
@@ -220,32 +220,32 @@ export function UserStorefront({ onClose, customStorefront }) {
           zIndex: 0
         }}
       >
-        <div style={{ 
-          pointerEvents: 'auto', 
-          height: '100%', 
+        <div style={{
+          pointerEvents: 'auto',
+          height: '100%',
           width: '100%',
           position: 'relative'
         }}>
           <ImageTrail items={imageTrailItems} variant={1} />
         </div>
-        <div 
-          className="absolute inset-0" 
-          style={{ 
+        <div
+          className="absolute inset-0"
+          style={{
             background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
             pointerEvents: 'none',
             zIndex: 1
-          }} 
+          }}
         />
       </div>
 
       {/* Header */}
-      <header 
+      <header
         className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-xl relative"
         style={{ backgroundColor: `${secondaryColor}CC` }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 
+            <h1
               className="text-lg sm:text-xl font-display font-bold truncate"
               style={{ color: primaryColor }}
             >
@@ -279,8 +279,8 @@ export function UserStorefront({ onClose, customStorefront }) {
       </header>
 
       {/* Hero Section */}
-      <section 
-        className="relative py-20 sm:py-32 md:py-40 overflow-hidden"
+      <section
+        className="relative py-32 sm:py-48 md:py-64 overflow-hidden"
         style={{
           backgroundColor: heroBackgroundColor,
           backgroundImage: heroBackgroundImage ? `url(${heroBackgroundImage})` : 'none',
@@ -311,7 +311,7 @@ export function UserStorefront({ onClose, customStorefront }) {
         <section className="relative z-10 py-16 px-6">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Products</h2>
-            
+
             {/* Category Filter */}
             {productCategories.length > 1 && (
               <div className="flex flex-wrap gap-3 justify-center mb-8">
@@ -322,11 +322,10 @@ export function UserStorefront({ onClose, customStorefront }) {
                       setActiveProductCategory(category);
                       setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      activeProductCategory === category
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeProductCategory === category
                         ? 'text-white'
                         : 'text-white/60 hover:text-white/80'
-                    }`}
+                      }`}
                     style={{
                       backgroundColor: activeProductCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
                     }}
@@ -394,7 +393,7 @@ export function UserStorefront({ onClose, customStorefront }) {
         <section className="relative z-10 py-16 px-6">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Services</h2>
-            
+
             {/* Category Filter */}
             {serviceCategories.length > 1 && (
               <div className="flex flex-wrap gap-3 justify-center mb-8">
@@ -402,11 +401,10 @@ export function UserStorefront({ onClose, customStorefront }) {
                   <button
                     key={category}
                     onClick={() => setActiveServiceCategory(category)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      activeServiceCategory === category
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeServiceCategory === category
                         ? 'text-white'
                         : 'text-white/60 hover:text-white/80'
-                    }`}
+                      }`}
                     style={{
                       backgroundColor: activeServiceCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
                     }}

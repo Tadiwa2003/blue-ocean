@@ -16,6 +16,7 @@ import bookingRoutes from './routes/bookings.js';
 import storefrontRoutes from './routes/storefronts.js';
 import elevenlabsRoutes from './routes/elevenlabs.js';
 import adminRoutes from './routes/admin.js';
+import aiRoutes from './routes/ai.js';
 
 // Load environment variables from server/.env
 
@@ -32,17 +33,17 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Development override: allow all origins if ALLOW_ALL_CORS is set
     if (process.env.ALLOW_ALL_CORS === 'true') {
       return callback(null, true);
     }
-    
+
     // Allow requests from frontend URL or any localhost port
     if (origin === FRONTEND_URL || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
       return callback(null, true);
     }
-    
+
     // Deny all other origins
     callback(new Error('Not allowed by CORS'));
   },
@@ -91,6 +92,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/storefronts', storefrontRoutes);
 app.use('/api/elevenlabs', elevenlabsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -115,7 +117,7 @@ const startServer = async () => {
   try {
     // Connect to MongoDB (non-blocking - server will start even if DB fails)
     await connectDB();
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 BrightPath API server running on http://localhost:${PORT}`);
       console.log(`📡 Frontend URL: ${FRONTEND_URL}`);

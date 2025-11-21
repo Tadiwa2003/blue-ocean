@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Button } from './Button.jsx';
+import { Upload, Link as LinkIcon, Image as ImageIcon, Sparkles, Zap, Wind, Waves, Grid } from 'lucide-react';
 import api from '../services/api.js';
 
 export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [logoUploadMode, setLogoUploadMode] = useState('url'); // 'url' or 'upload'
+  const [logoPreview, setLogoPreview] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     type: 'products',
@@ -30,6 +33,10 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
         storeName: '',
         tagline: '',
         logo: '',
+      },
+      animations: {
+        background: 'none', // none, gradient, fluid, particles, mesh
+        content: 'fade', // none, fade, slide, zoom, typewriter
       },
     },
     settings: {
@@ -73,6 +80,32 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
     });
   };
 
+  const handleLogoFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a valid image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Logo file size must be less than 5MB');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result);
+      handleNestedChange('design.branding.logo', reader.result);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -108,6 +141,10 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
               tagline: '',
               logo: '',
             },
+            animations: {
+              background: 'none',
+              content: 'fade',
+            },
           },
           settings: {
             showCategories: true,
@@ -116,6 +153,8 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
             enableCheckout: true,
           },
         });
+        setLogoUploadMode('url');
+        setLogoPreview(null);
         onSuccess?.(response.data.storefront);
         onClose();
       } else {
@@ -158,7 +197,7 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Storefront Name *
@@ -195,7 +234,7 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
             {/* Hero Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white mb-4">Hero Section</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Hero Title
@@ -249,10 +288,79 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
 
+            {/* Visual Effects & Animations */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-brand-400" />
+                <h3 className="text-lg font-semibold text-white">Visual Effects</h3>
+              </div>
+
+              {/* Background Animation Selection */}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                  Background Animation
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: 'none', name: 'Static', icon: ImageIcon, desc: 'No animation' },
+                    { id: 'gradient', name: 'Gradient Flow', icon: Wind, desc: 'Soft color shifts' },
+                    { id: 'fluid', name: 'Fluid Glass', icon: Waves, desc: 'Interactive 3D liquid' },
+                    { id: 'particles', name: 'Particles', icon: Sparkles, desc: 'Floating specks' },
+                    { id: 'mesh', name: 'Mesh Grid', icon: Grid, desc: 'Cyberpunk grid' },
+                  ].map((anim) => (
+                    <button
+                      key={anim.id}
+                      type="button"
+                      onClick={() => handleNestedChange('design.animations.background', anim.id)}
+                      className={`relative p-3 rounded-xl border text-left transition-all duration-200 group ${formData.design.animations?.background === anim.id
+                        ? 'bg-brand-400/20 border-brand-400/50 ring-1 ring-brand-400/50'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                        }`}
+                    >
+                      <div className={`p-2 rounded-lg inline-flex mb-2 ${formData.design.animations?.background === anim.id ? 'bg-brand-400/20 text-brand-300' : 'bg-white/10 text-white/60'
+                        }`}>
+                        <anim.icon className="h-5 w-5" />
+                      </div>
+                      <div className="font-medium text-white text-sm">{anim.name}</div>
+                      <div className="text-xs text-white/50 mt-0.5">{anim.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content Animation Selection */}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                  Hero Content Entry
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { id: 'none', name: 'Instant', icon: Zap },
+                    { id: 'fade', name: 'Fade In', icon: Wind },
+                    { id: 'slide', name: 'Slide Up', icon: Upload },
+                    { id: 'zoom', name: 'Zoom', icon: ImageIcon },
+                  ].map((anim) => (
+                    <button
+                      key={anim.id}
+                      type="button"
+                      onClick={() => handleNestedChange('design.animations.content', anim.id)}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 ${formData.design.animations?.content === anim.id
+                        ? 'bg-brand-400/20 border-brand-400/50 text-white'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                    >
+                      <anim.icon className="h-5 w-5 mb-2" />
+                      <span className="text-sm font-medium">{anim.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Branding */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white mb-4">Branding</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Store Name
@@ -278,12 +386,120 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
                   placeholder="Your store tagline"
                 />
               </div>
+
+              {/* Logo Upload Section */}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                  Store Logo
+                </label>
+
+                {/* Upload Mode Toggle */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLogoUploadMode('url');
+                      setLogoPreview(null);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition ${logoUploadMode === 'url'
+                      ? 'bg-brand-400/20 border-brand-400/50 text-white'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">URL</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLogoUploadMode('upload');
+                      handleNestedChange('design.branding.logo', '');
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition ${logoUploadMode === 'upload'
+                      ? 'bg-brand-400/20 border-brand-400/50 text-white'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm font-medium">Upload</span>
+                  </button>
+                </div>
+
+                {/* URL Input */}
+                {logoUploadMode === 'url' && (
+                  <div>
+                    <div className="relative">
+                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                      <input
+                        type="url"
+                        value={formData.design.branding.logo}
+                        onChange={(e) => {
+                          handleNestedChange('design.branding.logo', e.target.value);
+                          setLogoPreview(e.target.value);
+                        }}
+                        className="w-full px-4 py-3 pl-12 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50"
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-white/50">
+                      Enter the URL of your logo image
+                    </p>
+                  </div>
+                )}
+
+                {/* File Upload */}
+                {logoUploadMode === 'upload' && (
+                  <div>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 transition">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="h-8 w-8 text-white/40 mb-2" />
+                        <p className="text-sm text-white/60 mb-1">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-white/40">PNG, JPG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleLogoFileChange}
+                      />
+                    </label>
+                    <p className="mt-2 text-xs text-white/50">
+                      Upload your logo image file
+                    </p>
+                  </div>
+                )}
+
+                {/* Logo Preview */}
+                {(logoPreview || formData.design.branding.logo) && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-white/80 mb-2">Preview:</p>
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center">
+                      <img
+                        src={logoPreview || formData.design.branding.logo}
+                        alt="Logo preview"
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          setLogoPreview(null);
+                        }}
+                        onLoad={() => {
+                          if (logoUploadMode === 'url' && !logoPreview) {
+                            setLogoPreview(formData.design.branding.logo);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Colors */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white mb-4">Color Scheme</h3>
-              
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-white/80 mb-2">
@@ -324,7 +540,7 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
             {/* Layout Options */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white mb-4">Layout Options</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Product Card Style
