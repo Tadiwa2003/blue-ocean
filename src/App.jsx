@@ -105,7 +105,7 @@ function AppContent() {
     }
     setIsModalOpen(false);
     setIsDashboardLoading(true);
-    
+
     // Check subscription status after sign in
     await checkSubscriptionStatus();
   };
@@ -141,6 +141,42 @@ function AppContent() {
     // Refresh subscription status
     await checkSubscriptionStatus();
   };
+
+  // Check for storefront URL parameter and load storefront
+  useEffect(() => {
+    const loadStorefrontFromURL = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const storefrontSlug = urlParams.get('storefront');
+
+      if (storefrontSlug) {
+        try {
+          setIsStorefrontLoading(true);
+          // Fetch storefront by slug (public endpoint, no auth required)
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/storefronts/slug/${storefrontSlug}`);
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data.storefront) {
+              const storefront = data.data.storefront;
+              console.log('Loaded storefront from URL:', storefront);
+              openStorefront(storefront.type, storefront);
+            } else {
+              console.error('Storefront not found:', storefrontSlug);
+              setIsStorefrontLoading(false);
+            }
+          } else {
+            console.error('Failed to load storefront:', response.status);
+            setIsStorefrontLoading(false);
+          }
+        } catch (error) {
+          console.error('Error loading storefront from URL:', error);
+          setIsStorefrontLoading(false);
+        }
+      }
+    };
+
+    loadStorefrontFromURL();
+  }, []);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -178,13 +214,110 @@ function AppContent() {
   useEffect(() => {
     if (isAuthenticated && currentUser) {
       checkSubscriptionStatus();
-      
+
       // Check every 5 minutes
       const interval = setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, currentUser]);
 
+  // Verify 21st.dev extension is loaded and monitor connection
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Initial connection status log
+      const logConnectionStatus = () => {
+        const status = {
+          toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
+          reactPluginAvailable: typeof ReactPlugin !== 'undefined',
+          port: window.location.port || '5178',
+          host: window.location.hostname,
+          protocol: window.location.protocol,
+          url: window.location.href,
+          environment: process.env.NODE_ENV,
+          timestamp: new Date().toISOString(),
+        };
+
+        console.log('%c✅ 21st.dev Extension Status', 'color: #4CAF50; font-weight: bold; font-size: 14px;', status);
+        console.log('%c🔗 Connection Info', 'color: #2196F3; font-weight: bold;', {
+          extensionInstalled: 'Check Cursor Extensions (Cmd+Shift+X)',
+          extensionEnabled: 'Make sure 21st extension is enabled',
+          devServerRunning: `http://localhost:${status.port}`,
+          browserOpen: status.url,
+          connectionPort: '5178',
+          extensionHostPort: '5747 (Cursor)',
+        });
+      };
+
+      // Log initial status
+      logConnectionStatus();
+
+      // Enhanced toolbar detection with multiple strategies
+      const detectToolbar = () => {
+        const selectors = [
+          '[data-21st-toolbar]',
+          '[data-21st]',
+          '[class*="21st"]',
+          '[id*="21st"]',
+          '[class*="toolbar"]',
+          'div[data-extension="21st"]',
+          'div[class*="TwentyFirst"]',
+        ];
+
+        for (const selector of selectors) {
+          try {
+            const element = document.querySelector(selector);
+            if (element && (element.offsetParent !== null || element.style.display !== 'none')) {
+              return { found: true, selector, element };
+            }
+          } catch (e) {
+            // Ignore selector errors
+          }
+        }
+
+        return { found: false, selector: null, element: null };
+      };
+
+      // Monitor toolbar with extended retry logic
+      let checkCount = 0;
+      const maxChecks = 15; // Increased attempts
+      const checkInterval = 2000; // Check every 2 seconds
+      let connectionEstablished = false;
+
+      const monitorToolbar = setInterval(() => {
+        checkCount++;
+        const result = detectToolbar();
+
+        if (result.found && !connectionEstablished) {
+          connectionEstablished = true;
+          console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+          console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
+            status: 'Connected',
+            selector: result.selector,
+            timestamp: new Date().toISOString(),
+          });
+          clearInterval(monitorToolbar);
+        } else if (checkCount >= maxChecks && !connectionEstablished) {
+          console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
+          console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
+            step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
+            step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
+            step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
+            step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
+            step5: '5. Verify dev server is running: npm run dev',
+            step6: '6. Check browser is at: http://localhost:5178',
+            step7: '7. Hard refresh browser: Cmd+Shift+R',
+            step8: '8. Check console for connection status',
+          });
+          clearInterval(monitorToolbar);
+        }
+      }, checkInterval);
+
+      // Cleanup on unmount
+      return () => {
+        clearInterval(monitorToolbar);
+      };
+    }
+  }, []);
 
   const openStorefront = (type = 'products', storefrontData = null) => {
     setStorefrontType(type);
@@ -208,6 +341,10 @@ function AppContent() {
       clearTimeout(storefrontTimeoutRef.current);
       storefrontTimeoutRef.current = null;
     }
+    // Clear URL parameter
+    const url = new URL(window.location);
+    url.searchParams.delete('storefront');
+    window.history.pushState({}, '', url);
   };
 
   return (
@@ -216,102 +353,123 @@ function AppContent() {
         <div className="pointer-events-none fixed inset-0 -z-10 opacity-70">
           <ShaderAnimation />
         </div>
-        {/* 21st.dev Toolbar - AI-powered editing toolbar (development only) */}
-        <TwentyFirstToolbarWrapper />
-      <SignInModal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setModalMode('signin'); // Reset to sign-in mode when closing
-        }}
-        onSuccess={handleSignInSuccess}
-        initialMode={modalMode}
-      />
-      <ContactModal
-        isOpen={isContactModalOpen}
-        onClose={() => setIsContactModalOpen(false)}
-        onSuccess={(data) => {
-          console.log('Contact form submitted:', data);
-          setIsContactModalOpen(false);
-        }}
-      />
-      {isDashboardLoading ? (
-        <CounterLoader onComplete={handleCounterLoaderComplete} duration={2000} />
-      ) : isViewingStorefront ? (
-        isStorefrontLoading ? (
-          <StorefrontLoading />
-        ) : currentStorefront ? (
-          // User's custom storefront - use dedicated component
-          <UserStorefront onClose={closeStorefront} customStorefront={currentStorefront} />
-        ) : storefrontType === 'spa' ? (
-          // Platform spa storefront
-          <BeautySpaStorefront onClose={closeStorefront} />
-        ) : storefrontType === 'clothing' ? (
-          // Platform Anaya Finds clothing storefront
-          <AnayaFindsStorefront onClose={closeStorefront} />
+        {/* 21st.dev Toolbar - Requires Cursor/VSCode extension to be installed and active */}
+        {typeof window !== 'undefined' && (
+          <TwentyFirstToolbar
+            config={{
+              plugins: [ReactPlugin],
+              // Connection settings - enable auto-connect
+              autoConnect: true,
+              // Development mode settings
+              devMode: process.env.NODE_ENV === 'development',
+              // Connection retry settings
+              reconnect: true,
+              reconnectInterval: 3000,
+              maxReconnectAttempts: 10,
+              // Enable debugging in development
+              debug: process.env.NODE_ENV === 'development',
+              // Connection timeout
+              connectionTimeout: 10000,
+              // Server configuration
+              server: {
+                port: 5178,
+                host: 'localhost',
+              },
+            }}
+            key="21st-toolbar" // Stable key for consistent rendering
+          />
+        )}
+        <SignInModal
+          open={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setModalMode('signin'); // Reset to sign-in mode when closing
+          }}
+          onSuccess={handleSignInSuccess}
+          initialMode={modalMode}
+        />
+        <ContactModal
+          isOpen={isContactModalOpen}
+          onClose={() => setIsContactModalOpen(false)}
+          onSuccess={(data) => {
+            console.log('Contact form submitted:', data);
+            setIsContactModalOpen(false);
+          }}
+        />
+        {isDashboardLoading ? (
+          <CounterLoader onComplete={handleCounterLoaderComplete} duration={2000} />
+        ) : isViewingStorefront ? (
+          isStorefrontLoading ? (
+            <StorefrontLoading />
+          ) : currentStorefront ? (
+            // User's custom storefront - use dedicated component
+            <UserStorefront onClose={closeStorefront} customStorefront={currentStorefront} />
+          ) : storefrontType === 'spa' ? (
+            // Platform spa storefront
+            <BeautySpaStorefront onClose={closeStorefront} />
+          ) : (
+            // Platform products storefront
+            <Storefront onClose={closeStorefront} />
+          )
+        ) : isAuthenticated ? (
+          <>
+            <SubscriptionRequiredModal
+              isOpen={subscriptionRequired && currentUser?.role !== 'owner'}
+              trialExpired={trialExpired}
+              onSubscribeSuccess={handleSubscribeSuccess}
+            />
+            {(!subscriptionRequired || currentUser?.role === 'owner') && (
+              <DashboardLayout
+                currentUser={currentUser}
+                onSignOut={handleSignOut}
+                onViewStorefront={openStorefront}
+                onViewSpaStorefront={() => openStorefront('spa')}
+              />
+            )}
+          </>
         ) : (
-          // Platform products storefront
-          <Storefront onClose={closeStorefront} />
-        )
-      ) : isAuthenticated ? (
-        <>
-          <SubscriptionRequiredModal
-            isOpen={subscriptionRequired && currentUser?.role !== 'owner'}
-            trialExpired={trialExpired}
-            onSubscribeSuccess={handleSubscribeSuccess}
-          />
-          {(!subscriptionRequired || currentUser?.role === 'owner') && (
-            <DashboardLayout
-              currentUser={currentUser}
-              onSignOut={handleSignOut}
-              onViewStorefront={openStorefront}
-              onViewSpaStorefront={() => openStorefront('spa')}
-            />
-          )}
-        </>
-      ) : (
-        <ContainerScrollAnimation>
-          <Header
-            onSignInClick={() => {
-              setModalMode('signin');
-              setIsModalOpen(true);
-            }}
-            onSignUpClick={() => {
-              setModalMode('signup');
-              setIsModalOpen(true);
-            }}
-            onViewStorefront={() => openStorefront('products')}
-            onViewSpaStorefront={() => openStorefront('spa')}
-          />
-          <main className="flex flex-col gap-20 pb-24">
-            <Hero />
-            <FeatureTiles />
-            <Intro />
-            <ValueJourney />
-            <Offerings 
-              onBookStrategyCall={() => setIsContactModalOpen(true)}
-              onViewSpaStorefront={() => openStorefront('spa')}
-              onDownloadMenu={() => {
-                downloadRitualMenu(() => {
-                  // Optional: Show success notification
-                  console.log('Ritual menu downloaded successfully');
-                });
+          <ContainerScrollAnimation>
+            <Header
+              onSignInClick={() => {
+                setModalMode('signin');
+                setIsModalOpen(true);
               }}
-            />
-            <Testimonials />
-            <CallToAction 
-              onGetStarted={() => {
+              onSignUpClick={() => {
                 setModalMode('signup');
                 setIsModalOpen(true);
               }}
-              onTalkToTeam={() => setIsContactModalOpen(true)}
+              onViewStorefront={() => openStorefront('products')}
+              onViewSpaStorefront={() => openStorefront('spa')}
             />
-          </main>
-          <Footer />
-        </ContainerScrollAnimation>
-      )}
-      <ElevenLabsAgent />
-    </div>
+            <main className="flex flex-col gap-20 pb-24">
+              <Hero />
+              <FeatureTiles />
+              <Intro />
+              <ValueJourney />
+              <Offerings
+                onBookStrategyCall={() => setIsContactModalOpen(true)}
+                onViewSpaStorefront={() => openStorefront('spa')}
+                onDownloadMenu={() => {
+                  downloadRitualMenu(() => {
+                    // Optional: Show success notification
+                    console.log('Ritual menu downloaded successfully');
+                  });
+                }}
+              />
+              <Testimonials />
+              <CallToAction
+                onGetStarted={() => {
+                  setModalMode('signup');
+                  setIsModalOpen(true);
+                }}
+                onTalkToTeam={() => setIsContactModalOpen(true)}
+              />
+            </main>
+            <Footer />
+          </ContainerScrollAnimation>
+        )}
+        <ElevenLabsAgent />
+      </div>
     </GradientBackground>
   );
 }

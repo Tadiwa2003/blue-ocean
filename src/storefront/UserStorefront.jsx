@@ -442,12 +442,12 @@ export function UserStorefront({ onClose, customStorefront }) {
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
       {/* Image Trail Background */}
-      <div 
-        className="fixed inset-0 z-0" 
-        style={{ 
-          height: '100vh', 
-          width: '100vw', 
-          overflow: 'hidden', 
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
           pointerEvents: 'none',
           position: 'fixed',
           top: 0,
@@ -457,32 +457,32 @@ export function UserStorefront({ onClose, customStorefront }) {
           zIndex: 0
         }}
       >
-        <div style={{ 
-          pointerEvents: 'auto', 
-          height: '100%', 
+        <div style={{
+          pointerEvents: 'auto',
+          height: '100%',
           width: '100%',
           position: 'relative'
         }}>
           <ImageTrail items={imageTrailItems} variant={1} />
         </div>
-        <div 
-          className="absolute inset-0" 
-          style={{ 
+        <div
+          className="absolute inset-0"
+          style={{
             background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
             pointerEvents: 'none',
             zIndex: 1
-          }} 
+          }}
         />
       </div>
 
       {/* Header */}
-      <header 
+      <header
         className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-xl relative"
         style={{ backgroundColor: `${secondaryColor}CC` }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 
+            <h1
               className="text-lg sm:text-xl font-display font-bold truncate"
               style={{ color: primaryColor }}
             >
@@ -516,8 +516,8 @@ export function UserStorefront({ onClose, customStorefront }) {
       </header>
 
       {/* Hero Section */}
-      <section 
-        className="relative py-24 sm:py-32 md:py-40 overflow-hidden"
+      <section
+        className="relative py-32 sm:py-48 md:py-64 overflow-hidden"
         style={{
           backgroundColor: heroBackgroundColor,
           backgroundImage: heroBackgroundImage
@@ -587,30 +587,29 @@ export function UserStorefront({ onClose, customStorefront }) {
         </div>
       </section>
 
-      {/* Brand Spotlight */}
-      <section className="relative z-10 px-6 -mt-16 pb-10">
-        <div className="mx-auto max-w-6xl grid gap-6 md:grid-cols-[2fr,1fr]">
-          <div
-            className="rounded-[32px] border border-white/10 p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden"
-            style={{ background: 'rgba(13,25,45,0.85)' }}
-          >
-            <div
-              className="absolute inset-y-0 right-[-30%] w-2/3 opacity-30"
-              style={{ backgroundImage: selectedTheme.texture }}
-            />
-            <div className="relative z-10 space-y-4">
-              <p className="text-white/60 text-sm uppercase tracking-[0.5em]">Brand Narrative</p>
-              <h3 className="text-3xl font-display text-white">Why shoppers love {storefrontName}</h3>
-              <p className="text-white/70">
-                {customStorefront?.design?.branding?.story ||
-                  'Curated experiences, distinctive packaging, and concierge-level support designed for digital flagship stores.'}
-              </p>
-              <div className="flex flex-wrap gap-3 pt-4">
-                {brandHighlights.slice(0, 4).map((highlight) => (
-                  <span
-                    key={highlight}
-                    className="rounded-full border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+      {/* Products Section */}
+      {(storefrontType === 'products' || storefrontType === 'mixed') && (
+        <section className="relative z-10 py-16 px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Products</h2>
+
+            {/* Category Filter */}
+            {productCategories.length > 1 && (
+              <div className="flex flex-wrap gap-3 justify-center mb-8">
+                {productCategories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      setActiveProductCategory(category);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeProductCategory === category
+                        ? 'text-white'
+                        : 'text-white/60 hover:text-white/80'
+                      }`}
+                    style={{
+                      backgroundColor: activeProductCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
+                    }}
                   >
                     {highlight}
                   </span>
@@ -645,30 +644,21 @@ export function UserStorefront({ onClose, customStorefront }) {
       {lookbookImages.length > 0 && (
         <section className="relative z-10 px-6 pb-12">
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col gap-3 text-white mb-8">
-              <p className="text-xs uppercase tracking-[0.4em] text-white/50">Lookbook</p>
-              <h3 className="text-3xl font-display">Latest Capsule Preview</h3>
-              <p className="text-white/70 text-sm max-w-3xl">
-                A rotating set of hero visuals automatically mapped to each storefront so every merchant gets a bespoke presentation layer.
-              </p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-3">
-              {lookbookImages.map((image, index) => (
-                <motion.div
-                  key={image}
-                  className={`relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-lg ${
-                    index === 0 ? 'md:col-span-2' : ''
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ type: 'spring', stiffness: 180 }}
-                >
-                  <img
-                    src={image}
-                    alt={`${storefrontName} lookbook ${index + 1}`}
-                    className="h-72 w-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1542297487-69c217bedd95?w=800&h=800&fit=crop';
+            <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Services</h2>
+
+            {/* Category Filter */}
+            {serviceCategories.length > 1 && (
+              <div className="flex flex-wrap gap-3 justify-center mb-8">
+                {serviceCategories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setActiveServiceCategory(category)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeServiceCategory === category
+                        ? 'text-white'
+                        : 'text-white/60 hover:text-white/80'
+                      }`}
+                    style={{
+                      backgroundColor: activeServiceCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
                     }}
                   />
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent text-white">

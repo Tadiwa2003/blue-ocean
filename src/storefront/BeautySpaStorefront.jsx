@@ -36,7 +36,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
 
   // Fetch services from backend
   const { services: allServices, loading: servicesLoading, error: servicesError } = useServices();
-  
+
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedService, setSelectedService] = useState(null);
   const [bookingIntent, setBookingIntent] = useState('view');
@@ -120,11 +120,11 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       console.error('❌ Cannot show service: Service is missing');
       return;
     }
-    
+
     setSelectedService(service);
     setBookingIntent(intent);
     setIsModalOpen(true);
-    
+
     if (intent === 'book') {
       console.log('📅 Opening booking modal for:', service.name);
     }
@@ -164,7 +164,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
     let defaultDate = '';
     let defaultTime = service.timeSlots?.[0] || '10:00 AM';
     let dateLabel = '';
-    
+
     // Try to get a valid future date from bookableDates
     if (service.bookableDates && service.bookableDates.length > 0) {
       for (const dateOption of service.bookableDates) {
@@ -179,7 +179,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         }
       }
     }
-    
+
     // If no valid future date found, or no dates available, use tomorrow
     if (!defaultDate) {
       const tomorrow = new Date();
@@ -187,7 +187,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       defaultDate = tomorrow.toISOString().split('T')[0];
       dateLabel = getRelativeDateLabel(defaultDate);
     }
-    
+
     // Final check: ensure the date/time is not in the past
     if (defaultDate && defaultTime && isPastDateTime(defaultDate, defaultTime)) {
       // If somehow still in the past, use tomorrow
@@ -196,17 +196,17 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       defaultDate = tomorrow.toISOString().split('T')[0];
       dateLabel = getRelativeDateLabel(defaultDate);
     }
-    
+
     // Ensure we always have a valid time
     if (!defaultTime) {
       defaultTime = '10:00 AM';
     }
-    
+
     // Ensure dateLabel is always set to a readable format
     if (!dateLabel) {
       dateLabel = getRelativeDateLabel(defaultDate);
     }
-    
+
     // Final validation: ensure date is valid ISO format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(defaultDate)) {
@@ -216,7 +216,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       defaultDate = tomorrow.toISOString().split('T')[0];
       dateLabel = getRelativeDateLabel(defaultDate);
     }
-    
+
     // Log for debugging
     console.log('📅 Quick book date selection:', {
       defaultDate,
@@ -284,7 +284,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       }
 
       const updatedBookings = [...prevBookings, bookingEntry];
-      
+
       // Log successful addition
       console.log('✅ Quick booking added successfully:', {
         bookingId: bookingEntry.bookingId,
@@ -294,7 +294,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         totalBookings: updatedBookings.length,
         bookingEntry: bookingEntry,
       });
-      
+
       // Save to localStorage
       try {
         saveBookingsToLocalStorage(updatedBookings);
@@ -366,7 +366,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       const counter = (window.__bookingCounter = (window.__bookingCounter || 0) + 1);
       bookingId = `${service.id || service._id || 'service'}-${Date.now()}-${counter}`;
     }
-    
+
     // Ensure bookingData.date is in ISO format (YYYY-MM-DD)
     let bookingDate = bookingData.date;
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -377,39 +377,39 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         bookingDate = isoDate;
         bookingData.date = isoDate;
       } else {
-      // Try to parse if not in ISO format
-      try {
+        // Try to parse if not in ISO format
+        try {
           const parsedDate = new Date(bookingDate);
-        if (!isNaN(parsedDate.getTime())) {
+          if (!isNaN(parsedDate.getTime())) {
             bookingDate = parsedDate.toISOString().split('T')[0];
             bookingData.date = bookingDate;
-        } else {
-          throw new Error('Invalid date format');
+          } else {
+            throw new Error('Invalid date format');
+          }
+        } catch (e) {
+          showNotification('Error: Invalid date format. Please select a valid date.');
+          return;
         }
-      } catch (e) {
-        showNotification('Error: Invalid date format. Please select a valid date.');
-        return;
-      }
       }
     }
-    
+
     // Validate that the selected date/time is not in the past
     if (isPastDateTime(bookingDate, bookingData.time)) {
       showNotification('Error: Cannot book a date and time in the past. Please select a future date and time.');
       return;
     }
-    
+
     // Find date label for display
     const dateLabel = service.bookableDates?.find((date) => {
       const dateValue = convertDateLabelToISO(date.value) || date.value;
       return dateValue === bookingDate;
     })?.label || getRelativeDateLabel(bookingDate);
-    
+
     // Map add-on IDs to add-on objects
     const selectedAddOns = Array.isArray(bookingData.addOns)
       ? bookingData.addOns
-          .map((addOnId) => service.addOns?.find((addOn) => addOn.id === addOnId))
-          .filter(Boolean)
+        .map((addOnId) => service.addOns?.find((addOn) => addOn.id === addOnId))
+        .filter(Boolean)
       : [];
 
     // Calculate total price
@@ -458,7 +458,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       }
 
       const updatedBookings = [...prevBookings, bookingEntry];
-      
+
       // Log successful addition
       console.log('✅ Booking added successfully:', {
         bookingId: bookingEntry.bookingId,
@@ -468,7 +468,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         totalBookings: updatedBookings.length,
         bookingEntry: bookingEntry,
       });
-      
+
       // Save to localStorage
       try {
         saveBookingsToLocalStorage(updatedBookings);
@@ -482,10 +482,10 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
 
     // Show success notification
     showNotification(`✅ Reserved: ${service.name} · ${bookingEntry.dateLabel} at ${bookingEntry.time}`);
-    
+
     // Close the service modal first
     handleCloseModal();
-    
+
     // Open booking drawer after state update completes
     // Use setTimeout to ensure React state update completes before opening drawer
     setTimeout(() => {
@@ -531,7 +531,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       // Step 1: Comprehensive validation of all bookings
       const validationErrors = [];
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      
+
       bookings.forEach((booking, index) => {
         const bookingNum = index + 1;
         if (!booking.serviceId) {
@@ -540,7 +540,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         if (!booking.name || booking.name.trim() === '') {
           validationErrors.push(`Booking ${bookingNum}: Service name is required`);
         }
-        
+
         // Validate and convert date to ISO format
         let bookingDate = booking.date || '';
         if (!bookingDate || bookingDate.trim() === '') {
@@ -557,13 +557,13 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
               validationErrors.push(`Booking ${bookingNum}: Invalid date format. Please select a valid date.`);
             }
           }
-          
+
           // Validate date is not in the past
           if (bookingDate && booking.time && isPastDateTime(bookingDate, booking.time)) {
             validationErrors.push(`Booking ${bookingNum}: Date and time cannot be in the past. Please select a future date and time.`);
           }
         }
-        
+
         if (!booking.time || booking.time.trim() === '') {
           validationErrors.push(`Booking ${bookingNum}: Time is required`);
         }
@@ -577,7 +577,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       });
 
       if (validationErrors.length > 0) {
-        const errorMessage = validationErrors.length === 1 
+        const errorMessage = validationErrors.length === 1
           ? validationErrors[0]
           : `Please fix the following:\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? '\n...' : ''}`;
         showNotification(errorMessage);
@@ -590,16 +590,16 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         // Transform addOns array to backend format
         const transformedAddOns = Array.isArray(booking.addOns)
           ? booking.addOns
-              .filter(addOn => addOn != null)
-              .map(addOn => {
-                if (typeof addOn === 'object') {
-                  return {
-                    name: String(addOn.name || 'Add-on').trim() || 'Add-on',
-                    price: Number(addOn.price) || 0,
-                  };
-                }
-                return { name: 'Add-on', price: 0 };
-              })
+            .filter(addOn => addOn != null)
+            .map(addOn => {
+              if (typeof addOn === 'object') {
+                return {
+                  name: String(addOn.name || 'Add-on').trim() || 'Add-on',
+                  price: Number(addOn.price) || 0,
+                };
+              }
+              return { name: 'Add-on', price: 0 };
+            })
           : [];
 
         // Generate unique booking ID if not present
@@ -613,10 +613,10 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
 
         // Ensure date is in correct ISO format (YYYY-MM-DD)
         let bookingDate = booking.date || '';
-        
+
         // Validate date format with regex
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        
+
         if (!bookingDate || !dateRegex.test(bookingDate)) {
           // If date is not in ISO format, try to convert using date helper
           const isoDate = convertDateLabelToISO(bookingDate || booking.dateLabel);
@@ -639,12 +639,12 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
             throw new Error(`Booking ${index + 1}: Date is required and must be in ISO format (YYYY-MM-DD).`);
           }
         }
-        
+
         // Final validation that we have a valid ISO date
         if (!dateRegex.test(bookingDate)) {
           throw new Error(`Booking ${index + 1}: Date validation failed. Expected ISO format (YYYY-MM-DD).`);
         }
-        
+
         // Validate that the date/time is not in the past
         // But first, ensure we have a valid date
         if (bookingDate && booking.time) {
@@ -657,14 +657,14 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
               booking.date = convertedDate;
             }
           }
-          
+
           // Now check if it's in the past
           if (isPastDateTime(bookingDate, booking.time)) {
             // Instead of throwing error, try to fix it by using tomorrow
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowISO = tomorrow.toISOString().split('T')[0];
-            
+
             // Only throw error if we can't fix it
             if (isPastDateTime(tomorrowISO, booking.time)) {
               throw new Error(`Booking ${index + 1}: The selected time is too early. Please select a later time.`);
@@ -760,7 +760,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       if (response && response.success) {
         const createdBookings = response.data?.bookings || [];
         const bookingCount = createdBookings.length || bookings.length;
-        
+
         // Show success notification
         showNotification(
           `✅ Successfully confirmed ${bookingCount} booking${bookingCount > 1 ? 's' : ''}! ` +
@@ -790,12 +790,12 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
     } catch (error) {
       // Step 6: Handle exceptions with detailed error messages
       console.error('❌ Error confirming bookings:', error);
-      
+
       let errorMessage = 'Failed to confirm bookings. Please try again.';
 
       if (error && error.message) {
         const errorMsg = error.message.toLowerCase();
-        
+
         // Network/connection errors
         if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('failed to fetch')) {
           errorMessage = 'Unable to connect to server. Please check your internet connection and ensure the backend server is running.';
@@ -859,7 +859,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
   // Parallax effect for hero section
   const heroRef = useRef(null);
   const servicesGridRef = useRef(null);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
@@ -868,7 +868,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
         const heroTop = rect.top + scrolled;
         const heroHeight = rect.height;
         const windowHeight = window.innerHeight;
-        
+
         // Only apply parallax when hero is in viewport
         if (scrolled < heroTop + heroHeight && scrolled + windowHeight > heroTop) {
           const parallax = (scrolled - heroTop) * 0.3;
@@ -943,7 +943,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
 
       card.addEventListener('mouseenter', handleMouseEnter);
       card.addEventListener('mouseleave', handleMouseLeave);
-      
+
       hoverHandlers.push({ card, handleMouseEnter, handleMouseLeave });
     });
 
@@ -952,7 +952,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
       if (scrollTrigger) {
         scrollTrigger.kill();
       }
-      
+
       // Cleanup event listeners
       hoverHandlers.forEach(({ card, handleMouseEnter, handleMouseLeave }) => {
         card.removeEventListener('mouseenter', handleMouseEnter);
@@ -964,12 +964,12 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
       {/* Image Trail Background - full viewport background */}
-      <div 
-        className="fixed inset-0 z-0" 
-        style={{ 
-          height: '100vh', 
-          width: '100vw', 
-          overflow: 'hidden', 
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
           pointerEvents: 'none',
           position: 'fixed',
           top: 0,
@@ -979,9 +979,9 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
           zIndex: 0
         }}
       >
-        <div style={{ 
-          pointerEvents: 'auto', 
-          height: '100%', 
+        <div style={{
+          pointerEvents: 'auto',
+          height: '100%',
           width: '100%',
           position: 'relative'
         }}>
@@ -991,24 +991,24 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
           />
         </div>
         {/* Subtle overlay to ensure content readability */}
-        <div 
-          className="absolute inset-0" 
-          style={{ 
+        <div
+          className="absolute inset-0"
+          style={{
             background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
             pointerEvents: 'none',
             zIndex: 1
-          }} 
+          }}
         />
       </div>
-      
+
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl relative">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:py-4 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
             {/* Logo - optimized for header */}
             <div className="flex items-center justify-center flex-shrink-0">
-              <BeautySpaLogo 
-                className="h-12 w-auto sm:h-16 md:h-20 transition-transform duration-200 hover:scale-105" 
-                showText={false} 
+              <BeautySpaLogo
+                className="h-12 w-auto sm:h-16 md:h-20 transition-transform duration-200 hover:scale-105"
+                showText={false}
               />
             </div>
             {/* Brand name - visible on medium screens and up */}
@@ -1053,8 +1053,8 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
                 </span>
               )}
             </button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={onClose}
               className="text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2 whitespace-nowrap"
             >
@@ -1069,7 +1069,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
           <div className="absolute inset-0" ref={heroRef}>
             {/* 3D Spline Background - can be enabled via environment variable */}
             {import.meta.env.VITE_SPA_SPLINE_SCENE && (
-              <SplineBackground 
+              <SplineBackground
                 sceneUrl={import.meta.env.VITE_SPA_SPLINE_SCENE}
                 className="z-0"
                 interactive={false}
@@ -1105,12 +1105,12 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
             )}
             <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-b from-amber-900/30 via-orange-800/20 to-amber-800/30 z-10" />
           </div>
-          <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-16 sm:py-24 md:py-32 text-center z-20">
+          <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-24 sm:py-32 md:py-48 text-center z-20">
             {/* Logo with text - displayed directly on background */}
             <div className="storefront-hero-text mb-8 sm:mb-10 md:mb-12 flex justify-center" style={{ animationDelay: '0s' }}>
               <BeautySpaLogo className="h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80" showText={true} />
             </div>
-            
+
             {/* Text boxes */}
             <div className="storefront-hero-text flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6" style={{ animationDelay: '0.1s' }}>
               <div className="rounded-lg bg-white/20 backdrop-blur-md px-6 py-3 sm:px-8 sm:py-3.5 border border-white/30 shadow-lg">
@@ -1124,15 +1124,15 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
                 </span>
               </div>
             </div>
-            
+
             {/* Description text */}
             <p className="storefront-hero-text max-w-2xl text-sm sm:text-base md:text-lg text-white/95 leading-relaxed mt-8 sm:mt-10 drop-shadow-lg" style={{ animationDelay: '0.2s' }}>
               Experience our signature spa services featuring marine botanicals, heated ocean stones, and reef-safe rituals designed for complete relaxation and renewal.
             </p>
-            
+
             {/* Action buttons */}
             <div className="storefront-hero-text flex flex-wrap justify-center gap-3 sm:gap-4 mt-6 sm:mt-8" style={{ animationDelay: '0.3s' }}>
-              <Button 
+              <Button
                 onClick={() => {
                   if (allServices && allServices.length > 0) {
                     handleShowService(allServices[0], 'book');
@@ -1142,7 +1142,7 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
               >
                 Book Treatment
               </Button>
-              <Button 
+              <Button
                 variant="secondary"
                 onClick={() => setIsBookingOpen(true)}
                 className="text-sm sm:text-base px-6 py-3"
@@ -1255,47 +1255,47 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
               />
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 relative z-10" style={{ perspective: '1000px' }}>
-            {servicesLoading ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20">
-                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
-                <p className="text-white/60">Loading spa services...</p>
-              </div>
-            ) : servicesError ? (
-              <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
-                <p className="text-red-200 font-semibold">Error loading services</p>
-                <p className="mt-2 text-sm text-red-200/70">{servicesError}</p>
-              </div>
-            ) : filteredServices.length === 0 ? (
-              <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-                <p className="text-white/60">No services found in this category.</p>
-              </div>
-            ) : (
-              filteredServices.map((service, index) => (
-                <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: index * 0.1,
-                    type: "spring",
-                    stiffness: 100
-                  }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="storefront-card"
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                  }}
-                >
-                  <ServiceCard
-                    service={service}
-                    onViewDetails={(selected) => handleShowService(selected, 'view')}
-                    onBook={(selected) => handleQuickBook(selected)}
-                  />
-                </motion.div>
-              ))
-            )}
+              {servicesLoading ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20">
+                  <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
+                  <p className="text-white/60">Loading spa services...</p>
+                </div>
+              ) : servicesError ? (
+                <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+                  <p className="text-red-200 font-semibold">Error loading services</p>
+                  <p className="mt-2 text-sm text-red-200/70">{servicesError}</p>
+                </div>
+              ) : filteredServices.length === 0 ? (
+                <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                  <p className="text-white/60">No services found in this category.</p>
+                </div>
+              ) : (
+                filteredServices.map((service, index) => (
+                  <motion.div
+                    key={service.id}
+                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 100
+                    }}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="storefront-card"
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                    }}
+                  >
+                    <ServiceCard
+                      service={service}
+                      onViewDetails={(selected) => handleShowService(selected, 'view')}
+                      onBook={(selected) => handleQuickBook(selected)}
+                    />
+                  </motion.div>
+                ))
+              )}
             </div>
           </div>
         </section>

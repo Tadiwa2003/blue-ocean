@@ -278,14 +278,14 @@ const spaSalesBreakdown = [
 
 function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
   const isOwner = currentUser?.role === 'owner';
-  
+
   // Filter nav items based on user role
   const filteredNavItems = useMemo(() => {
     if (isOwner) {
       return navItems; // Owner sees all items
     }
     // Non-owners don't see bookings, subscription, reports, analytics, database
-    return navItems.filter(item => 
+    return navItems.filter(item =>
       !['bookings', 'subscription', 'reports', 'analytics', 'database'].includes(item.id)
     );
   }, [isOwner]);
@@ -304,11 +304,10 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
             key={item.id}
             type="button"
             onClick={() => onSelect(item.id)}
-            className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition ${
-              activeSection === item.id
+            className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition ${activeSection === item.id
                 ? 'bg-brand-500/20 text-white'
                 : 'text-white/60 hover:bg-white/10 hover:text-white'
-            }`}
+              }`}
           >
             <span className="text-lg">{item.icon}</span>
             {item.label}
@@ -328,7 +327,7 @@ function CopyShareLinkButton() {
   const handleCopy = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       const currentUrl = window.location.href;
       await navigator.clipboard.writeText(currentUrl);
@@ -362,7 +361,7 @@ function CopyShareLinkButton() {
   };
 
   return (
-    <Button 
+    <Button
       className={copied ? 'bg-emerald-500/80 hover:bg-emerald-500' : 'bg-brand-500/80 hover:bg-brand-500'}
       onClick={handleCopy}
     >
@@ -478,12 +477,12 @@ function MetricRow() {
 
   const metrics = useMemo(() => {
     const totalSales = orders.reduce((sum, order) => {
-      const amount = typeof order.total === 'string' 
+      const amount = typeof order.total === 'string'
         ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
         : parseFloat(order.total) || 0;
       return sum + amount;
     }, 0);
-    
+
     const productCount = products?.length || 0;
     const serviceCount = services?.length || 0;
     const totalItems = productCount + serviceCount;
@@ -512,8 +511,8 @@ function MetricRow() {
   }, [orders, products, services]);
 
   if (loading) {
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
+    return (
+      <div className="grid gap-4 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div key={i} className="rounded-3xl border border-white/10 bg-gradient-to-br from-ocean/50 to-ocean/30 px-5 py-4 animate-pulse">
             <div className="h-20"></div>
@@ -571,7 +570,7 @@ function AnalyticsSummary({ isOwner }) {
 
     // User sees their own analytics
     const totalSales = orders.reduce((sum, order) => {
-      const amount = typeof order.total === 'string' 
+      const amount = typeof order.total === 'string'
         ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
         : parseFloat(order.total) || 0;
       return sum + amount;
@@ -584,7 +583,7 @@ function AnalyticsSummary({ isOwner }) {
 
     // Calculate growth (simplified - compare with previous period)
     const previousPeriodSales = totalSales * 0.85; // Simulated
-    const salesGrowth = previousPeriodSales > 0 
+    const salesGrowth = previousPeriodSales > 0
       ? ((totalSales - previousPeriodSales) / previousPeriodSales * 100).toFixed(1)
       : 0;
 
@@ -662,7 +661,7 @@ function AnalyticsSummary({ isOwner }) {
 function SalesTrend({ isOwner }) {
   const [timeframe, setTimeframe] = useState('Week');
   const [orders, setOrders] = useState([]);
-  
+
   useEffect(() => {
     if (!isOwner) {
       const fetchOrders = async () => {
@@ -691,7 +690,7 @@ function SalesTrend({ isOwner }) {
 
     orders.forEach((order) => {
       const orderDate = new Date(order.createdAt || order.orderDate || now);
-      const amount = typeof order.total === 'string' 
+      const amount = typeof order.total === 'string'
         ? parseFloat(order.total.replace(/[^0-9.]/g, '')) || 0
         : parseFloat(order.total) || 0;
 
@@ -723,7 +722,7 @@ function SalesTrend({ isOwner }) {
       orders: data.orders,
     }));
   }, [orders, timeframe, isOwner]);
-  
+
   const defaultData = salesTrendData[timeframe];
   const displayData = currentData.length > 0 ? currentData : defaultData;
 
@@ -763,7 +762,7 @@ function SalesTrend({ isOwner }) {
     <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-ocean/80 to-ocean/60 p-8 text-white shadow-xl">
       <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-brand-500/10 blur-3xl" />
       <div className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-brand-400/10 blur-2xl" />
-      
+
       <div className="relative flex flex-wrap items-start justify-between gap-6">
         <div className="space-y-2">
           <h2 className="font-display text-3xl text-white">Sales & Trends</h2>
@@ -788,7 +787,7 @@ function SalesTrend({ isOwner }) {
           </div>
         </div>
       </div>
-      
+
       {/* Stats Section */}
       <div className="mt-8 grid gap-6 md:grid-cols-3">
         {[
@@ -806,21 +805,20 @@ function SalesTrend({ isOwner }) {
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl font-semibold leading-none">{metric.value.toLocaleString()}</span>
                     <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium ${
-                        change >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
+                      className={`inline-flex items-center gap-1 text-xs font-medium ${change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        }`}
                     >
                       {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {Math.abs(change)}%
-                </span>
-              </div>
-              </div>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           );
         })}
-          </div>
-      
+      </div>
+
       {/* Chart */}
       <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 bg-midnight/40 p-6 backdrop-blur-sm">
         <ChartContainer
@@ -837,7 +835,7 @@ function SalesTrend({ isOwner }) {
               right: 20,
             }}
           >
-          <defs>
+            <defs>
               {/* Modern Abstract Background Pattern */}
               <pattern id="modernPattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
                 <path
@@ -857,13 +855,13 @@ function SalesTrend({ isOwner }) {
               <linearGradient id="fillSales" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#1da0e6" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#1da0e6" stopOpacity={0.1} />
-            </linearGradient>
+              </linearGradient>
               <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3ed598" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3ed598" stopOpacity={0.1} />
-            </linearGradient>
-          </defs>
-          
+              </linearGradient>
+            </defs>
+
             <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="rgba(255,255,255,0.1)" />
 
             <XAxis
@@ -930,7 +928,7 @@ function SalesTrend({ isOwner }) {
               type="natural"
               fill="url(#fillSales)"
               fillOpacity={0.4}
-                        stroke="#1da0e6"
+              stroke="#1da0e6"
               stackId="a"
               dot={false}
               activeDot={{
@@ -980,24 +978,24 @@ function RecentOrders({ onViewAll }) {
       .map((order) => {
         const orderDate = order.createdAt || order.orderDate;
         const date = orderDate ? new Date(orderDate) : new Date();
-        const formattedDate = date.toLocaleDateString('en-US', { 
-          month: 'short', 
+        const formattedDate = date.toLocaleDateString('en-US', {
+          month: 'short',
           day: 'numeric',
           year: 'numeric'
         });
-        const formattedTime = date.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        const formattedTime = date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
         });
-        
-        const total = typeof order.total === 'string' 
-          ? order.total 
+
+        const total = typeof order.total === 'string'
+          ? order.total
           : `$${parseFloat(order.total || 0).toFixed(2)}`;
-        
+
         const itemCount = order.items?.length || order.itemCount || 0;
         const customerName = order.customerName || order.customer || 'Guest';
         const status = order.status || 'pending';
-        
+
         return {
           id: order._id || order.id,
           customer: customerName,
@@ -1024,12 +1022,12 @@ function RecentOrders({ onViewAll }) {
           <p className="text-sm text-white/70">Latest transactions and guest activity.</p>
         </div>
         {onViewAll && (
-          <button 
+          <button
             onClick={onViewAll}
             className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/70 hover:border-brand-400/60 hover:text-white"
           >
-          View all
-        </button>
+            View all
+          </button>
         )}
       </div>
       {loading ? (
@@ -1045,48 +1043,39 @@ function RecentOrders({ onViewAll }) {
           No orders yet. Orders will appear here after customers make purchases.
         </div>
       ) : (
-      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-        <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
-          <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
-            <tr>
-              <th className="px-4 py-3">Customer</th>
-              <th className="px-4 py-3">Items</th>
-              <th className="px-4 py-3">Date/Time</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
+            <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
+              <tr>
+                <th className="px-4 py-3">Customer</th>
+                <th className="px-4 py-3">Items</th>
+                <th className="px-4 py-3">Date/Time</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
               {recentOrdersList.map((order) => (
                 <tr key={order.id} className="hover:bg-white/5">
-                <td className="px-4 py-3 text-white">{order.customer}</td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleItemsClick(order)}
-                    className="text-brand-400 hover:text-brand-300 underline cursor-pointer font-medium transition-colors"
-                    title="Click to view item details"
-                  >
-                    {order.items} {order.items === 1 ? 'item' : 'items'}
-                  </button>
-                </td>
-                <td className="px-4 py-3">{order.date}</td>
-                <td className="px-4 py-3">{order.amount}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        order.status.toLowerCase() === 'paid' || order.status.toLowerCase() === 'completed'
-                        ? 'bg-emerald-500/20 text-emerald-200'
-                        : 'bg-amber-500/20 text-amber-200'
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  <td className="px-4 py-3 text-white">{order.customer}</td>
+                  <td className="px-4 py-3">{order.items}</td>
+                  <td className="px-4 py-3">{order.date}</td>
+                  <td className="px-4 py-3">{order.amount}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status.toLowerCase() === 'paid' || order.status.toLowerCase() === 'completed'
+                          ? 'bg-emerald-500/20 text-emerald-200'
+                          : 'bg-amber-500/20 text-amber-200'
+                        }`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Order Items Modal */}
@@ -1283,19 +1272,19 @@ function OrdersPanel() {
           </div>
         ) : (
           <>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
-            <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
-              <tr>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/10 text-left text-sm text-white/70">
+                <thead className="text-xs uppercase tracking-[0.3em] text-white/50">
+                  <tr>
                     <th className="px-6 py-4">Order Number</th>
-                <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Items</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Date/Time</th>
-                <th className="px-6 py-4">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
+                    <th className="px-6 py-4">Total</th>
+                    <th className="px-6 py-4">Date/Time</th>
+                    <th className="px-6 py-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
                   {orders.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-8 text-center text-white/60">
@@ -1304,17 +1293,17 @@ function OrdersPanel() {
                     </tr>
                   ) : (
                     orders.map((order) => {
-                      const customerName = order.shippingInfo 
+                      const customerName = order.shippingInfo
                         ? `${order.shippingInfo.firstName || ''} ${order.shippingInfo.lastName || ''}`.trim() || 'Guest'
                         : 'Guest';
-                      const orderDate = order.createdAt 
-                        ? new Date(order.createdAt).toLocaleDateString('en-US', { 
-                            year: 'numeric', month: 'short', day: 'numeric', 
-                            hour: '2-digit', minute: '2-digit' 
-                          })
+                      const orderDate = order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                          hour: '2-digit', minute: '2-digit'
+                        })
                         : 'N/A';
                       const itemCount = order.items ? order.items.length : 0;
-                      
+
                       return (
                         <tr key={order.id || order.orderNumber} className="hover:bg-white/5">
                           <td className="px-6 py-4 text-white font-mono text-xs">{order.orderNumber || order.id}</td>
@@ -1322,29 +1311,28 @@ function OrdersPanel() {
                           <td className="px-6 py-4">{itemCount} item{itemCount !== 1 ? 's' : ''}</td>
                           <td className="px-6 py-4">${parseFloat(order.total || 0).toFixed(2)}</td>
                           <td className="px-6 py-4">{orderDate}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                order.status === 'completed' || order.status === 'paid'
-                          ? 'bg-emerald-500/20 text-emerald-200'
+                          <td className="px-6 py-4">
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === 'completed' || order.status === 'paid'
+                                  ? 'bg-emerald-500/20 text-emerald-200'
                                   : order.status === 'pending'
-                                  ? 'bg-amber-500/20 text-amber-200'
-                                  : 'bg-red-500/20 text-red-200'
-                      }`}
-                    >
+                                    ? 'bg-amber-500/20 text-amber-200'
+                                    : 'bg-red-500/20 text-red-200'
+                                }`}
+                            >
                               {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Pending'}
-                    </span>
-                  </td>
-                </tr>
+                            </span>
+                          </td>
+                        </tr>
                       );
                     })
                   )}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 text-xs text-white/50">
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 text-xs text-white/50">
               <span>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</span>
-          </div>
+            </div>
           </>
         )}
       </div>
@@ -1354,7 +1342,7 @@ function OrdersPanel() {
 
 function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, onProductAdded, refreshTrigger }) {
   const { products: allProducts, loading, refresh } = useProducts();
-  
+
   // Refresh products when refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
@@ -1363,7 +1351,7 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, 
   }, [refreshTrigger, refresh]);
   // Allow owners to add products even without subscription for testing/admin purposes
   const hasSubscription = !!subscription || isOwner;
-  
+
   const productRows = useMemo(
     () => {
       if (!allProducts || allProducts.length === 0) return [];
@@ -1374,10 +1362,10 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, 
           index % 6 === 0
             ? 'Draft'
             : index % 5 === 0
-            ? 'Unpublished'
-            : index % 4 === 0
-            ? 'Out of stock'
-            : 'Published',
+              ? 'Unpublished'
+              : index % 4 === 0
+                ? 'Out of stock'
+                : 'Published',
         stock: index % 4 === 0 ? 0 : (product.stock || 23),
       }));
     },
@@ -1394,8 +1382,8 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, 
           </p>
         </div>
         <div className="flex gap-3">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="border-white/20"
             onClick={() => {
               // Export functionality - could export to CSV/JSON
@@ -1424,9 +1412,9 @@ function ProductsTable({ isOwner, onAddProduct, subscription, onViewStorefront, 
             disabled={!hasSubscription}
             className={!hasSubscription ? 'cursor-not-allowed bg-white/10 text-white/40' : undefined}
             title={
-              !hasSubscription 
+              !hasSubscription
                 ? 'Subscription required to add products'
-                : isOwner 
+                : isOwner
                   ? 'Create a new BrightPath product'
                   : 'Create a new product for your storefront'
             }
@@ -1570,7 +1558,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
 
   return (
     <>
-    <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
+      <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-display text-2xl">Storefronts</h2>
@@ -1587,8 +1575,8 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
             </Button>
           )}
         </div>
-        
-        {!subscription && !isOwner ? (
+
+        {!subscription ? (
           <div className="mt-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-amber-500/10 p-6">
             <div className="flex items-start gap-4">
               <div className="flex-1">
@@ -1712,7 +1700,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                     const secondaryColor = storefront.design?.colors?.secondary || '#0b233e';
                     const backgroundImage = storefront.design?.hero?.backgroundImage;
                     const backgroundColor = storefront.design?.hero?.backgroundColor || secondaryColor;
-                    
+
                     return (
                       <motion.div
                         key={storefront._id || storefront.id}
@@ -1723,7 +1711,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                       >
                         {/* Background Preview */}
                         {backgroundImage ? (
-                          <div 
+                          <div
                             className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity duration-300"
                             style={{
                               backgroundImage: `url(${backgroundImage})`,
@@ -1732,12 +1720,12 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                             }}
                           />
                         ) : (
-                          <div 
+                          <div
                             className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                             style={{ backgroundColor }}
                           />
                         )}
-                        
+
                         <div className="relative p-6">
                           {/* Header */}
                           <div className="flex items-start justify-between mb-4">
@@ -1784,12 +1772,12 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                           <div className="flex items-center gap-2 mb-5">
                             <span className="text-xs text-white/40 uppercase tracking-wider">Colors</span>
                             <div className="flex gap-1.5">
-                              <div 
+                              <div
                                 className="w-6 h-6 rounded-full border-2 border-white/20 shadow-lg"
                                 style={{ backgroundColor: primaryColor }}
                                 title="Primary Color"
                               />
-                              <div 
+                              <div
                                 className="w-6 h-6 rounded-full border-2 border-white/20 shadow-lg"
                                 style={{ backgroundColor: secondaryColor }}
                                 title="Secondary Color"
@@ -1857,7 +1845,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
                         </div>
 
                         {/* Hover Glow Effect */}
-                        <div 
+                        <div
                           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                           style={{
                             background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 70%)`,
@@ -1872,35 +1860,35 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
           </>
         )}
       </div>
-        <CreateStorefrontModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={handleStorefrontCreated}
-        />
-        <AddProductModal
-          isOpen={isAddProductModalOpen}
-          onClose={() => {
-            setIsAddProductModalOpen(false);
-            setSelectedStorefrontForProduct(null);
-          }}
-          onSuccess={() => {
-            setIsAddProductModalOpen(false);
-            setSelectedStorefrontForProduct(null);
-          }}
-          storefrontId={selectedStorefrontForProduct?._id || selectedStorefrontForProduct?.id || null}
-        />
-        <AddServiceModal
-          isOpen={isAddServiceModalOpen}
-          onClose={() => {
-            setIsAddServiceModalOpen(false);
-            setSelectedStorefrontForService(null);
-          }}
-          onSuccess={() => {
-            setIsAddServiceModalOpen(false);
-            setSelectedStorefrontForService(null);
-          }}
-          storefrontId={selectedStorefrontForService?._id || selectedStorefrontForService?.id || null}
-        />
+      <CreateStorefrontModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleStorefrontCreated}
+      />
+      <AddProductModal
+        isOpen={isAddProductModalOpen}
+        onClose={() => {
+          setIsAddProductModalOpen(false);
+          setSelectedStorefrontForProduct(null);
+        }}
+        onSuccess={() => {
+          setIsAddProductModalOpen(false);
+          setSelectedStorefrontForProduct(null);
+        }}
+        storefrontId={selectedStorefrontForProduct?._id || selectedStorefrontForProduct?.id || null}
+      />
+      <AddServiceModal
+        isOpen={isAddServiceModalOpen}
+        onClose={() => {
+          setIsAddServiceModalOpen(false);
+          setSelectedStorefrontForService(null);
+        }}
+        onSuccess={() => {
+          setIsAddServiceModalOpen(false);
+          setSelectedStorefrontForService(null);
+        }}
+        storefrontId={selectedStorefrontForService?._id || selectedStorefrontForService?.id || null}
+      />
     </>
   );
 }
@@ -1909,7 +1897,7 @@ function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isO
   const { services: allServices, loading: servicesLoading, refresh } = useServices();
   // Allow owners to add services even without subscription for testing/admin purposes
   const hasSubscription = !!subscription || isOwner;
-  
+
   // Filter services - users see their own, owner sees all
   const services = useMemo(
     () => {
@@ -1974,22 +1962,22 @@ function SpaServicesPanel({ onAddService, subscription, onViewSpaStorefront, isO
           <div>
             <h2 className="font-display text-2xl">Beauty Spa Services</h2>
             <p className="mt-2 text-sm text-white/70">
-              {isOwner 
+              {isOwner
                 ? 'Manage platform treatment menu, highlight premium rituals, and align spa merchandising with seasonal demand.'
                 : 'View your spa services and manage your beauty spa storefront offerings.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="secondary" 
-              className="border-white/20" 
+            <Button
+              variant="secondary"
+              className="border-white/20"
               onClick={onAddService}
               disabled={!hasSubscription}
               title={!hasSubscription ? 'Subscription required to add services' : isOwner ? 'Add a new beauty spa service' : 'Add a new service to your spa storefront'}
             >
               Add New Service
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (onViewSpaStorefront) {
                   onViewSpaStorefront('spa', null);
@@ -2082,7 +2070,7 @@ function SpaBookingsTable({ onSelect, onViewSpaStorefront }) {
         `"${booking.amount}"`
       ].join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2111,8 +2099,8 @@ function SpaBookingsTable({ onSelect, onViewSpaStorefront }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="border-white/20"
             onClick={handleExportWeek}
           >
@@ -2172,9 +2160,8 @@ function SpaBookingsTable({ onSelect, onViewSpaStorefront }) {
                 <td className="px-4 py-3 text-white/70">{booking.date}</td>
                 <td className="px-4 py-3">
                   <span
-                    className={`rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
-                      bookingStatusStyles[booking.status] ?? 'text-white/80'
-                    }`}
+                    className={`rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${bookingStatusStyles[booking.status] ?? 'text-white/80'
+                      }`}
                   >
                     {booking.status}
                   </span>
@@ -2578,9 +2565,9 @@ function AnalyticsPanel() {
         <p className="mt-2 text-sm text-white/70">Visual representation of profit metrics across different time periods.</p>
         <div className="mt-8 grid gap-8 md:grid-cols-3">
           <div className="flex flex-col items-center">
-            <AnimatedRadialChart 
-              value={dailyProfitPercent} 
-              size={200} 
+            <AnimatedRadialChart
+              value={dailyProfitPercent}
+              size={200}
               duration={2}
               showLabels={true}
             />
@@ -2591,9 +2578,9 @@ function AnalyticsPanel() {
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <AnimatedRadialChart 
-              value={weeklyProfitPercent} 
-              size={200} 
+            <AnimatedRadialChart
+              value={weeklyProfitPercent}
+              size={200}
               duration={2.2}
               showLabels={true}
             />
@@ -2604,9 +2591,9 @@ function AnalyticsPanel() {
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <AnimatedRadialChart 
-              value={monthlyProfitPercent} 
-              size={200} 
+            <AnimatedRadialChart
+              value={monthlyProfitPercent}
+              size={200}
               duration={2.4}
               showLabels={true}
             />
@@ -2702,7 +2689,7 @@ function SpaAnalyticsSummary() {
     acc[booking.status] = (acc[booking.status] || 0) + 1;
     return acc;
   }, {});
-  
+
   const bookingChartData = Object.entries(bookingStatusCounts).map(([status, count], index) => {
     const statusColors = {
       'Confirmed': '#3ed598',
@@ -2725,8 +2712,8 @@ function SpaAnalyticsSummary() {
   );
   const displayRevenueValue = activeRevenueSegment?.value ?? totalRevenue;
   const displayRevenueLabel = activeRevenueSegment?.label ?? 'Total Revenue';
-  const displayRevenuePercentage = activeRevenueSegment 
-    ? ((activeRevenueSegment.value / totalRevenue) * 100).toFixed(0) 
+  const displayRevenuePercentage = activeRevenueSegment
+    ? ((activeRevenueSegment.value / totalRevenue) * 100).toFixed(0)
     : null;
 
   // Get active segment for booking chart
@@ -2735,40 +2722,40 @@ function SpaAnalyticsSummary() {
   );
   const displayBookingValue = activeBookingSegment?.value ?? totalBookings;
   const displayBookingLabel = activeBookingSegment?.label ?? 'Total Bookings';
-  const displayBookingPercentage = activeBookingSegment 
-    ? ((activeBookingSegment.value / totalBookings) * 100).toFixed(0) 
+  const displayBookingPercentage = activeBookingSegment
+    ? ((activeBookingSegment.value / totalBookings) * 100).toFixed(0)
     : null;
 
   return (
     <div className="space-y-6 text-white">
       <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div>
-          <h2 className="font-display text-2xl">Beauty Spa Performance</h2>
-          <p className="text-sm text-white/70">Bookings cadence, guest repeat rate, and service mix.</p>
-        </div>
-        <div className="ml-auto flex flex-wrap gap-2">
-          {spaAnalyticsTiles.map((tile) => (
-            <div
-              key={tile.label}
-              className={`rounded-2xl border border-white/10 bg-gradient-to-br ${tile.tone} px-4 py-3 text-sm`}
-            >
-              <div className="flex items-center gap-3 text-white/80">
-                <span className="text-lg">{tile.icon}</span>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">{tile.label}</p>
-                  <p className="text-lg font-semibold text-white">{tile.value}</p>
-                  <p className="text-xs text-emerald-300">Trend {tile.delta}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div>
+            <h2 className="font-display text-2xl">Beauty Spa Performance</h2>
+            <p className="text-sm text-white/70">Bookings cadence, guest repeat rate, and service mix.</p>
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            {spaAnalyticsTiles.map((tile) => (
+              <div
+                key={tile.label}
+                className={`rounded-2xl border border-white/10 bg-gradient-to-br ${tile.tone} px-4 py-3 text-sm`}
+              >
+                <div className="flex items-center gap-3 text-white/80">
+                  <span className="text-lg">{tile.icon}</span>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/60">{tile.label}</p>
+                    <p className="text-lg font-semibold text-white">{tile.value}</p>
+                    <p className="text-xs text-emerald-300">Trend {tile.delta}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <StatCard title="Week" value={`$${spaTrendData.Week.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`} subtitle="Week-to-date revenue" />
-        <StatCard title="Bookings" value={spaTrendData.Week.reduce((sum, item) => sum + item.bookings, 0)} subtitle="Spa guests this week" />
-        <StatCard title="Repeat Guests" value={`${Math.round(spaTrendData.Week.reduce((sum, item) => sum + item.repeat, 0) / spaTrendData.Week.length * 100)}%`} subtitle="Return spa clients" />
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <StatCard title="Week" value={`$${spaTrendData.Week.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}`} subtitle="Week-to-date revenue" />
+          <StatCard title="Bookings" value={spaTrendData.Week.reduce((sum, item) => sum + item.bookings, 0)} subtitle="Spa guests this week" />
+          <StatCard title="Repeat Guests" value={`${Math.round(spaTrendData.Week.reduce((sum, item) => sum + item.repeat, 0) / spaTrendData.Week.length * 100)}%`} subtitle="Return spa clients" />
         </div>
       </div>
 
@@ -2819,9 +2806,8 @@ function SpaAnalyticsSummary() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
-                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                    hoveredRevenueSegment?.label === segment.label ? 'bg-white/10' : ''
-                  }`}
+                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${hoveredRevenueSegment?.label === segment.label ? 'bg-white/10' : ''
+                    }`}
                   onMouseEnter={() => setHoveredRevenueSegment(segment)}
                   onMouseLeave={() => setHoveredRevenueSegment(null)}
                 >
@@ -2888,9 +2874,8 @@ function SpaAnalyticsSummary() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1.2 + index * 0.1, duration: 0.4 }}
-                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                    hoveredBookingSegment?.label === segment.label ? 'bg-white/10' : ''
-                  }`}
+                  className={`flex items-center justify-between p-2 rounded-md transition-all duration-200 cursor-pointer ${hoveredBookingSegment?.label === segment.label ? 'bg-white/10' : ''
+                    }`}
                   onMouseEnter={() => setHoveredBookingSegment(segment)}
                   onMouseLeave={() => setHoveredBookingSegment(null)}
                 >
@@ -2969,8 +2954,8 @@ function SpaTrendChart() {
                     <span className="text-xs font-medium text-white/70">{config?.label || item.dataKey}</span>
                   </div>
                   <span className="text-sm font-semibold text-white">
-                    {item.dataKey === 'revenue' || item.dataKey === 'profit' 
-                      ? `$${item.value.toLocaleString()}` 
+                    {item.dataKey === 'revenue' || item.dataKey === 'profit'
+                      ? `$${item.value.toLocaleString()}`
                       : item.value.toLocaleString()}
                   </span>
                 </div>
@@ -3024,19 +3009,18 @@ function SpaTrendChart() {
                   <div className="text-sm font-medium text-white/60">{metric.label}</div>
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl font-semibold leading-none">
-                      {metric.key === 'revenue' || metric.key === 'profit' 
-                        ? `$${metric.value.toLocaleString()}` 
+                      {metric.key === 'revenue' || metric.key === 'profit'
+                        ? `$${metric.value.toLocaleString()}`
                         : metric.value.toLocaleString()}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium ${
-                        change >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
+                      className={`inline-flex items-center gap-1 text-xs font-medium ${change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        }`}
                     >
                       {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {Math.abs(change)}%
-            </span>
-          </div>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3059,8 +3043,8 @@ function SpaTrendChart() {
               left: 20,
               right: 20,
             }}
-            >
-              <defs>
+          >
+            <defs>
               {/* Modern Abstract Background Pattern */}
               <pattern id="spaModernPattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
                 <path
@@ -3086,16 +3070,16 @@ function SpaTrendChart() {
               <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1} />
-                </linearGradient>
+              </linearGradient>
               <linearGradient id="fillBookings" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.1} />
-                </linearGradient>
+              </linearGradient>
               <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#facc15" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#facc15" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
+              </linearGradient>
+            </defs>
 
             <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="rgba(255,255,255,0.1)" />
 
@@ -3217,7 +3201,7 @@ function SpaSalesTable({ onSelect }) {
         Math.round(row.utilisation * 100)
       ].join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3239,8 +3223,8 @@ function SpaSalesTable({ onSelect }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="border-white/20"
             onClick={handleDownloadCSV}
           >
@@ -3300,11 +3284,11 @@ function OwnerStorefrontAnalytics() {
         // For now, we'll simulate with available data
         const ordersResponse = await api.orders.getUserOrders();
         const productsResponse = await api.products.getProducts();
-        
+
         if (ordersResponse.success && productsResponse.success) {
           const allOrders = ordersResponse.data.orders || [];
           const allProducts = productsResponse.data.products || [];
-          
+
           // Calculate top selling items across all users
           const itemSales = {};
           allOrders.forEach((order) => {
@@ -3328,7 +3312,7 @@ function OwnerStorefrontAnalytics() {
           const topItems = Object.values(itemSales)
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 10);
-          
+
           setTopSellingItems(topItems);
         }
       } catch (error) {
@@ -3448,10 +3432,10 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
 
   return (
     <div className="space-y-6">
-      <DashboardHero 
-        currentUser={currentUser} 
-        onViewStorefront={onViewStorefront} 
-        onViewSpaStorefront={onViewSpaStorefront} 
+      <DashboardHero
+        currentUser={currentUser}
+        onViewStorefront={onViewStorefront}
+        onViewSpaStorefront={onViewSpaStorefront}
         subscription={subscription}
         onNavigateToSubscription={onNavigateToSubscription}
       />
@@ -3459,7 +3443,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
       <AnalyticsSummary isOwner={isOwner} />
       <SalesTrend isOwner={isOwner} />
       {isOwner && <OwnerStorefrontAnalytics />}
-      
+
       {/* User Storefronts Section - Only show user-created storefronts, no create button */}
       {subscription && (
         <div className="rounded-[32px] border border-white/10 bg-ocean/65 p-6 text-white">
@@ -3480,7 +3464,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
               </Button>
             )}
           </div>
-          
+
           {storefrontsLoading ? (
             <div className="text-center text-white/60 py-8">Loading storefronts...</div>
           ) : userStorefronts.length === 0 ? (
@@ -3502,7 +3486,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                 const secondaryColor = storefront.design?.colors?.secondary || '#0b233e';
                 const backgroundImage = storefront.design?.hero?.backgroundImage;
                 const backgroundColor = storefront.design?.hero?.backgroundColor || secondaryColor;
-                
+
                 return (
                   <motion.div
                     key={storefront._id || storefront.id}
@@ -3513,7 +3497,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                   >
                     {/* Background Preview */}
                     {backgroundImage ? (
-                      <div 
+                      <div
                         className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity duration-300"
                         style={{
                           backgroundImage: `url(${backgroundImage})`,
@@ -3522,12 +3506,12 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                         }}
                       />
                     ) : (
-                      <div 
+                      <div
                         className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                         style={{ backgroundColor }}
                       />
                     )}
-                    
+
                     <div className="relative p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -3580,7 +3564,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                     </div>
 
                     {/* Hover Glow Effect */}
-                    <div 
+                    <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                       style={{
                         background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 70%)`,
@@ -3593,7 +3577,7 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
           )}
         </div>
       )}
-      
+
       <RecentOrders onViewAll={onViewOrders} />
     </div>
   );
@@ -3658,7 +3642,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
 
     if (currentUser) {
       fetchSubscription();
-      
+
       // Check subscription status every 5 minutes
       const interval = setInterval(fetchSubscription, 5 * 60 * 1000);
       return () => clearInterval(interval);
@@ -3668,16 +3652,15 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
   const handleSubscribeSuccess = async (newSubscription) => {
     setSubscription(newSubscription);
     setActiveSection('dashboard');
-    // Refresh the page to update all data
-    window.location.reload();
+    // No need to reload - state update will trigger re-render
   };
 
   const renderSection = () => {
     switch (activeSection) {
       case 'products':
-        return <ProductsTable 
-          isOwner={isOwner} 
-          onAddProduct={() => setIsAddProductOpen(true)} 
+        return <ProductsTable
+          isOwner={isOwner}
+          onAddProduct={() => setIsAddProductOpen(true)}
           subscription={subscription}
           onViewStorefront={onViewStorefront}
           refreshTrigger={productRefreshTrigger}
@@ -3686,8 +3669,8 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
           }}
         />;
       case 'spaServices':
-        return <SpaServicesPanel 
-          onAddService={() => setIsAddServiceOpen(true)} 
+        return <SpaServicesPanel
+          onAddService={() => setIsAddServiceOpen(true)}
           subscription={subscription}
           onViewSpaStorefront={onViewSpaStorefront}
           isOwner={isOwner}
@@ -3706,7 +3689,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         }
         return <SpaAnalyticsPanel onSelect={setActiveSection} onViewSpaStorefront={onViewSpaStorefront} />;
       case 'storefront':
-        return <StorefrontPanel 
+        return <StorefrontPanel
           subscription={subscription}
           onViewStorefront={handleViewStorefront}
           onViewSpaStorefront={handleViewSpaStorefront}
@@ -3787,29 +3770,29 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         );
       case 'dashboard':
       default:
-        return       <DashboardPanel 
-        currentUser={currentUser} 
-        onViewStorefront={handleViewStorefront} 
-        onViewSpaStorefront={handleViewSpaStorefront} 
-        subscription={subscription}
-        onNavigateToSubscription={() => setActiveSection('subscription')}
-        onViewOrders={() => setActiveSection('orders')}
-        onNavigateToStorefronts={() => setActiveSection('storefront')}
-      />;
+        return <DashboardPanel
+          currentUser={currentUser}
+          onViewStorefront={handleViewStorefront}
+          onViewSpaStorefront={handleViewSpaStorefront}
+          subscription={subscription}
+          onNavigateToSubscription={() => setActiveSection('subscription')}
+          onViewOrders={() => setActiveSection('orders')}
+          onNavigateToStorefronts={() => setActiveSection('storefront')}
+        />;
     }
   };
 
   return (
     <>
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] gap-8 px-6 py-10">
-      <Sidebar
-        activeSection={activeSection}
-        onSelect={setActiveSection}
-        onSignOut={onSignOut}
-        currentUser={currentUser}
-      />
-      <main className="flex-1 space-y-6 pb-16">{renderSection()}</main>
-    </div>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] gap-8 px-6 py-10">
+        <Sidebar
+          activeSection={activeSection}
+          onSelect={setActiveSection}
+          onSignOut={onSignOut}
+          currentUser={currentUser}
+        />
+        <main className="flex-1 space-y-6 pb-16">{renderSection()}</main>
+      </div>
       <AddProductModal
         isOpen={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
@@ -3825,10 +3808,7 @@ export function DashboardLayout({ currentUser, onSignOut, onViewStorefront, onVi
         onSuccess={async (service) => {
           setIsAddServiceOpen(false);
           // Service is already saved to database via API
-          // Refresh the services list by reloading the page to ensure all components update
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
+          // The service list will auto-refresh via its useEffect hook
         }}
       />
     </>

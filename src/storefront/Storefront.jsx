@@ -82,7 +82,7 @@ export function Storefront({ onClose, customStorefront = null }) {
   );
   // Fetch products from backend
   const { products: allProducts, loading: productsLoading, error: productsError } = useProducts();
-  
+
   // Filter out Beauty Spa Services - this is for products only
   const productItems = useMemo(
     () => (allProducts || []).filter((p) => p.category !== 'Beauty Spa Services'),
@@ -124,7 +124,7 @@ export function Storefront({ onClose, customStorefront = null }) {
   // Storefront preferences
   const [currency, setCurrency] = useState('ZWG $');
   const [language, setLanguage] = useState('English');
-  
+
   // Product details modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -175,14 +175,14 @@ export function Storefront({ onClose, customStorefront = null }) {
         )
       );
       const variantText = [color, size].filter(Boolean).join(', ');
-      const message = variantText 
+      const message = variantText
         ? `Updated quantity: ${product.name} (${variantText})`
         : `Updated quantity: ${product.name}`;
       showNotification(message);
     } else {
       // New item, add to cart with specified quantity
       // Use crypto.randomUUID() for unique cartId to avoid collisions
-      const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+      const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID().substring(0, 8)
         : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const cartId = `${product.id}-${color}-${size}-${uniqueId}`;
@@ -195,7 +195,7 @@ export function Storefront({ onClose, customStorefront = null }) {
       };
       setCartItems((prev) => [...prev, newItem]);
       const variantText = [color, size].filter(Boolean).join(', ');
-      const message = variantText 
+      const message = variantText
         ? `Added to cart: ${product.name} (${variantText})`
         : `Added to cart: ${product.name}`;
       showNotification(message);
@@ -245,7 +245,7 @@ export function Storefront({ onClose, customStorefront = null }) {
     // Close the product modal first
     setIsModalOpen(false);
     setSelectedProduct(null);
-    
+
     // Add product to cart using functional update
     setCartItems((prevItems) => {
       // Check if item with same product ID, color, and size already exists
@@ -262,7 +262,7 @@ export function Storefront({ onClose, customStorefront = null }) {
         );
       } else {
         // New item, add to cart with specified quantity
-        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID 
+        const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID().substring(0, 8)
           : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const cartId = `${product.id}-${color}-${size}-${uniqueId}`;
@@ -276,7 +276,7 @@ export function Storefront({ onClose, customStorefront = null }) {
         return [...prevItems, newItem];
       }
     });
-    
+
     // Open checkout after a short delay to ensure state updates complete
     // and modal is fully closed
     setTimeout(() => {
@@ -318,7 +318,7 @@ export function Storefront({ onClose, customStorefront = null }) {
 
   const handleDownloadLineSheet = () => {
     showNotification('Preparing line sheet download...');
-    
+
     setTimeout(() => {
       // Helper function to escape HTML
       const escapeHtml = (text) => {
@@ -564,7 +564,7 @@ export function Storefront({ onClose, customStorefront = null }) {
   </div>
 </body>
 </html>`;
-      
+
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -574,13 +574,13 @@ export function Storefront({ onClose, customStorefront = null }) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       showNotification('Line sheet downloaded successfully!');
     }, 500);
   };
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  
+
   // Image trail items - product and spa related images from Unsplash
   const imageTrailItems = useMemo(() => [
     // Beauty products and skincare
@@ -622,7 +622,7 @@ export function Storefront({ onClose, customStorefront = null }) {
   const heroRef = useRef(null);
   const productsGridRef = useRef(null);
   const productsSectionRef = useRef(null);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
@@ -631,7 +631,7 @@ export function Storefront({ onClose, customStorefront = null }) {
         const heroTop = rect.top + scrolled;
         const heroHeight = rect.height;
         const windowHeight = window.innerHeight;
-        
+
         // Only apply parallax when hero is in viewport
         if (scrolled < heroTop + heroHeight && scrolled + windowHeight > heroTop) {
           const parallax = (scrolled - heroTop) * 0.3;
@@ -706,7 +706,7 @@ export function Storefront({ onClose, customStorefront = null }) {
 
       card.addEventListener('mouseenter', handleMouseEnter);
       card.addEventListener('mouseleave', handleMouseLeave);
-      
+
       hoverHandlers.push({ card, handleMouseEnter, handleMouseLeave });
     });
 
@@ -715,7 +715,7 @@ export function Storefront({ onClose, customStorefront = null }) {
       if (scrollTrigger) {
         scrollTrigger.kill();
       }
-      
+
       // Cleanup event listeners
       hoverHandlers.forEach(({ card, handleMouseEnter, handleMouseLeave }) => {
         card.removeEventListener('mouseenter', handleMouseEnter);
@@ -727,12 +727,12 @@ export function Storefront({ onClose, customStorefront = null }) {
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
       {/* Image Trail Background - full viewport background */}
-      <div 
-        className="fixed inset-0 z-0" 
-        style={{ 
-          height: '100vh', 
-          width: '100vw', 
-          overflow: 'hidden', 
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
           pointerEvents: 'none',
           position: 'fixed',
           top: 0,
@@ -742,9 +742,9 @@ export function Storefront({ onClose, customStorefront = null }) {
           zIndex: 0
         }}
       >
-        <div style={{ 
-          pointerEvents: 'auto', 
-          height: '100%', 
+        <div style={{
+          pointerEvents: 'auto',
+          height: '100%',
           width: '100%',
           position: 'relative'
         }}>
@@ -754,16 +754,16 @@ export function Storefront({ onClose, customStorefront = null }) {
           />
         </div>
         {/* Subtle overlay to ensure content readability */}
-        <div 
-          className="absolute inset-0" 
-          style={{ 
+        <div
+          className="absolute inset-0"
+          style={{
             background: 'radial-gradient(circle at center, transparent 0%, rgba(11, 35, 62, 0.3) 100%)',
             pointerEvents: 'none',
             zIndex: 1
-          }} 
+          }}
         />
       </div>
-      
+
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl relative">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <Logo className="hidden sm:flex" />
@@ -801,7 +801,7 @@ export function Storefront({ onClose, customStorefront = null }) {
           <div className="absolute inset-0" ref={heroRef}>
             {/* 3D Spline Background - can be enabled via environment variable */}
             {import.meta.env.VITE_PRODUCTS_SPLINE_SCENE && (
-              <SplineBackground 
+              <SplineBackground
                 sceneUrl={import.meta.env.VITE_PRODUCTS_SPLINE_SCENE}
                 className="z-0"
                 interactive={false}
@@ -852,12 +852,12 @@ export function Storefront({ onClose, customStorefront = null }) {
               Each piece ships with merchandising stories and sensory rituals for your guests.
             </p>
             <div className="storefront-hero-text flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.6s' }}>
-              <Button 
+              <Button
                 onClick={() => {
                   if (productsSectionRef.current) {
-                    productsSectionRef.current.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'start' 
+                    productsSectionRef.current.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start'
                     });
                   }
                 }}
@@ -885,7 +885,7 @@ export function Storefront({ onClose, customStorefront = null }) {
             <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.03] p-6 backdrop-blur-md shadow-xl">
               <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-brand-500/10 blur-3xl" />
               <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-brand-400/10 blur-2xl" />
-              
+
               <div className="relative mb-5 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400/20 to-brand-600/20 shadow-lg">
                   <svg className="h-5 w-5 text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -897,7 +897,7 @@ export function Storefront({ onClose, customStorefront = null }) {
                   <p className="text-xs text-white/50">Select a category to filter</p>
                 </div>
               </div>
-              
+
               <div className="no-scrollbar relative -mx-2 flex gap-3 overflow-x-auto px-2 pb-1">
                 {categories.map((cat) => {
                   const isActive = activeCategory === cat;
@@ -924,8 +924,8 @@ export function Storefront({ onClose, customStorefront = null }) {
                       <span
                         className={[
                           'inline-flex min-w-[2rem] items-center justify-center rounded-full px-2.5 py-1 text-xs font-bold transition-colors',
-                          isActive 
-                            ? 'bg-white/25 text-white' 
+                          isActive
+                            ? 'bg-white/25 text-white'
                             : 'bg-white/10 text-white/60 group-hover:bg-white/15 group-hover:text-white/80',
                         ].join(' ')}
                       >
@@ -957,47 +957,47 @@ export function Storefront({ onClose, customStorefront = null }) {
               />
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr relative z-10" style={{ perspective: '1000px' }}>
-            {productsLoading ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20">
-                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
-                <p className="text-white/60">Loading products...</p>
-              </div>
-            ) : productsError ? (
-              <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
-                <p className="text-red-200 font-semibold">Error loading products</p>
-                <p className="mt-2 text-sm text-red-200/70">{productsError}</p>
-              </div>
-            ) : paginatedProducts.length === 0 ? (
-              <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-                <p className="text-white/60">No products found in this category.</p>
-              </div>
-            ) : (
-              paginatedProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: index * 0.1,
-                    type: "spring",
-                    stiffness: 100
-                  }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="storefront-card"
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                  }}
-                >
-                  <ProductCard
-                    product={product}
-                    onViewDetails={handleViewProductDetails}
-                    onAddToCart={(product) => addToCart(product)}
-                  />
-                </motion.div>
-              ))
-            )}
+              {productsLoading ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20">
+                  <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
+                  <p className="text-white/60">Loading products...</p>
+                </div>
+              ) : productsError ? (
+                <div className="col-span-full rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+                  <p className="text-red-200 font-semibold">Error loading products</p>
+                  <p className="mt-2 text-sm text-red-200/70">{productsError}</p>
+                </div>
+              ) : paginatedProducts.length === 0 ? (
+                <div className="col-span-full rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                  <p className="text-white/60">No products found in this category.</p>
+                </div>
+              ) : (
+                paginatedProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 100
+                    }}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="storefront-card"
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                    }}
+                  >
+                    <ProductCard
+                      product={product}
+                      onViewDetails={handleViewProductDetails}
+                      onAddToCart={(product) => addToCart(product)}
+                    />
+                  </motion.div>
+                ))
+              )}
             </div>
           </div>
 
