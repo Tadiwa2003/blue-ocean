@@ -31,7 +31,7 @@ export function Impact() {
             </h2>
             <p className="mt-4 text-sm text-white/70">
               Every partnership we accept is measured by its community impact and guest delight. From artisan collectives in
-              Lamu to scent studios in Cape Town, we invest in thoughtful growth and regenerative supply chains.
+              Harare to scent studios in Cape Town, we invest in thoughtful growth and regenerative supply chains.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">

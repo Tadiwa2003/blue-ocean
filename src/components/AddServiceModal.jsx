@@ -158,7 +158,7 @@ export function AddServiceModal({ isOpen, onClose, onSuccess, storefrontId = nul
       return;
     }
 
-    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+    const allowedCurrencies = ['USD', 'ZAR'];
     if (formData.currency && !allowedCurrencies.includes(formData.currency)) {
       setError(`Currency must be one of: ${allowedCurrencies.join(', ')}`);
       return;
@@ -359,8 +359,7 @@ export function AddServiceModal({ isOpen, onClose, onSuccess, storefrontId = nul
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-brand-400/50 focus:bg-white/10 outline-none transition"
             >
               <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
+              <option value="ZAR">ZAR (R)</option>
             </select>
           </div>
 

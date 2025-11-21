@@ -18,10 +18,17 @@ const fallbackImage =
     </svg>
   `);
 
-export function ProductCard({ product, onViewDetails, onAddToCart }) {
+export function ProductCard({ product, onViewDetails, onAddToCart, theme }) {
   const [imageSrc, setImageSrc] = useState(product.image || fallbackImage);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const cardTheme = {
+    background: theme?.card?.background || 'rgba(11,35,62,0.7)',
+    border: theme?.card?.border || 'rgba(255,255,255,0.08)',
+    shadow:
+      theme?.card?.shadow || '0 20px 60px rgba(29,160,230,0.3)',
+    accent: theme?.accent || '#1da0e6',
+  };
 
   const handleViewDetails = () => {
     if (onViewDetails) {
@@ -39,7 +46,14 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
   };
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-3xl bg-ocean/50 border border-white/8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-brand-400/40 hover:shadow-[0_20px_60px_rgba(29,160,230,0.3)]">
+    <article
+      className="group relative flex flex-col overflow-hidden rounded-3xl backdrop-blur-sm transition-all duration-500 hover:-translate-y-2"
+      style={{
+        background: cardTheme.background,
+        border: `1px solid ${cardTheme.border}`,
+        boxShadow: cardTheme.shadow,
+      }}
+    >
       <div className="relative h-56 overflow-hidden cursor-pointer" onClick={handleViewDetails}>
         <img
           src={imageSrc}
@@ -82,7 +96,15 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
               <span className="text-white/60">Price unavailable</span>
             )}
           </span>
-          <Button variant="secondary" onClick={handleViewDetails} className="text-xs px-3 py-1.5">
+          <Button
+            variant="secondary"
+            onClick={handleViewDetails}
+            className="text-xs px-3 py-1.5"
+            style={{
+              borderColor: `${cardTheme.accent}40`,
+              color: cardTheme.accent,
+            }}
+          >
             View Details
           </Button>
         </div>
@@ -93,6 +115,10 @@ export function ProductCard({ product, onViewDetails, onAddToCart }) {
             onClick={handleAddToCart}
             disabled={isAdding}
             className="w-full justify-center"
+            style={{
+              background: cardTheme.accent,
+              boxShadow: `0 10px 30px ${cardTheme.accent}40`,
+            }}
             aria-label={`Add ${product.name} to cart`}
           >
             {isAdding ? (

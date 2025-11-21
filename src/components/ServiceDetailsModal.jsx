@@ -28,12 +28,15 @@ const fallbackImage =
     </svg>
   `);
 
-const formatCurrency = (value, currency = 'USD') =>
-  new Intl.NumberFormat('en-US', {
+const formatCurrency = (value, currency = 'USD') => {
+  // Use appropriate locale for currency formatting
+  const locale = currency === 'ZAR' ? 'en-ZA' : 'en-US';
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
   }).format(value);
+};
 
 export function ServiceDetailsModal({ service, open, onClose, onBook, intent = 'view' }) {
   const [selectedImage, setSelectedImage] = useState(service?.image || fallbackImage);

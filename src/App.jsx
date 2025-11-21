@@ -15,11 +15,11 @@ import { ContactModal } from './components/ContactModal.jsx';
 import { SubscriptionRequiredModal } from './components/SubscriptionRequiredModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
+import { AnayaFindsStorefront } from './storefront/AnayaFindsStorefront.jsx';
 import { UserStorefront } from './storefront/UserStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
 import { CounterLoader } from './components/CounterLoader.jsx';
-import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
-import { ReactPlugin } from '@21st-extension/react';
+import { TwentyFirstToolbarWrapper } from './components/TwentyFirstToolbarWrapper.jsx';
 import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
 import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
@@ -185,103 +185,6 @@ function AppContent() {
     }
   }, [isAuthenticated, currentUser]);
 
-  // Verify 21st.dev extension is loaded and monitor connection
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Initial connection status log
-      const logConnectionStatus = () => {
-        const status = {
-          toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
-          reactPluginAvailable: typeof ReactPlugin !== 'undefined',
-          port: window.location.port || '5178',
-          host: window.location.hostname,
-          protocol: window.location.protocol,
-          url: window.location.href,
-          environment: process.env.NODE_ENV,
-          timestamp: new Date().toISOString(),
-        };
-        
-        console.log('%c✅ 21st.dev Extension Status', 'color: #4CAF50; font-weight: bold; font-size: 14px;', status);
-        console.log('%c🔗 Connection Info', 'color: #2196F3; font-weight: bold;', {
-          extensionInstalled: 'Check Cursor Extensions (Cmd+Shift+X)',
-          extensionEnabled: 'Make sure 21st extension is enabled',
-          devServerRunning: `http://localhost:${status.port}`,
-          browserOpen: status.url,
-          connectionPort: '5178',
-          extensionHostPort: '5747 (Cursor)',
-        });
-      };
-      
-      // Log initial status
-      logConnectionStatus();
-      
-      // Enhanced toolbar detection with multiple strategies
-      const detectToolbar = () => {
-        const selectors = [
-          '[data-21st-toolbar]',
-          '[data-21st]',
-          '[class*="21st"]',
-          '[id*="21st"]',
-          '[class*="toolbar"]',
-          'div[data-extension="21st"]',
-          'div[class*="TwentyFirst"]',
-        ];
-        
-        for (const selector of selectors) {
-          try {
-            const element = document.querySelector(selector);
-            if (element && (element.offsetParent !== null || element.style.display !== 'none')) {
-              return { found: true, selector, element };
-            }
-          } catch (e) {
-            // Ignore selector errors
-          }
-        }
-        
-        return { found: false, selector: null, element: null };
-      };
-      
-      // Monitor toolbar with extended retry logic
-      let checkCount = 0;
-      const maxChecks = 15; // Increased attempts
-      const checkInterval = 2000; // Check every 2 seconds
-      let connectionEstablished = false;
-      
-      const monitorToolbar = setInterval(() => {
-        checkCount++;
-        const result = detectToolbar();
-        
-        if (result.found && !connectionEstablished) {
-          connectionEstablished = true;
-          console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-          console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
-            status: 'Connected',
-            selector: result.selector,
-            timestamp: new Date().toISOString(),
-          });
-          clearInterval(monitorToolbar);
-        } else if (checkCount >= maxChecks && !connectionEstablished) {
-          console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
-          console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
-            step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
-            step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
-            step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
-            step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
-            step5: '5. Verify dev server is running: npm run dev',
-            step6: '6. Check browser is at: http://localhost:5178',
-            step7: '7. Hard refresh browser: Cmd+Shift+R',
-            step8: '8. Check console for connection status',
-          });
-          clearInterval(monitorToolbar);
-        }
-      }, checkInterval);
-      
-      // Cleanup on unmount
-      return () => {
-        clearInterval(monitorToolbar);
-      };
-    }
-  }, []);
 
   const openStorefront = (type = 'products', storefrontData = null) => {
     setStorefrontType(type);
@@ -313,32 +216,8 @@ function AppContent() {
         <div className="pointer-events-none fixed inset-0 -z-10 opacity-70">
           <ShaderAnimation />
         </div>
-        {/* 21st.dev Toolbar - Requires Cursor/VSCode extension to be installed and active */}
-        {typeof window !== 'undefined' && (
-          <TwentyFirstToolbar 
-            config={{ 
-              plugins: [ReactPlugin],
-              // Connection settings - enable auto-connect
-              autoConnect: true,
-              // Development mode settings
-              devMode: process.env.NODE_ENV === 'development',
-              // Connection retry settings
-              reconnect: true,
-              reconnectInterval: 3000,
-              maxReconnectAttempts: 10,
-              // Enable debugging in development
-              debug: process.env.NODE_ENV === 'development',
-              // Connection timeout
-              connectionTimeout: 10000,
-              // Server configuration
-              server: {
-                port: 5178,
-                host: 'localhost',
-              },
-            }} 
-            key="21st-toolbar" // Stable key for consistent rendering
-          />
-        )}
+        {/* 21st.dev Toolbar - AI-powered editing toolbar (development only) */}
+        <TwentyFirstToolbarWrapper />
       <SignInModal
         open={isModalOpen}
         onClose={() => {
@@ -367,6 +246,9 @@ function AppContent() {
         ) : storefrontType === 'spa' ? (
           // Platform spa storefront
           <BeautySpaStorefront onClose={closeStorefront} />
+        ) : storefrontType === 'clothing' ? (
+          // Platform Anaya Finds clothing storefront
+          <AnayaFindsStorefront onClose={closeStorefront} />
         ) : (
           // Platform products storefront
           <Storefront onClose={closeStorefront} />

@@ -16,6 +16,7 @@ import bookingRoutes from './routes/bookings.js';
 import storefrontRoutes from './routes/storefronts.js';
 import elevenlabsRoutes from './routes/elevenlabs.js';
 import adminRoutes from './routes/admin.js';
+import customerRoutes from './routes/customers.js';
 
 // Load environment variables from server/.env
 
@@ -91,6 +92,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/storefronts', storefrontRoutes);
 app.use('/api/elevenlabs', elevenlabsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', customerRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

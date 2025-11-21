@@ -44,7 +44,7 @@ const serviceSchema = new mongoose.Schema({
   currency: {
     type: String,
     default: 'USD',
-    enum: ['USD', 'EUR', 'GBP'],
+    enum: ['USD', 'ZAR'],
   },
   image: {
     type: String,
