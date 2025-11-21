@@ -34,6 +34,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   const [activeTab, setActiveTab] = useState('description');
   const [quantity, setQuantity] = useState(1);
   const containerRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const imageGallery = [product?.image, product?.image, product?.image].filter(Boolean).slice(0, 3);
 
   // Get actual variants for this product
@@ -145,6 +146,34 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
     };
   }, [open]);
 
+  // Ensure mouse wheel scrolling works on the modal
+  useEffect(() => {
+    if (!open || !scrollContainerRef.current) return;
+
+    const scrollContainer = scrollContainerRef.current;
+
+    const handleWheel = (e) => {
+      // Let the browser handle scrolling naturally on the scroll container
+      // This ensures smooth mouse wheel scrolling
+      const { scrollHeight, clientHeight } = scrollContainer;
+      const isScrollable = scrollHeight > clientHeight;
+      
+      if (isScrollable) {
+        // If the container is scrollable, ensure it handles the scroll
+        // The CSS overflow-y: auto will handle the actual scrolling
+        // We just need to ensure the event doesn't bubble to body
+        e.stopPropagation();
+      }
+    };
+
+    // Use capture phase to ensure we catch the event early
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: true, capture: true });
+    
+    return () => {
+      scrollContainer.removeEventListener('wheel', handleWheel, { capture: true });
+    };
+  }, [open]);
+
   if (!open || !product) return null;
 
   const handleAddToCart = () => {
@@ -162,7 +191,12 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-start justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
+    <div 
+      ref={scrollContainerRef}
+      className="fixed inset-0 z-[1000] flex items-start justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto py-6 product-modal-scroll-container" 
+      style={{ scrollBehavior: 'smooth' }}
+      tabIndex={-1}
+    >
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -180,35 +214,54 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
         }
         .modal-backdrop {
           animation: fadeIn 0.3s ease-out;
+          pointer-events: auto;
         }
         .modal-content {
           animation: slideUp 0.3s ease-out;
         }
-        /* Smooth scrolling for modal content */
+        /* Smooth scrolling for outer container */
+        .product-modal-scroll-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+        .product-modal-scroll-container::-webkit-scrollbar {
+          width: 10px;
+        }
+        .product-modal-scroll-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 5px;
+        }
+        .product-modal-scroll-container::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.4);
+          border-radius: 5px;
+        }
+        .product-modal-scroll-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.6);
+        }
+        /* Modal container should not scroll */
         .product-modal-container {
+          scroll-behavior: smooth;
+          overflow: visible;
+        }
+        /* Smooth scrolling for content area */
+        .product-details-content {
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
         }
-        .product-modal-container::-webkit-scrollbar {
-          width: 8px;
-        }
-        .product-modal-container::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 4px;
-        }
-        .product-modal-container::-webkit-scrollbar-thumb {
-          background: rgba(29, 160, 230, 0.3);
-          border-radius: 4px;
-        }
-        .product-modal-container::-webkit-scrollbar-thumb:hover {
-          background: rgba(29, 160, 230, 0.5);
-        }
       `}</style>
       {/* Backdrop */}
-      <div className="absolute inset-0 modal-backdrop" onClick={onClose} />
+      <div 
+        className="absolute inset-0 modal-backdrop" 
+        onClick={onClose}
+      />
 
       {/* Modal Content */}
-      <div ref={containerRef} className="product-modal-container relative w-full max-w-7xl my-6 mx-4 bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl modal-content">
+      <div 
+        ref={containerRef} 
+        className="product-modal-container relative w-full max-w-7xl my-6 mx-4 bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl modal-content"
+      >
         {/* Close Button */}
         <button
           type="button"
@@ -221,7 +274,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           </svg>
         </button>
 
-        <div className="grid lg:grid-cols-2 gap-0 min-h-0">
+        <div className="grid lg:grid-cols-2 gap-0">
           {/* Left: Image Gallery */}
           <article className="relative bg-gradient-to-br from-ocean/50 to-midnight/80 p-6 sm:p-8 lg:p-12">
             <div className="lg:sticky lg:top-6">
@@ -311,7 +364,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           </article>
 
           {/* Right: Product Details */}
-          <div className="flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50 overflow-y-auto max-h-[calc(100vh-3rem)] lg:max-h-none">
+          <div className="product-details-content flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50">
             <div className="flex-1 space-y-6">
               {/* Category, Name, Rating & Wishlist */}
               <header className="flex justify-between items-start gap-4">
