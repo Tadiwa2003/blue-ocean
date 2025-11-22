@@ -335,7 +335,10 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1002] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[1002] flex items-center justify-center p-4 overflow-y-auto py-6 checkout-scroll-container" 
+      style={{ scrollBehavior: 'smooth' }}
+    >
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -357,6 +360,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         }
         .checkout-backdrop {
           animation: fadeIn 0.3s ease-out;
+          pointer-events: auto;
         }
         .animated-blob {
           animation: blob 7s infinite;
@@ -368,6 +372,46 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         .animated-blob-delay-2 {
           animation: blob 7s infinite;
           animation-delay: 4s;
+        }
+        /* Smooth scrolling for checkout container */
+        .checkout-scroll-container {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+        .checkout-scroll-container::-webkit-scrollbar {
+          width: 10px;
+        }
+        .checkout-scroll-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 5px;
+        }
+        .checkout-scroll-container::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.4);
+          border-radius: 5px;
+        }
+        .checkout-scroll-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.6);
+        }
+        /* Smooth scrolling for content area */
+        .checkout-content-area {
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .checkout-content-area::-webkit-scrollbar {
+          width: 8px;
+        }
+        .checkout-content-area::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .checkout-content-area::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.3);
+          border-radius: 4px;
+        }
+        .checkout-content-area::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.5);
         }
       `}</style>
 
@@ -382,7 +426,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
       {/* Checkout Content */}
       <div
         ref={containerRef}
-        className="relative w-full max-w-6xl max-h-[90vh] bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-6xl max-h-[90vh] bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-3xl shadow-2xl overflow-visible flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
@@ -437,7 +481,7 @@ export function Checkout({ cartItems, isOpen, onClose, onOrderComplete }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="checkout-content-area flex-1 overflow-y-auto p-6" style={{ scrollBehavior: 'smooth' }}>
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Form Section */}
             <div ref={formRef} className="lg:col-span-2 space-y-6">

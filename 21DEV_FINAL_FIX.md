@@ -148,3 +148,9 @@ npm run dev
 **Next Step**: Enable extension in Cursor and reload
 
 
+
+
+
+
+
+
