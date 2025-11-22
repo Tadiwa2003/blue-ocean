@@ -10,7 +10,7 @@ export const SUBSCRIPTION_TIERS = {
 };
 
 export const SUBSCRIPTION_FEATURES = {
-    // Basic Tier Features
+    // Basic Tier Features - GOOD (Essential tools to get started)
     [SUBSCRIPTION_TIERS.BASIC]: {
         // Storefront Limits
         maxStorefronts: 1,
@@ -18,118 +18,175 @@ export const SUBSCRIPTION_FEATURES = {
         maxServices: 5,
         maxProductImages: 3,
         maxServiceImages: 2,
+        maxCategories: 5,
+        maxOrders: 50, // per month
 
-        // Customization
+        // Customization - Basic but functional
         customThemes: false,
         customDomain: false,
-        customBranding: false,
+        customBranding: true, // Can set colors and logo
         removeWatermark: false,
+        customFonts: false,
+        advancedStyling: false,
 
-        // Analytics
+        // Analytics - Essential insights
         basicAnalytics: true,
         advancedAnalytics: false,
         customReports: false,
         exportData: false,
+        realTimeAnalytics: false,
+        customerInsights: false,
+        salesForecasting: false,
 
-        // Features
+        // Features - Core functionality
         inventoryManagement: false,
-        orderTracking: false,
+        orderTracking: true, // Basic tracking
         customerManagement: false,
         emailMarketing: false,
         smsNotifications: false,
         multiCurrency: false,
         multiLanguage: false,
+        discountCodes: true, // Basic discounts
+        giftCards: false,
+        subscriptionProducts: false,
 
-        // Support
+        // Support - Standard support
         emailSupport: true,
         prioritySupport: false,
         phoneSupport: false,
         dedicatedManager: false,
+        liveChat: false,
+        responseTime: '48 hours',
 
-        // Integration
+        // Integration - Limited
         apiAccess: false,
         webhooks: false,
         customIntegrations: false,
         thirdPartyApps: false,
+        zapierIntegration: false,
 
-        // Advanced
+        // Advanced - Not available
         multiUserAccounts: false,
         roleBasedAccess: false,
         whiteLabel: false,
         customCheckout: false,
+        automatedWorkflows: false,
+        aiAssistant: false,
+
+        // Security & Compliance
+        ssl: true,
+        backups: 'Weekly',
+        dataRetention: '30 days',
+        twoFactorAuth: true,
+        fraudDetection: false,
+        pciCompliance: true,
     },
 
-    // Professional Tier Features
+    // Professional Tier Features - BETTER (Powerful growth tools)
     [SUBSCRIPTION_TIERS.PROFESSIONAL]: {
-        // Storefront Limits
-        maxStorefronts: 3,
+        // Storefront Limits - Generous
+        maxStorefronts: 5, // Increased from 3
         maxProducts: -1, // Unlimited
         maxServices: -1, // Unlimited
-        maxProductImages: 10,
-        maxServiceImages: 8,
+        maxProductImages: 15, // Increased from 10
+        maxServiceImages: 12, // Increased from 8
+        maxCategories: -1, // Unlimited
+        maxOrders: -1, // Unlimited
 
-        // Customization
+        // Customization - Full control
         customThemes: true,
         customDomain: true,
         customBranding: true,
         removeWatermark: true,
+        customFonts: true,
+        advancedStyling: true,
 
-        // Analytics
+        // Analytics - Comprehensive insights
         basicAnalytics: true,
         advancedAnalytics: true,
         customReports: true,
         exportData: true,
+        realTimeAnalytics: true,
+        customerInsights: true,
+        salesForecasting: true,
 
-        // Features
+        // Features - Advanced tools
         inventoryManagement: true,
-        orderTracking: true,
+        orderTracking: true, // Advanced tracking
         customerManagement: true,
         emailMarketing: true,
-        smsNotifications: false,
+        smsNotifications: false, // Reserved for Enterprise
         multiCurrency: true,
-        multiLanguage: false,
+        multiLanguage: true,
+        discountCodes: true,
+        giftCards: true,
+        subscriptionProducts: true,
 
-        // Support
+        // Support - Priority support
         emailSupport: true,
         prioritySupport: true,
-        phoneSupport: false,
+        phoneSupport: false, // Reserved for Enterprise
         dedicatedManager: false,
+        liveChat: true,
+        responseTime: '12 hours',
 
-        // Integration
+        // Integration - Full API access
         apiAccess: true,
         webhooks: true,
-        customIntegrations: false,
+        customIntegrations: true,
         thirdPartyApps: true,
+        zapierIntegration: true,
 
-        // Advanced
+        // Advanced - Team collaboration
         multiUserAccounts: true,
+        maxUsers: 10,
         roleBasedAccess: true,
-        whiteLabel: false,
+        whiteLabel: false, // Reserved for Enterprise
         customCheckout: true,
+        automatedWorkflows: true,
+        aiAssistant: false, // Reserved for Enterprise
+
+        // Security & Compliance
+        ssl: true,
+        backups: 'Daily',
+        dataRetention: '1 year',
+        twoFactorAuth: true,
+        fraudDetection: true,
+        pciCompliance: true,
     },
 
-    // Enterprise Tier Features
+    // Enterprise Tier Features - BEST OF THE BEST (Premium everything)
     [SUBSCRIPTION_TIERS.ENTERPRISE]: {
-        // Storefront Limits
+        // Storefront Limits - Unlimited everything
         maxStorefronts: -1, // Unlimited
         maxProducts: -1, // Unlimited
         maxServices: -1, // Unlimited
         maxProductImages: -1, // Unlimited
         maxServiceImages: -1, // Unlimited
+        maxCategories: -1, // Unlimited
+        maxOrders: -1, // Unlimited
 
-        // Customization
+        // Customization - Complete white-label
         customThemes: true,
         customDomain: true,
         customBranding: true,
         removeWatermark: true,
+        customFonts: true,
+        advancedStyling: true,
 
-        // Analytics
+        // Analytics - Enterprise-grade insights
         basicAnalytics: true,
         advancedAnalytics: true,
         customReports: true,
         exportData: true,
+        realTimeAnalytics: true,
+        customerInsights: true,
+        salesForecasting: true,
+        predictiveAnalytics: true,
+        customDashboards: true,
+        dataWarehouse: true,
 
-        // Features
+        // Features - Premium everything
         inventoryManagement: true,
         orderTracking: true,
         customerManagement: true,
@@ -137,24 +194,64 @@ export const SUBSCRIPTION_FEATURES = {
         smsNotifications: true,
         multiCurrency: true,
         multiLanguage: true,
+        discountCodes: true,
+        giftCards: true,
+        subscriptionProducts: true,
+        advancedShipping: true,
+        dropshipping: true,
 
-        // Support
+        // Support - VIP treatment
         emailSupport: true,
         prioritySupport: true,
         phoneSupport: true,
         dedicatedManager: true,
+        liveChat: true,
+        responseTime: '1 hour',
+        slaGuarantee: '99.9%',
+        onboarding: true,
+        training: true,
 
-        // Integration
+        // Integration - Custom development
         apiAccess: true,
         webhooks: true,
         customIntegrations: true,
         thirdPartyApps: true,
+        zapierIntegration: true,
+        customApiDevelopment: true,
+        graphqlApi: true,
 
-        // Advanced
+        // Advanced - Enterprise features
         multiUserAccounts: true,
+        maxUsers: -1, // Unlimited
         roleBasedAccess: true,
         whiteLabel: true,
         customCheckout: true,
+        automatedWorkflows: true,
+        aiAssistant: true,
+        advancedAutomation: true,
+        customReporting: true,
+
+        // Security & Compliance - Maximum security
+        ssl: true,
+        backups: 'Real-time',
+        dataRetention: 'Unlimited',
+        twoFactorAuth: true,
+        fraudDetection: true,
+        pciCompliance: true,
+        soc2Compliance: true,
+        gdprCompliance: true,
+        hipaaCompliance: true,
+        customSecurity: true,
+        penetrationTesting: true,
+
+        // Exclusive Enterprise Features
+        priorityFeatureRequests: true,
+        betaAccess: true,
+        customDevelopment: true,
+        dedicatedInfrastructure: true,
+        loadBalancing: true,
+        cdn: true,
+        customSla: true,
     },
 };
 

@@ -18,25 +18,30 @@ const subscriptionPlans = [
     price: 29,
     yearlyPrice: 290,
     period: 'month',
-    description: 'Perfect for small businesses getting started',
+    description: 'Essential tools to get started',
     icon: Sparkles,
     color: 'from-brand-500/30 to-brand-500/10',
     features: [
       '1 Storefront',
-      'Up to 10 products',
-      'Up to 5 services',
-      'Up to 3 images per product',
-      'Basic analytics & reports',
-      'Email support',
-      'Mobile-responsive design',
-      'Secure checkout',
+      'Up to 10 products & 5 services',
+      'Up to 3 images per item',
+      'Up to 50 orders/month',
+      'Basic order tracking',
+      'Basic analytics dashboard',
+      'Discount codes',
+      'Custom branding (colors & logo)',
+      'SSL security',
+      'Email support (48hr response)',
+      'Weekly backups',
+      '2-factor authentication',
     ],
     includes: [
-      'Everything you need to start:',
-      'Custom branding colors',
-      'Product categories',
-      'Service bookings',
+      'Perfect for getting started:',
+      'Mobile-responsive design',
+      'Secure checkout',
+      'Product categories (up to 5)',
       'Order management',
+      'PCI compliance',
     ],
     popular: false,
   },
@@ -46,31 +51,43 @@ const subscriptionPlans = [
     price: 79,
     yearlyPrice: 790,
     period: 'month',
-    description: 'Ideal for growing businesses',
+    description: 'Powerful tools for growing businesses',
     icon: Crown,
     color: 'from-purple-600/90 to-purple-500/90',
     features: [
-      'Up to 3 storefronts',
+      'Up to 5 storefronts',
       'Unlimited products & services',
-      'Up to 10 images per item',
-      'Custom themes & branding',
-      'Advanced analytics & reports',
+      'Up to 15 images per item',
+      'Unlimited orders',
+      'Advanced order tracking',
+      'Real-time analytics & insights',
+      'Sales forecasting',
+      'Customer insights',
       'Data export (CSV/Excel)',
       'Inventory management',
-      'Order tracking',
-      'Customer management',
+      'Customer management (CRM)',
       'Email marketing tools',
+      'Gift cards & subscriptions',
       'Multi-currency support',
-      'API access & webhooks',
-      'Priority email support',
+      'Multi-language support',
+      'Custom themes & fonts',
       'Custom domain',
+      'Remove watermark',
+      'API access & webhooks',
+      'Zapier integration',
+      'Live chat support',
+      'Priority support (12hr response)',
+      'Daily backups',
+      'Fraud detection',
     ],
     includes: [
       'Everything in Basic, plus:',
-      'Multi-user accounts (up to 5)',
+      'Multi-user accounts (up to 10)',
       'Role-based access control',
-      'Third-party app integrations',
+      'Automated workflows',
       'Custom checkout flow',
+      'Third-party integrations',
+      '1 year data retention',
     ],
     popular: true,
   },
@@ -80,30 +97,47 @@ const subscriptionPlans = [
     price: 199,
     yearlyPrice: 1990,
     period: 'month',
-    description: 'For large-scale operations',
+    description: 'Premium features for large operations',
     icon: Rocket,
     color: 'from-emerald-500/30 to-emerald-500/10',
     features: [
+      '✨ Unlimited everything',
       'Unlimited storefronts',
       'Unlimited products & services',
-      'Unlimited images',
-      'White-label options',
-      'Custom integrations',
-      'Advanced reporting & analytics',
-      'Multi-language support',
+      'Unlimited images & orders',
+      'Unlimited users',
+      'Predictive analytics',
+      'Custom dashboards',
+      'Data warehouse access',
+      'Advanced shipping & dropshipping',
       'SMS notifications',
+      'AI-powered assistant',
+      'Advanced automation',
+      'Custom API development',
+      'GraphQL API',
+      'White-label options',
+      'Custom development support',
       'Dedicated account manager',
       '24/7 phone support',
-      'Custom API development',
+      '1-hour response time',
+      '99.9% SLA guarantee',
+      'Onboarding & training',
+      'Real-time backups',
+      'SOC 2, GDPR, HIPAA compliance',
+      'Custom security & pen testing',
+      'Dedicated infrastructure',
+      'CDN & load balancing',
       'Priority feature requests',
-      'SLA guarantee (99.9% uptime)',
+      'Beta access to new features',
     ],
     includes: [
       'Everything in Professional, plus:',
-      'Unlimited user accounts',
-      'Advanced role permissions',
-      'Custom development support',
-      'Onboarding & training',
+      'VIP treatment & support',
+      'Custom SLA agreements',
+      'Unlimited data retention',
+      'Enterprise-grade security',
+      'Custom integrations',
+      'Dedicated resources',
     ],
     popular: false,
   },
@@ -123,8 +157,8 @@ const PricingSwitch = ({ onSwitch, isYearly, className }) => {
         <button
           onClick={() => handleSwitch("0")}
           className={`relative z-10 w-fit sm:h-12 cursor-pointer h-10 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors ${selected === "0"
-              ? "text-white"
-              : "text-white/60 hover:text-white"
+            ? "text-white"
+            : "text-white/60 hover:text-white"
             }`}
         >
           {selected === "0" && (
@@ -140,8 +174,8 @@ const PricingSwitch = ({ onSwitch, isYearly, className }) => {
         <button
           onClick={() => handleSwitch("1")}
           className={`relative z-10 w-fit cursor-pointer sm:h-12 h-10 flex-shrink-0 rounded-full sm:px-6 px-3 sm:py-2 py-1 font-medium transition-colors ${selected === "1"
-              ? "text-white"
-              : "text-white/60 hover:text-white"
+            ? "text-white"
+            : "text-white/60 hover:text-white"
             }`}
         >
           {selected === "1" && (
@@ -293,8 +327,8 @@ export function SubscriptionPlans({ onSelectPlan, currentPlan = null }) {
             <div
               key={plan.id}
               className={`plan-card relative flex flex-col justify-between ${plan.popular
-                  ? "scale-105 sm:scale-110 ring-2 ring-brand-400/50 bg-gradient-to-br from-ocean/95 via-brand-500/20 to-midnight/95 text-white shadow-[0_8px_32px_rgba(29,160,230,0.4)]"
-                  : "border border-white/10 shadow-none bg-gradient-to-br from-ocean/80 to-midnight/80 pt-4 text-white"
+                ? "scale-105 sm:scale-110 ring-2 ring-brand-400/50 bg-gradient-to-br from-ocean/95 via-brand-500/20 to-midnight/95 text-white shadow-[0_8px_32px_rgba(29,160,230,0.4)]"
+                : "border border-white/10 shadow-none bg-gradient-to-br from-ocean/80 to-midnight/80 pt-4 text-white"
                 } rounded-2xl sm:rounded-3xl p-6 sm:p-8 transition-all duration-300`}
             >
               <div>
@@ -333,8 +367,8 @@ export function SubscriptionPlans({ onSelectPlan, currentPlan = null }) {
                     {plan.includes.slice(1).map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start">
                         <span className={`h-6 w-6 rounded-full grid place-content-center mt-0.5 mr-3 shrink-0 ${plan.popular
-                            ? "bg-white/20 border border-white/30"
-                            : "bg-white/10 border border-white/20"
+                          ? "bg-white/20 border border-white/30"
+                          : "bg-white/10 border border-white/20"
                           }`}>
                           <CheckCheck className="h-4 w-4" />
                         </span>
@@ -363,8 +397,8 @@ export function SubscriptionPlans({ onSelectPlan, currentPlan = null }) {
                     onClick={() => handleSelectPlan(plan.id)}
                     disabled={isProcessing}
                     className={`w-full mb-2 p-4 text-base sm:text-lg rounded-xl font-semibold transition-all duration-300 ${plan.popular
-                        ? "bg-gradient-to-t from-white/90 to-white/70 shadow-lg shadow-brand-500/50 border border-white/40 text-midnight hover:from-white hover:to-white/90"
-                        : "bg-gradient-to-t from-brand-500/90 to-brand-400/80 shadow-lg shadow-brand-500/30 border border-brand-400/50 text-white hover:from-brand-400 hover:to-brand-300"
+                      ? "bg-gradient-to-t from-white/90 to-white/70 shadow-lg shadow-brand-500/50 border border-white/40 text-midnight hover:from-white hover:to-white/90"
+                      : "bg-gradient-to-t from-brand-500/90 to-brand-400/80 shadow-lg shadow-brand-500/30 border border-brand-400/50 text-white hover:from-brand-400 hover:to-brand-300"
                       } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing && selectedPlanId === plan.id ? 'Processing...' : 'Subscribe Now'}
