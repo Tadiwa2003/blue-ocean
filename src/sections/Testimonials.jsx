@@ -113,9 +113,35 @@ function SettledFlag({ ball }) {
     <motion.div
       key={`settled-${ball.id}`}
       initial={{ opacity: 0, y: 28 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 420 - ball.stackIndex * 20, damping: 30 + ball.stackIndex * 3, mass: 0.6 }}
-      className={`absolute flex -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_16px_38px_rgba(4,13,26,0.4)]`}
+      animate={{
+        opacity: 1,
+        y: [0, -12, 0], // Bouncing effect
+        scale: [1, 1.1, 1], // Slight scale on bounce
+      }}
+      transition={{
+        opacity: { duration: 0.3 },
+        y: {
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "loop",
+          ease: "easeInOut",
+          delay: ball.stackIndex * 0.1 + (ball.finalX / 100) * 0.5, // Staggered delay based on position
+        },
+        scale: {
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "loop",
+          ease: "easeInOut",
+          delay: ball.stackIndex * 0.1 + (ball.finalX / 100) * 0.5,
+        }
+      }}
+      whileHover={{
+        scale: 1.2,
+        y: -20,
+        rotate: [0, -5, 5, 0],
+        transition: { duration: 0.3 }
+      }}
+      className={`absolute flex -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_16px_38px_rgba(4,13,26,0.4)] cursor-pointer`}
       style={{ left: `${ball.finalX}%`, bottom: ball.bottomOffset, width: FLAG_SIZE, height: FLAG_SIZE }}
     >
       <span>{ball.flag}</span>
