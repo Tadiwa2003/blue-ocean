@@ -113,67 +113,66 @@ function SettledFlag({ ball, containerWidth, containerHeight }) {
     x: ball.finalX,
     y: 10, // Start near bottom
   });
-  const [velocity, setVelocity] = useState({
-    x: (Math.random() - 0.5) * 0.8, // Random horizontal velocity
-    y: -(Math.random() * 0.5 + 0.3), // Initial upward velocity
+
+  // Use refs for velocity to avoid state update issues
+  const velocityRef = useRef({
+    x: (Math.random() - 0.5) * 0.8,
+    y: -(Math.random() * 0.5 + 0.3),
   });
 
   useEffect(() => {
-    const gravity = 0.015; // Gravity strength
-    const damping = 0.98; // Energy loss on bounce
-    const friction = 0.99; // Friction
-    const minVelocity = 0.05; // Minimum velocity to keep moving
+    const gravity = 0.015;
+    const damping = 0.98;
+    const friction = 0.99;
+    const minVelocity = 0.05;
 
     const animate = () => {
       setPosition((prevPos) => {
-        setVelocity((prevVel) => {
-          let newVelX = prevVel.x * friction;
-          let newVelY = prevVel.y + gravity;
+        let vel = velocityRef.current;
 
-          let newX = prevPos.x + newVelX;
-          let newY = prevPos.y + newVelY;
+        // Apply physics
+        let newVelX = vel.x * friction;
+        let newVelY = vel.y + gravity;
+        let newX = prevPos.x + newVelX;
+        let newY = prevPos.y + newVelY;
 
-          // Bounce off left and right walls
-          if (newX <= 2 || newX >= 98) {
-            newVelX = -newVelX * damping;
-            newX = newX <= 2 ? 2 : 98;
+        // Bounce off left and right walls
+        if (newX <= 2 || newX >= 98) {
+          newVelX = -newVelX * damping;
+          newX = newX <= 2 ? 2 : 98;
+        }
+
+        // Bounce off bottom
+        if (newY >= 95) {
+          newVelY = -newVelY * damping;
+          newY = 95;
+          if (Math.abs(newVelY) > minVelocity) {
+            newVelX += (Math.random() - 0.5) * 0.2;
           }
+        }
 
-          // Bounce off bottom
-          if (newY >= 95) {
-            newVelY = -newVelY * damping;
-            newY = 95;
+        // Bounce off top
+        if (newY <= 5) {
+          newVelY = -newVelY * damping;
+          newY = 5;
+        }
 
-            // Add random horizontal velocity on bounce for variety
-            if (Math.abs(newVelY) > minVelocity) {
-              newVelX += (Math.random() - 0.5) * 0.2;
-            }
+        // Keep some minimum movement
+        if (Math.abs(newVelX) < minVelocity && Math.abs(newVelY) < minVelocity) {
+          if (Math.random() > 0.98) {
+            newVelY = -(Math.random() * 0.3 + 0.2);
+            newVelX = (Math.random() - 0.5) * 0.3;
           }
+        }
 
-          // Bounce off top
-          if (newY <= 5) {
-            newVelY = -newVelY * damping;
-            newY = 5;
-          }
-
-          // Keep some minimum movement
-          if (Math.abs(newVelX) < minVelocity && Math.abs(newVelY) < minVelocity) {
-            // Give it a little push occasionally
-            if (Math.random() > 0.98) {
-              newVelY = -(Math.random() * 0.3 + 0.2);
-              newVelX = (Math.random() - 0.5) * 0.3;
-            }
-          }
-
-          return { x: newVelX, y: newVelY };
-        });
+        // Update velocity ref
+        velocityRef.current = { x: newVelX, y: newVelY };
 
         return { x: newX, y: newY };
       });
     };
 
-    const intervalId = setInterval(animate, 16); // ~60fps
-
+    const intervalId = setInterval(animate, 16);
     return () => clearInterval(intervalId);
   }, []);
 
