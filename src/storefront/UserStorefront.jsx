@@ -419,28 +419,174 @@ export function UserStorefront({ onClose, customStorefront }) {
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Products</h2>
 
-            {/* Category Filter */}
+            {/* Category Filter - Premium Design */}
             {productCategories.length > 1 && (
-              <div className="flex flex-wrap gap-3 justify-center mb-8">
-                {productCategories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      setActiveProductCategory(category);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeProductCategory === category
-                      ? 'text-white'
-                      : 'text-white/60 hover:text-white/80'
-                      }`}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mb-12"
+              >
+                {/* Section Header */}
+                <div className="text-center mb-8">
+                  <motion.h3
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-lg font-semibold text-white/90 mb-2"
+                  >
+                    Browse by Category
+                  </motion.h3>
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="mx-auto w-16 h-0.5 rounded-full"
                     style={{
-                      backgroundColor: activeProductCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
+                      background: `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`,
+                    }}
+                  />
+                </div>
+
+                {/* Category Cards Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                  {productCategories.map((category, index) => {
+                    const isActive = activeProductCategory === category;
+                    const isAll = category === 'All';
+
+                    return (
+                      <motion.button
+                        key={category}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setActiveProductCategory(category);
+                          setCurrentPage(1);
+                        }}
+                        className="group relative overflow-hidden rounded-2xl p-6 transition-all duration-300"
+                        style={{
+                          background: isActive
+                            ? `linear-gradient(135deg, ${primaryColor}E6 0%, ${primaryColor}B3 100%)`
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
+                          border: isActive
+                            ? `2px solid ${primaryColor}`
+                            : '2px solid rgba(255, 255, 255, 0.1)',
+                          boxShadow: isActive
+                            ? `0 8px 32px ${primaryColor}40, 0 0 0 1px ${primaryColor}20 inset`
+                            : '0 4px 16px rgba(0, 0, 0, 0.2)',
+                        }}
+                      >
+                        {/* Glow Effect on Hover */}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                          style={{
+                            background: `radial-gradient(circle at center, ${primaryColor}30, transparent 70%)`,
+                            filter: 'blur(20px)',
+                          }}
+                        />
+
+                        {/* Shimmer Effect */}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          style={{
+                            background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%)',
+                            backgroundSize: '200% 200%',
+                            animation: 'shimmer 2s infinite',
+                          }}
+                        />
+
+                        {/* Content */}
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                          {/* Icon */}
+                          <div
+                            className="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 group-hover:scale-110"
+                            style={{
+                              background: isActive
+                                ? 'rgba(255, 255, 255, 0.2)'
+                                : 'rgba(255, 255, 255, 0.1)',
+                              boxShadow: isActive
+                                ? `0 4px 12px ${primaryColor}40`
+                                : '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            }}
+                          >
+                            {isAll ? (
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Category Name */}
+                          <span
+                            className="text-sm font-semibold text-center leading-tight transition-colors duration-300"
+                            style={{
+                              color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                            }}
+                          >
+                            {category}
+                          </span>
+
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                              style={{
+                                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}CC 100%)`,
+                                boxShadow: `0 2px 8px ${primaryColor}60`,
+                              }}
+                            >
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </motion.div>
+                          )}
+                        </div>
+
+                        {/* Bottom Accent Line */}
+                        <div
+                          className="absolute bottom-0 left-0 right-0 h-1 transition-all duration-300"
+                          style={{
+                            background: isActive
+                              ? `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`
+                              : 'transparent',
+                            opacity: isActive ? 1 : 0,
+                          }}
+                        />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Category Count Badge */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-center mt-6"
+                >
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.7)',
                     }}
                   >
-                    {category}
-                  </button>
-                ))}
-              </div>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'} in {activeProductCategory}
+                  </span>
+                </motion.div>
+              </motion.div>
             )}
 
             {/* Products Grid */}
