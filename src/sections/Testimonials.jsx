@@ -108,15 +108,99 @@ function FallingFlag({ ball, targetY, onSettle }) {
   );
 }
 
-function SettledFlag({ ball }) {
+function SettledFlag({ ball, containerWidth, containerHeight }) {
+  const [position, setPosition] = useState({
+    x: ball.finalX,
+    y: 10, // Start near bottom
+  });
+
+  // Use refs for velocity to avoid state update issues
+  const velocityRef = useRef({
+    x: (Math.random() - 0.5) * 0.8,
+    y: -(Math.random() * 0.5 + 0.3),
+  });
+
+  useEffect(() => {
+    const gravity = 0.015;
+    const damping = 0.98;
+    const friction = 0.99;
+    const minVelocity = 0.05;
+
+    const animate = () => {
+      setPosition((prevPos) => {
+        let vel = velocityRef.current;
+
+        // Apply physics
+        let newVelX = vel.x * friction;
+        let newVelY = vel.y + gravity;
+        let newX = prevPos.x + newVelX;
+        let newY = prevPos.y + newVelY;
+
+        // Bounce off left and right walls
+        if (newX <= 2 || newX >= 98) {
+          newVelX = -newVelX * damping;
+          newX = newX <= 2 ? 2 : 98;
+        }
+
+        // Bounce off bottom
+        if (newY >= 95) {
+          newVelY = -newVelY * damping;
+          newY = 95;
+          if (Math.abs(newVelY) > minVelocity) {
+            newVelX += (Math.random() - 0.5) * 0.2;
+          }
+        }
+
+        // Bounce off top
+        if (newY <= 5) {
+          newVelY = -newVelY * damping;
+          newY = 5;
+        }
+
+        // Keep some minimum movement
+        if (Math.abs(newVelX) < minVelocity && Math.abs(newVelY) < minVelocity) {
+          if (Math.random() > 0.98) {
+            newVelY = -(Math.random() * 0.3 + 0.2);
+            newVelX = (Math.random() - 0.5) * 0.3;
+          }
+        }
+
+        // Update velocity ref
+        velocityRef.current = { x: newVelX, y: newVelY };
+
+        return { x: newX, y: newY };
+      });
+    };
+
+    const intervalId = setInterval(animate, 16);
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <motion.div
       key={`settled-${ball.id}`}
-      initial={{ opacity: 0, y: 28 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 420 - ball.stackIndex * 20, damping: 30 + ball.stackIndex * 3, mass: 0.6 }}
-      className={`absolute flex -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_16px_38px_rgba(4,13,26,0.4)]`}
-      style={{ left: `${ball.finalX}%`, bottom: ball.bottomOffset, width: FLAG_SIZE, height: FLAG_SIZE }}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+      }}
+      transition={{
+        opacity: { duration: 0.3 },
+        scale: { type: 'spring', stiffness: 300, damping: 20 }
+      }}
+      whileHover={{
+        scale: 1.3,
+        rotate: 360,
+        transition: { duration: 0.5 }
+      }}
+      className={`absolute flex items-center justify-center rounded-full bg-gradient-to-br ${ball.gradient} text-3xl shadow-[0_16px_38px_rgba(4,13,26,0.4)] cursor-pointer transition-transform`}
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        width: FLAG_SIZE,
+        height: FLAG_SIZE,
+        transform: 'translate(-50%, -50%)',
+      }}
     >
       <span>{ball.flag}</span>
     </motion.div>
@@ -280,12 +364,11 @@ export function Testimonials() {
               <FallingFlag key={ball.id} ball={ball} targetY={targetY} onSettle={handleSettle} />
             ))}
           </AnimatePresence>
-          <div className="absolute inset-x-0 bottom-0 h-[240px] bg-gradient-to-t from-midnight/94 via-midnight/78 to-transparent">
-            <div className="relative h-full w-full">
-              {settledFlags.map((ball) => (
-                <SettledFlag ball={ball} key={ball.id} />
-              ))}
-            </div>
+          {/* Bouncing flags container - full height */}
+          <div className="absolute inset-0">
+            {settledFlags.map((ball) => (
+              <SettledFlag ball={ball} key={ball.id} containerWidth={containerHeight} containerHeight={containerHeight} />
+            ))}
           </div>
         </div>
       </div>
