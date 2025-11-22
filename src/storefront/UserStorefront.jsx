@@ -283,26 +283,133 @@ export function UserStorefront({ onClose, customStorefront }) {
         className="relative py-32 sm:py-48 md:py-64 overflow-hidden"
         style={{
           backgroundColor: heroBackgroundColor,
-          backgroundImage: heroBackgroundImage ? `url(${heroBackgroundImage})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative mx-auto max-w-6xl px-6 text-center z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold mb-4" style={{ color: primaryColor }}>
+        {/* High-Quality Background Image with Parallax */}
+        {heroBackgroundImage ? (
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{
+              backgroundImage: `url(${heroBackgroundImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              backgroundAttachment: 'fixed', // Parallax effect
+              imageRendering: 'high-quality',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+            }}
+          />
+        ) : (
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{
+              background: `linear-gradient(135deg, ${heroBackgroundColor} 0%, ${primaryColor}22 100%)`,
+            }}
+          />
+        )}
+
+        {/* Animated Gradient Overlay */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"
+          style={{
+            animation: 'pulse 8s ease-in-out infinite',
+          }}
+        />
+
+        {/* Subtle Pattern Overlay */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+            backgroundSize: '48px 48px',
+          }}
+        />
+
+        {/* Content Container with Fade-in Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="relative mx-auto max-w-6xl px-6 text-center z-10"
+        >
+          {/* Title with Glow Effect */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 drop-shadow-2xl"
+            style={{
+              color: '#ffffff',
+              textShadow: `0 0 40px ${primaryColor}80, 0 0 80px ${primaryColor}40, 0 4px 20px rgba(0, 0, 0, 0.5)`,
+            }}
+          >
             {heroTitle}
-          </h1>
+          </motion.h1>
+
+          {/* Subtitle with Slide-in Animation */}
           {heroSubtitle && (
-            <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto">
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-lg sm:text-xl md:text-2xl text-white/95 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-lg"
+            >
               {heroSubtitle}
-            </p>
+            </motion.p>
           )}
+
+          {/* Tagline with Fade-in */}
           {storefrontTagline && (
-            <p className="mt-4 text-base text-white/70 max-w-xl mx-auto">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mt-6 text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-md"
+            >
               {storefrontTagline}
-            </p>
+            </motion.p>
           )}
+
+          {/* Decorative Element */}
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-8 mx-auto w-24 h-1 rounded-full"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`,
+              boxShadow: `0 0 20px ${primaryColor}80`,
+            }}
+          />
+        </motion.div>
+
+        {/* Floating Particles Effect */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                background: `radial-gradient(circle, ${primaryColor}60, transparent)`,
+                left: `${15 + i * 15}%`,
+                top: `${20 + (i % 3) * 20}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                opacity: [0.3, 0.8, 0.3],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: 4 + i * 0.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.3,
+              }}
+            />
+          ))}
         </div>
       </section>
 
@@ -323,8 +430,8 @@ export function UserStorefront({ onClose, customStorefront }) {
                       setCurrentPage(1);
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeProductCategory === category
-                        ? 'text-white'
-                        : 'text-white/60 hover:text-white/80'
+                      ? 'text-white'
+                      : 'text-white/60 hover:text-white/80'
                       }`}
                     style={{
                       backgroundColor: activeProductCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
@@ -402,8 +509,8 @@ export function UserStorefront({ onClose, customStorefront }) {
                     key={category}
                     onClick={() => setActiveServiceCategory(category)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeServiceCategory === category
-                        ? 'text-white'
-                        : 'text-white/60 hover:text-white/80'
+                      ? 'text-white'
+                      : 'text-white/60 hover:text-white/80'
                       }`}
                     style={{
                       backgroundColor: activeServiceCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
@@ -504,4 +611,3 @@ export function UserStorefront({ onClose, customStorefront }) {
     </ContainerScrollAnimation>
   );
 }
-
