@@ -5,15 +5,15 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5178,
+    port: 5182,
     host: true, // Allow external connections for 21st.dev
     strictPort: false,
     // Enable HMR for 21st.dev extension
     hmr: {
       protocol: 'ws',
       host: 'localhost',
-      port: 5178,
-      clientPort: 5178, // Explicit client port for 21st.dev
+      port: 5182,
+      clientPort: 5182, // Explicit client port for 21st.dev
     },
     // CORS configuration for 21st.dev extension
     cors: {
@@ -22,7 +22,7 @@ export default defineConfig({
     },
     // WebSocket configuration for 21st.dev
     ws: {
-      port: 5178,
+      port: 5182,
     },
   },
 });
