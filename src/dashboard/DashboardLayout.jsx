@@ -305,8 +305,8 @@ function Sidebar({ activeSection, onSelect, onSignOut, currentUser }) {
             type="button"
             onClick={() => onSelect(item.id)}
             className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition ${activeSection === item.id
-                ? 'bg-brand-500/20 text-white'
-                : 'text-white/60 hover:bg-white/10 hover:text-white'
+              ? 'bg-brand-500/20 text-white'
+              : 'text-white/60 hover:bg-white/10 hover:text-white'
               }`}
           >
             <span className="text-lg">{item.icon}</span>
@@ -1064,8 +1064,8 @@ function RecentOrders({ onViewAll }) {
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status.toLowerCase() === 'paid' || order.status.toLowerCase() === 'completed'
-                          ? 'bg-emerald-500/20 text-emerald-200'
-                          : 'bg-amber-500/20 text-amber-200'
+                        ? 'bg-emerald-500/20 text-emerald-200'
+                        : 'bg-amber-500/20 text-amber-200'
                         }`}
                     >
                       {order.status}
@@ -1314,10 +1314,10 @@ function OrdersPanel() {
                           <td className="px-6 py-4">
                             <span
                               className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === 'completed' || order.status === 'paid'
-                                  ? 'bg-emerald-500/20 text-emerald-200'
-                                  : order.status === 'pending'
-                                    ? 'bg-amber-500/20 text-amber-200'
-                                    : 'bg-red-500/20 text-red-200'
+                                ? 'bg-emerald-500/20 text-emerald-200'
+                                : order.status === 'pending'
+                                  ? 'bg-amber-500/20 text-amber-200'
+                                  : 'bg-red-500/20 text-red-200'
                                 }`}
                             >
                               {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Pending'}
@@ -1531,6 +1531,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
       onViewSpaStorefront?.('spa', storefront);
     }
   };
+
 
   const platformStorefronts = [
     {
@@ -1859,7 +1860,7 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
             </div>
           </>
         )}
-      </div>
+      </div >
       <CreateStorefrontModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

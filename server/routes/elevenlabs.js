@@ -1,7 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from server/.env explicitly
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const router = express.Router();
 
@@ -12,6 +18,7 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || process.env.VITE_EL
 router.post('/conversation', async (req, res) => {
   try {
     if (!ELEVENLABS_API_KEY) {
+      console.error('ElevenLabs API key not configured');
       return res.status(500).json({
         success: false,
         message: 'ElevenLabs API key not configured on server',
@@ -27,6 +34,8 @@ router.post('/conversation', async (req, res) => {
       });
     }
 
+    console.log(`Initializing ElevenLabs conversation for agent: ${agent_id}`);
+
     const response = await fetch('https://api.elevenlabs.io/v1/convai/conversation', {
       method: 'POST',
       headers: {
@@ -40,8 +49,9 @@ router.post('/conversation', async (req, res) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('ElevenLabs API error response:', errorData);
       const errorMessage = errorData.detail?.message || errorData.message || `HTTP ${response.status}: Failed to initialize conversation`;
-      
+
       return res.status(response.status).json({
         success: false,
         message: errorMessage,
@@ -49,7 +59,8 @@ router.post('/conversation', async (req, res) => {
     }
 
     const data = await response.json();
-    
+    console.log('ElevenLabs conversation initialized successfully');
+
     res.json({
       success: true,
       data,
@@ -64,4 +75,3 @@ router.post('/conversation', async (req, res) => {
 });
 
 export default router;
-

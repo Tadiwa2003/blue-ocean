@@ -151,21 +151,15 @@ function AppContent() {
       if (storefrontSlug) {
         try {
           setIsStorefrontLoading(true);
-          // Fetch storefront by slug (public endpoint, no auth required)
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/storefronts/slug/${storefrontSlug}`);
+          // Fetch storefront by slug using api service
+          const response = await api.storefronts.getStorefrontBySlug(storefrontSlug);
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data.storefront) {
-              const storefront = data.data.storefront;
-              console.log('Loaded storefront from URL:', storefront);
-              openStorefront(storefront.type, storefront);
-            } else {
-              console.error('Storefront not found:', storefrontSlug);
-              setIsStorefrontLoading(false);
-            }
+          if (response.success && response.data.storefront) {
+            const storefront = response.data.storefront;
+            console.log('Loaded storefront from URL:', storefront);
+            openStorefront(storefront.type, storefront);
           } else {
-            console.error('Failed to load storefront:', response.status);
+            console.error('Storefront not found:', storefrontSlug);
             setIsStorefrontLoading(false);
           }
         } catch (error) {
