@@ -68,7 +68,7 @@ export function ElevenLabsAgent() {
       if (import.meta.env.DEV) {
         console.log('Connecting to ElevenLabs agent via backend proxy...');
       }
-      
+
       // Initialize conversation via secure backend proxy
       // The backend handles the API key server-side
       const response = await fetch(`${API_BASE_URL}/elevenlabs/conversation`, {
@@ -84,37 +84,37 @@ export function ElevenLabsAgent() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `HTTP ${response.status}: Failed to initialize conversation`;
-        
+
         // If API fails, fallback to iframe
-        if (response.status === 401 || response.status === 403 || response.status === 500) {
+        if (response.status === 401 || response.status === 403 || response.status === 404 || response.status === 500) {
           if (import.meta.env.DEV) {
-            console.warn('Backend API key not configured. Using web interface instead.');
+            console.warn('Backend API key not configured or invalid. Using web interface instead.');
           }
-          setError('API key not configured. Using web interface instead.');
+          setError('AI agent unavailable. Using web interface instead.');
           setUseIframe(true);
           setIsConnected(true);
           return;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      
+
       if (!result.success || !result.data) {
         throw new Error(result.message || 'Failed to initialize conversation');
       }
 
       const data = result.data;
-      
+
       if (import.meta.env.DEV) {
         console.log('Conversation initialized via backend proxy');
       }
-      
+
       // Get WebSocket URL - ElevenLabs provides this in the response
       const conversationId = data.conversation_id || data.id || data.conversationId;
       let wsUrl = data.websocket_url || data.websocketUrl;
-      
+
       if (!wsUrl && conversationId) {
         wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation/${conversationId}/audio?agent_id=${ELEVENLABS_AGENT_ID}`;
       }
@@ -155,7 +155,7 @@ export function ElevenLabsAgent() {
             try {
               const data = JSON.parse(event.data);
               console.log('Received message:', data);
-              
+
               if (data.type === 'audio' && data.audio) {
                 // Base64 audio data
                 const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
@@ -226,11 +226,11 @@ export function ElevenLabsAgent() {
       const audioUrl = URL.createObjectURL(audioBlob);
       lastObjectUrlRef.current = audioUrl;
       const audio = new Audio(audioUrl);
-      
+
       audio.onloadeddata = () => {
         console.log('Audio loaded, playing...');
       };
-      
+
       audio.onerror = (err) => {
         console.error('Audio playback error:', err);
         if (lastObjectUrlRef.current === audioUrl) {
@@ -238,7 +238,7 @@ export function ElevenLabsAgent() {
           lastObjectUrlRef.current = null;
         }
       };
-      
+
       audio.onended = () => {
         if (lastObjectUrlRef.current === audioUrl) {
           URL.revokeObjectURL(audioUrl);
@@ -307,7 +307,7 @@ export function ElevenLabsAgent() {
       }
 
       console.log('Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -504,11 +504,10 @@ export function ElevenLabsAgent() {
                   <button
                     onClick={isListening ? stopListening : startListening}
                     disabled={!isConnected || !!error}
-                    className={`flex h-14 w-14 items-center justify-center rounded-full transition-all ${
-                      isListening
+                    className={`flex h-14 w-14 items-center justify-center rounded-full transition-all ${isListening
                         ? 'bg-red-500 hover:bg-red-600 animate-pulse'
                         : 'bg-brand-500 hover:bg-brand-600'
-                    } ${!isConnected || error ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${!isConnected || error ? 'opacity-50 cursor-not-allowed' : ''}`}
                     aria-label={isListening ? 'Stop listening' : 'Start listening'}
                   >
                     {isListening ? (

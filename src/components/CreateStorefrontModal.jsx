@@ -8,6 +8,8 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
   const [error, setError] = useState(null);
   const [logoUploadMode, setLogoUploadMode] = useState('url'); // 'url' or 'upload'
   const [logoPreview, setLogoPreview] = useState(null);
+  const [bgImageUploadMode, setBgImageUploadMode] = useState('url'); // 'url' or 'upload'
+  const [bgImagePreview, setBgImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     type: 'products',
@@ -80,7 +82,49 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
     });
   };
 
-  const handleLogoFileChange = (e) => {
+  // Helper function to compress image
+  const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions while maintaining aspect ratio
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with compression
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleLogoFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -96,14 +140,44 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
       return;
     }
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogoPreview(reader.result);
-      handleNestedChange('design.branding.logo', reader.result);
-    };
-    reader.readAsDataURL(file);
-    setError(null);
+    try {
+      // Compress image before upload
+      const compressedImage = await compressImage(file, 800, 800, 0.8);
+      setLogoPreview(compressedImage);
+      handleNestedChange('design.branding.logo', compressedImage);
+      setError(null);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      setError('Failed to process image. Please try another file.');
+    }
+  };
+
+  const handleBgImageFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a valid image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Background image file size must be less than 5MB');
+      return;
+    }
+
+    try {
+      // Compress image before upload (larger dimensions for backgrounds)
+      const compressedImage = await compressImage(file, 1920, 1920, 0.85);
+      setBgImagePreview(compressedImage);
+      handleNestedChange('design.hero.backgroundImage', compressedImage);
+      setError(null);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      setError('Failed to process image. Please try another file.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -155,6 +229,8 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
         });
         setLogoUploadMode('url');
         setLogoPreview(null);
+        setBgImageUploadMode('url');
+        setBgImagePreview(null);
         onSuccess?.(response.data.storefront);
         onClose();
       } else {
@@ -274,17 +350,110 @@ export function CreateStorefrontModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">
-                  Background Image URL (optional)
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                  Background Image (optional)
                 </label>
-                <input
-                  type="url"
-                  value={formData.design.hero.backgroundImage}
-                  onChange={(e) => handleNestedChange('design.hero.backgroundImage', e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50"
-                  placeholder="https://example.com/image.jpg"
-                />
-                <p className="mt-1 text-xs text-white/50">Leave empty to use background color only</p>
+
+                {/* Upload Mode Toggle */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBgImageUploadMode('url');
+                      setBgImagePreview(null);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition ${bgImageUploadMode === 'url'
+                      ? 'bg-brand-400/20 border-brand-400/50 text-white'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">URL</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBgImageUploadMode('upload');
+                      handleNestedChange('design.hero.backgroundImage', '');
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border transition ${bgImageUploadMode === 'upload'
+                      ? 'bg-brand-400/20 border-brand-400/50 text-white'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm font-medium">Upload</span>
+                  </button>
+                </div>
+
+                {/* URL Input */}
+                {bgImageUploadMode === 'url' && (
+                  <div>
+                    <div className="relative">
+                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
+                      <input
+                        type="url"
+                        value={formData.design.hero.backgroundImage}
+                        onChange={(e) => {
+                          handleNestedChange('design.hero.backgroundImage', e.target.value);
+                          setBgImagePreview(e.target.value);
+                        }}
+                        className="w-full px-4 py-3 pl-12 rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-400/50"
+                        placeholder="https://example.com/background.jpg"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-white/50">
+                      Enter the URL of your background image
+                    </p>
+                  </div>
+                )}
+
+                {/* File Upload */}
+                {bgImageUploadMode === 'upload' && (
+                  <div>
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 transition">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="h-8 w-8 text-white/40 mb-2" />
+                        <p className="text-sm text-white/60 mb-1">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-white/40">PNG, JPG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleBgImageFileChange}
+                      />
+                    </label>
+                    <p className="mt-2 text-xs text-white/50">
+                      Upload your background image file
+                    </p>
+                  </div>
+                )}
+
+                {/* Background Image Preview */}
+                {(bgImagePreview || formData.design.hero.backgroundImage) && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-white/80 mb-2">Preview:</p>
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center">
+                      <img
+                        src={bgImagePreview || formData.design.hero.backgroundImage}
+                        alt="Background preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          setBgImagePreview(null);
+                        }}
+                        onLoad={() => {
+                          if (bgImageUploadMode === 'url' && !bgImagePreview) {
+                            setBgImagePreview(formData.design.hero.backgroundImage);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
