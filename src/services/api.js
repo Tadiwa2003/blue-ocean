@@ -1,3 +1,5 @@
+
+
 /**
  * API Service - Handles all backend API calls
  */
@@ -23,25 +25,61 @@ if (import.meta.env.DEV) {
 const handleResponse = async (response) => {
   // Check if response has content
   const contentType = response.headers.get('content-type');
-  let data;
+  const contentLength = response.headers.get('content-length');
   
-  if (contentType && contentType.includes('application/json')) {
-    try {
-      data = await response.json();
-    } catch (error) {
-      throw new Error('Invalid JSON response from server');
+  // Handle empty responses
+  if (contentLength === '0' || (!contentType && response.status === 204)) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return null;
+  }
+  
+  let text;
+  
+  try {
+    text = await response.text();
+  } catch (error) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    throw new Error(`Failed to read response: ${error.message}`);
+  }
+  
+  // Handle empty text response
+  if (!text || text.trim().length === 0) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return null;
+  }
+  
+  // Try to parse as JSON if content-type suggests it, or if no content-type is set
+  if (!contentType || contentType.includes('application/json')) {
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      // JSON parsing failed
+      if (!response.ok) {
+        throw new Error(text || `HTTP error! status: ${response.status}`);
+      }
+      throw new Error(`Invalid JSON response from server: ${error.message}. Response: ${text.substring(0, 200)}`);
+    }
+    
+    if (!response.ok) {
+      const errorMessage = data?.message || data?.errors?.join(', ') || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+    
+    return data;
   } else {
-    const text = await response.text();
-    throw new Error(text || `HTTP error! status: ${response.status}`);
+    // Non-JSON response
+    if (!response.ok) {
+      throw new Error(text || `HTTP error! status: ${response.status}`);
+    }
+    return { text, contentType };
   }
-  
-  if (!response.ok) {
-    const errorMessage = data?.message || data?.errors?.join(', ') || `HTTP error! status: ${response.status}`;
-    throw new Error(errorMessage);
-  }
-  
-  return data;
 };
 
 // Get auth token from localStorage
@@ -230,10 +268,20 @@ export const api = {
   // Products
   products: {
     async getProducts(storefrontId = null) {
-      const url = storefrontId 
-        ? `${API_BASE_URL}/products?storefrontId=${storefrontId}`
-        : `${API_BASE_URL}/products`;
-      return await apiFetch(url);
+      try {
+        const url = storefrontId 
+          ? `${API_BASE_URL}/products?storefrontId=${storefrontId}`
+          : `${API_BASE_URL}/products`;
+        const response = await apiFetch(url);
+        return response;
+      } catch (error) {
+        console.error('Error in products.getProducts:', error);
+        // If it's a JSON parsing error, provide more context
+        if (error.message.includes('Invalid JSON')) {
+          throw new Error(`Server returned invalid response. Please check that the backend server is running and responding correctly. ${error.message}`);
+        }
+        throw error;
+      }
     },
 
     async getProductById(productId) {
@@ -341,6 +389,18 @@ export const api = {
         method: 'POST',
       });
     },
+
+    // Website Builder methods
+    async saveWebsiteSections(storefrontId, sections) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}/sections`, {
+        method: 'PUT',
+        body: JSON.stringify({ sections }),
+      });
+    },
+
+    async getWebsiteSections(storefrontId) {
+      return await apiFetch(`${API_BASE_URL}/storefronts/${storefrontId}/sections`);
+    },
   },
 
   // Bookings
@@ -368,6 +428,107 @@ export const api = {
       return await apiFetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
+      });
+    },
+  },
+
+  // Customers (Shopify-style)
+  customers: {
+    async getCustomers(storeId, params = {}) {
+      const queryParams = new URLSearchParams(params).toString();
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/customers?${queryParams}`);
+    },
+
+    async getCustomer(storeId, customerId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/customers/${customerId}`);
+    },
+
+    async createCustomer(storeId, customerData) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/customers`, {
+        method: 'POST',
+        body: JSON.stringify(customerData),
+      });
+    },
+
+    async updateCustomer(storeId, customerId, customerData) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/customers/${customerId}`, {
+        method: 'PUT',
+        body: JSON.stringify(customerData),
+      });
+    },
+
+    async deleteCustomer(storeId, customerId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/customers/${customerId}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async getCustomerStats(storeId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/stats`);
+    },
+  },
+
+  // Discounts
+  discounts: {
+    async getDiscounts(storeId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/discounts`);
+    },
+
+    async getDiscount(storeId, discountId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/discounts/${discountId}`);
+    },
+
+    async createDiscount(storeId, discountData) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/discounts`, {
+        method: 'POST',
+        body: JSON.stringify(discountData),
+      });
+    },
+
+    async updateDiscount(storeId, discountId, discountData) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/discounts/${discountId}`, {
+        method: 'PUT',
+        body: JSON.stringify(discountData),
+      });
+    },
+
+    async deleteDiscount(storeId, discountId) {
+      return await apiFetch(`${API_BASE_URL}/stores/${storeId}/discounts/${discountId}`, {
+        method: 'DELETE',
+      });
+    },
+
+    async validateDiscount(code, orderTotal) {
+      return await apiFetch(`${API_BASE_URL}/discounts/validate`, {
+        method: 'POST',
+        body: JSON.stringify({ code, orderTotal }),
+      });
+    },
+  },
+
+  // Reviews
+  reviews: {
+    async getReviews(productId) {
+      return await apiFetch(`${API_BASE_URL}/products/${productId}/reviews`);
+    },
+
+    async createReview(reviewData) {
+      return await apiFetch(`${API_BASE_URL}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify(reviewData),
+      });
+    },
+
+    async updateReview(reviewId, reviewData) {
+      return await apiFetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+        method: 'PUT',
+        body: JSON.stringify(reviewData),
+      });
+    },
+
+    async deleteReview(reviewId) {
+      return await apiFetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+        method: 'DELETE',
       });
     },
   },

@@ -110,6 +110,7 @@ export async function createStorefront(req, res) {
       type: req.body.type,
       userId,
       design: {
+        focus: req.body.design?.focus || 'beauty',
         hero: {
           title: req.body.design?.hero?.title || '',
           subtitle: req.body.design?.hero?.subtitle || '',
@@ -131,6 +132,8 @@ export async function createStorefront(req, res) {
           storeName: req.body.design?.branding?.storeName || '',
           tagline: req.body.design?.branding?.tagline || '',
           logo: req.body.design?.branding?.logo || '',
+          badge: req.body.design?.branding?.badge || '',
+          pillars: req.body.design?.branding?.pillars || [],
         },
       },
       settings: {
