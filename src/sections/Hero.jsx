@@ -13,6 +13,7 @@ export function Hero() {
 
   return (
     <section ref={sectionRef} id="hero" className="relative overflow-hidden pt-32">
+      {/* Background with Spline 3D */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"
@@ -39,24 +40,49 @@ export function Hero() {
           }}
         />
       </div>
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/75 via-midnight/60 to-midnight/40" />
-      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(27,152,224,0.15),_transparent_60%)]" />
+      
+      {/* Soft gradient overlays */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/80 via-midnight/60 to-midnight/30" />
+      <div className="absolute inset-0 z-20 hero-ring-animation bg-[radial-gradient(circle_at_top_left,_rgba(27,152,224,0.2),_transparent_60%)]" />
 
       <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur">
-              <p className="text-xs font-sans text-brand-100 font-semibold uppercase tracking-[0.35em] m-0">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur"
+            >
+              <p className="text-xs font-body text-brand-100 font-semibold uppercase tracking-[0.35em] m-0">
                 BrightPath · Tana's Beauty Boost Spa
               </p>
-            </div>
-            <h1 className="text-left max-w-3xl font-display text-[2.75rem] leading-tight sm:text-[3.1rem] font-semibold sm:font-medium tracking-tight m-0 text-white">
-              Your Complete Marketplace Platform: Beauty Spa Services & Product Store
-            </h1>
-            <p className="max-w-2xl text-left text-base md:text-lg font-sans text-white/80 font-normal leading-relaxed m-0">
-              BrightPath Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace.
-            </p>
-            <div className="grid gap-3 sm:flex sm:flex-wrap">
+            </motion.div>
+            
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-left max-w-3xl font-display text-[2.75rem] leading-tight sm:text-[3.1rem] font-light tracking-tight m-0 text-white"
+            >
+              BrightPath Marketplace · Tana&apos;s Beauty Boost Spa & Product Store
+            </motion.h1>
+            
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="max-w-2xl text-left text-base md:text-lg font-body text-white/80 font-normal leading-relaxed m-0"
+            >
+              BrightPath Marketplace powers two pillars: Tana&apos;s Beauty Boost Spa for premium wellness rituals, and our merchant store for curated product sales. Need infrastructure? Rent the BrightPath stack so other merchants can launch their storefronts inside our ecosystem.
+            </motion.p>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="grid gap-3 sm:flex sm:flex-wrap"
+            >
               <Button onClick={() => {
                 const retailSection = document.getElementById('retail');
                 if (retailSection) {
@@ -88,13 +114,19 @@ export function Hero() {
               >
                 How it works
               </Button>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60">
+            </motion.div>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60"
+            >
               <a
                 href="#cta"
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/20 hover:text-white"
               >
-                <span className="text-xl"></span>
+                <span className="text-xl"></span>
                 <span>Download on the App Store</span>
               </a>
               <a
@@ -104,10 +136,15 @@ export function Hero() {
                 <span className="text-lg">▶</span>
                 <span>Get it on BrightPath Play</span>
               </a>
-            </div>
+            </motion.div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <motion.div
+            initial={{ x: 30, opacity: 0 }}
+            animate={isInView ? { x: 0, opacity: 1 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="grid gap-6 lg:grid-cols-2"
+          >
             <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/8 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.4)] backdrop-blur-xl">
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
               <div className="relative space-y-4 text-left text-white">
@@ -141,7 +178,7 @@ export function Hero() {
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
                   Tana&apos;s Beauty Boost Spa
                   </span>
-                <h2 className="font-display text-2xl">Tana's Beauty Boost Spa: Premium Wellness Services</h2>
+                <h2 className="font-display text-2xl">BrightPath · Tana&apos;s Beauty Boost Spa</h2>
                 <p className="text-sm text-white/80 leading-relaxed">
                   Experience luxury beauty and spa treatments at Tana's Beauty Boost Spa. From facials and massages to complete wellness packages, we offer a full range of services designed to rejuvenate and restore.
                 </p>
@@ -161,7 +198,7 @@ export function Hero() {
                 </ul>
               </div>
             </article>
-          </div>
+          </motion.div>
         </div>
       </div>
 

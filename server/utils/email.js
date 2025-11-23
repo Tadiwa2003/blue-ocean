@@ -352,7 +352,7 @@ export const sendBookingConfirmation = async (booking) => {
         </div>
         <p><strong>We look forward to seeing you on ${booking.date} at ${booking.time}!</strong></p>
         <p>If you have any questions or need to make changes, please contact us at:</p>
-        <p>📞 Phone: +27 788637252<br>📧 Email: tadiwachoga2003@gmail.com</p>
+        <p>📞 Phone: +27 788637252<br>📧 Email: chogatadiwa2@gmail.com</p>
         <p>Best regards,<br><strong>Tana's Beauty Boost Spa Team</strong></p>
       </div>
     `,
