@@ -215,10 +215,10 @@ function AppContent() {
     }
   }, [isAuthenticated, currentUser]);
 
-  // Verify 21st.dev extension is loaded and monitor connection
+  // Verify 21st.dev extension is loaded (single check on mount)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Initial connection status log
+      // Single connection status log on mount
       const logConnectionStatus = () => {
         const status = {
           toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
@@ -232,83 +232,42 @@ function AppContent() {
         };
 
         console.log('%c✅ 21st.dev Extension Status', 'color: #4CAF50; font-weight: bold; font-size: 14px;', status);
-        console.log('%c🔗 Connection Info', 'color: #2196F3; font-weight: bold;', {
-          extensionInstalled: 'Check Cursor Extensions (Cmd+Shift+X)',
-          extensionEnabled: 'Make sure 21st extension is enabled',
-          devServerRunning: `http://localhost:${status.port}`,
-          browserOpen: status.url,
-          connectionPort: '5178',
-          extensionHostPort: '5747 (Cursor)',
-        });
       };
 
-      // Log initial status
+      // Log status once on mount
       logConnectionStatus();
 
-      // Enhanced toolbar detection with multiple strategies
+      // Single toolbar detection check (no polling)
       const detectToolbar = () => {
         const selectors = [
           '[data-21st-toolbar]',
           '[data-21st]',
           '[class*="21st"]',
           '[id*="21st"]',
-          '[class*="toolbar"]',
-          'div[data-extension="21st"]',
-          'div[class*="TwentyFirst"]',
         ];
 
         for (const selector of selectors) {
           try {
             const element = document.querySelector(selector);
             if (element && (element.offsetParent !== null || element.style.display !== 'none')) {
-              return { found: true, selector, element };
+              console.log(`%c✅ 21st.dev Toolbar Found: ${selector}`, 'color: #4CAF50; font-weight: bold;');
+              return true;
             }
           } catch (e) {
             // Ignore selector errors
           }
         }
-
-        return { found: false, selector: null, element: null };
+        return false;
       };
 
-      // Monitor toolbar with extended retry logic
-      let checkCount = 0;
-      const maxChecks = 15; // Increased attempts
-      const checkInterval = 2000; // Check every 2 seconds
-      let connectionEstablished = false;
+      // Check once after a short delay to allow toolbar to mount
+      const timeoutId = setTimeout(() => {
+        detectToolbar();
+      }, 3000);
 
-      const monitorToolbar = setInterval(() => {
-        checkCount++;
-        const result = detectToolbar();
-
-        if (result.found && !connectionEstablished) {
-          connectionEstablished = true;
-          console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-          console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
-            status: 'Connected',
-            selector: result.selector,
-            timestamp: new Date().toISOString(),
-          });
-          clearInterval(monitorToolbar);
-        } else if (checkCount >= maxChecks && !connectionEstablished) {
-          console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
-          console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
-            step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
-            step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
-            step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
-            step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
-            step5: '5. Verify dev server is running: npm run dev',
-            step6: '6. Check browser is at: http://localhost:5178',
-            step7: '7. Hard refresh browser: Cmd+Shift+R',
-            step8: '8. Check console for connection status',
-          });
-          clearInterval(monitorToolbar);
-        }
-      }, checkInterval);
-
-      // Cleanup on unmount
+      // Cleanup timeout on unmount
       return () => {
-        clearInterval(monitorToolbar);
+        clearTimeout(timeoutId);
       };
     }
   }, []);

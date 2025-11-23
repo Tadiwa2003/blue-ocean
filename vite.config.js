@@ -7,22 +7,24 @@ export default defineConfig({
   server: {
     port: 5182,
     host: true, // Allow external connections for 21st.dev
-    strictPort: false,
-    // Enable HMR for 21st.dev extension
+    strictPort: true,
+    // Optimized HMR configuration
     hmr: {
       protocol: 'ws',
       host: 'localhost',
       port: 5182,
-      clientPort: 5182, // Explicit client port for 21st.dev
+      clientPort: 5182,
+      overlay: false, // Disable error overlay to prevent refresh issues
     },
     // CORS configuration for 21st.dev extension
     cors: {
       origin: true,
       credentials: true,
     },
-    // WebSocket configuration for 21st.dev
-    ws: {
-      port: 5182,
+    // Watch options to prevent excessive file watching
+    watch: {
+      usePolling: false,
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
     },
   },
 });
