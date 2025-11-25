@@ -304,6 +304,7 @@ export function BeautySpaLogo({ className = '', showText = true, size = 200 }) {
         </svg>
         )}
       </div>
+    
 
       {/* Text below logo */}
       {showText && (

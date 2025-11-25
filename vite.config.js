@@ -7,14 +7,14 @@ export default defineConfig({
   server: {
     port: 5182,
     host: true, // Allow external connections for 21st.dev
-    strictPort: true,
-    // Optimized HMR configuration
+    strictPort: false,
+    // Enable HMR for 21st.dev extension with optimized settings
     hmr: {
       protocol: 'ws',
       host: 'localhost',
       port: 5182,
-      clientPort: 5182,
-      overlay: false, // Disable error overlay to prevent refresh issues
+      clientPort: 5182, // Explicit client port for 21st.dev
+      overlay: false, // Prevent HMR overlay from causing refreshes
     },
     // CORS configuration for 21st.dev extension
     cors: {
@@ -26,5 +26,9 @@ export default defineConfig({
       usePolling: false,
       ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
     },
+  },
+  // Optimize build to prevent refresh issues
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'lenis'],
   },
 });

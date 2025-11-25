@@ -20,11 +20,8 @@ body {
   @apply bg-midnight text-white antialiased;
   line-height: 1.6;
   color: #F2F2F2;
-  font-feature-settings: "rlig" 1, "calt" 1;
-  font-variant-ligatures: common-ligatures;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* scroll-behavior: smooth; - Removed to prevent conflict with Lenis */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Premium Typography System */
@@ -297,12 +294,9 @@ a {
   animation: fade-in-up 1s ease-out, text-glow 3s ease-in-out infinite;
 }
 
+/* Storefront card - animations removed for cleaner display */
 .storefront-card {
-  animation: fade-in-scale 0.6s ease-out backwards;
-}
-
-.storefront-card:hover {
-  animation: none;
+  /* No entrance animations */
 }
 
 .storefront-card article {
@@ -313,20 +307,6 @@ a {
   animation: filter-animation 15s ease-in-out infinite;
 }
 
-/* GSAP 3D Transform Support */
-.storefront-card {
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-}
-
-/* Smooth transitions for GSAP animations */
-[data-product-card],
-[data-animated-card] {
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-}
 
 /* Counter Loader Grid Animation */
 .counter-loader-grid {
@@ -375,7 +355,26 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(29, 160, 230, 0.1);
 }
 
-/* Smooth scrollbar for checkout */
+/* Global scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(29, 160, 230, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(29, 160, 230, 0.5);
+}
+
+/* Specific scrollbar for overflow containers */
 .overflow-y-auto::-webkit-scrollbar {
   width: 8px;
 }

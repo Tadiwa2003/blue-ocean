@@ -76,14 +76,14 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   }, [open]);
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === imageGallery.length - 1 ? 0 : prev + 1
     );
     setSelectedImage(imageGallery[currentImageIndex === imageGallery.length - 1 ? 0 : currentImageIndex + 1] || fallbackImage);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? imageGallery.length - 1 : prev - 1
     );
     setSelectedImage(imageGallery[currentImageIndex === 0 ? imageGallery.length - 1 : currentImageIndex - 1] || fallbackImage);
@@ -191,12 +191,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
   };
 
   return (
-    <div 
-      ref={scrollContainerRef}
-      className="fixed inset-0 z-[1000] flex items-start justify-center bg-midnight/95 backdrop-blur-md overflow-y-auto py-6 product-modal-scroll-container" 
-      style={{ scrollBehavior: 'smooth' }}
-      tabIndex={-1}
-    >
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-midnight/95 backdrop-blur-md p-4 overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -224,7 +219,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
           overflow-y: auto;
-          overflow-x: hidden;
+          max-height: calc(100vh - 2rem);
         }
         .product-modal-scroll-container::-webkit-scrollbar {
           width: 10px;
@@ -250,6 +245,27 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
         }
+        /* Scrollable details section */
+        .product-details-scroll {
+          overflow-y: auto;
+          max-height: calc(100vh - 8rem);
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+        }
+        .product-details-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .product-details-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 3px;
+        }
+        .product-details-scroll::-webkit-scrollbar-thumb {
+          background: rgba(29, 160, 230, 0.3);
+          border-radius: 3px;
+        }
+        .product-details-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(29, 160, 230, 0.5);
+        }
       `}</style>
       {/* Backdrop */}
       <div 
@@ -258,10 +274,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
       />
 
       {/* Modal Content */}
-      <div 
-        ref={containerRef} 
-        className="product-modal-container relative w-full max-w-7xl my-6 mx-4 bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl modal-content"
-      >
+      <div ref={containerRef} className="product-modal-container relative w-full max-w-7xl bg-gradient-to-br from-ocean/95 to-midnight/98 border border-white/10 rounded-[40px] shadow-2xl modal-content my-auto">
         {/* Close Button */}
         <button
           type="button"
@@ -290,7 +303,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                     }
                   }}
                 />
-                
+
                 {/* Navigation Arrows */}
                 {imageGallery.length > 1 && (
                   <>
@@ -312,7 +325,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                     </button>
                   </>
                 )}
-                
+
                 {product.badges && product.badges.length > 0 && (
                   <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
                     {product.badges.map((badge) => (
@@ -338,11 +351,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                         setCurrentImageIndex(idx);
                         setSelectedImage(img || fallbackImage);
                       }}
-                      className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${
-                        currentImageIndex === idx
-                          ? 'border-brand-400 shadow-lg shadow-brand-400/30 ring-2 ring-brand-400/50'
-                          : 'border-white/10 hover:border-white/30'
-                      }`}
+                      className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${currentImageIndex === idx
+                        ? 'border-brand-400 shadow-lg shadow-brand-400/30 ring-2 ring-brand-400/50'
+                        : 'border-white/10 hover:border-white/30'
+                        }`}
                       aria-label={`View image ${idx + 1}`}
                     >
                       <img
@@ -364,7 +376,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
           </article>
 
           {/* Right: Product Details */}
-          <div className="product-details-content flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50">
+          <div className="flex flex-col p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-midnight/90 to-ocean/50 product-details-scroll">
             <div className="flex-1 space-y-6">
               {/* Category, Name, Rating & Wishlist */}
               <header className="flex justify-between items-start gap-4">
@@ -387,11 +399,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                 <button
                   type="button"
                   onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={`p-3 rounded-full transition-all ${
-                    isWishlisted
-                      ? 'text-red-500 bg-red-500/20'
-                      : 'text-white/40 hover:text-red-500 hover:bg-white/10'
-                  }`}
+                  className={`p-3 rounded-full transition-all ${isWishlisted
+                    ? 'text-red-500 bg-red-500/20'
+                    : 'text-white/40 hover:text-red-500 hover:bg-white/10'
+                    }`}
                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
                   <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
@@ -405,11 +416,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        activeTab === tab
-                          ? 'border-brand-400 text-brand-300'
-                          : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
-                      }`}
+                      className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab
+                        ? 'border-brand-400 text-brand-300'
+                        : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
+                        }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -480,11 +490,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                         key={color}
                         type="button"
                         onClick={() => setSelectedColor(color)}
-                        className={`rounded-2xl border-2 px-5 py-3 text-sm font-semibold transition-all ${
-                          selectedColor === color
-                            ? 'border-brand-400 bg-brand-500/20 text-white shadow-lg shadow-brand-400/30'
-                            : 'border-white/20 bg-white/5 text-white/80 hover:border-white/40 hover:bg-white/10 hover:text-white'
-                        }`}
+                        className={`rounded-2xl border-2 px-5 py-3 text-sm font-semibold transition-all ${selectedColor === color
+                          ? 'border-brand-400 bg-brand-500/20 text-white shadow-lg shadow-brand-400/30'
+                          : 'border-white/20 bg-white/5 text-white/80 hover:border-white/40 hover:bg-white/10 hover:text-white'
+                          }`}
                       >
                         {color}
                       </button>
@@ -516,11 +525,10 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
-                        className={`rounded-2xl border-2 px-5 py-3 text-sm font-semibold transition-all ${
-                          selectedSize === size
-                            ? 'border-brand-400 bg-brand-500/20 text-white shadow-lg shadow-brand-400/30'
-                            : 'border-white/20 bg-white/5 text-white/80 hover:border-white/40 hover:bg-white/10 hover:text-white'
-                        }`}
+                        className={`rounded-2xl border-2 px-5 py-3 text-sm font-semibold transition-all ${selectedSize === size
+                          ? 'border-brand-400 bg-brand-500/20 text-white shadow-lg shadow-brand-400/30'
+                          : 'border-white/20 bg-white/5 text-white/80 hover:border-white/40 hover:bg-white/10 hover:text-white'
+                          }`}
                       >
                         {size}
                       </button>
@@ -619,7 +627,7 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                     </svg>
                   </button>
                 </div>
-                <Button 
+                <Button
                   onClick={() => {
                     if (onAddToCart) {
                       onAddToCart(product, selectedColor, selectedSize, quantity);
@@ -636,17 +644,17 @@ export function ProductDetailsModal({ product, open, onClose, onViewProduct, onA
                   Add to Cart ({quantity})
                 </Button>
               </div>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
+
                   // Validate selections if required
                   if ((requiresColorSelection && !selectedColor) || (requiresSizeSelection && !selectedSize)) {
                     return;
                   }
-                  
+
                   if (onBuyNow) {
                     onBuyNow(product, selectedColor, selectedSize, quantity);
                   } else if (onAddToCart) {

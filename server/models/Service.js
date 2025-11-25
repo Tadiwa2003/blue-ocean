@@ -66,11 +66,8 @@ const serviceSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Indexes
+// Indexes - remove duplicates (id, userId, storefrontId already have indexes defined in schema)
 serviceSchema.index({ serviceCategory: 1 });
-serviceSchema.index({ id: 1 });
-serviceSchema.index({ userId: 1 });
-serviceSchema.index({ storefrontId: 1 });
 serviceSchema.index({ storefrontId: 1, serviceCategory: 1 }); // Compound index for filtering
 
 const Service = mongoose.model('Service', serviceSchema);
