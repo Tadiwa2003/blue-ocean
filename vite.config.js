@@ -31,4 +31,30 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'lenis'],
   },
+  // Production build configuration
+  build: {
+    outDir: 'dist',
+    sourcemap: false, // Disable sourcemaps in production for smaller bundle
+    minify: 'terser', // Use terser for better minification
+    terserOptions: {
+      compress: {
+        // Remove console statements in production
+        drop_console: true, // Remove all console.* calls
+        drop_debugger: true, // Remove debugger statements
+        pure_funcs: ['console.log', 'console.debug', 'console.info'], // Specifically remove these
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor code for better caching
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['framer-motion', 'lucide-react'],
+          'animation-vendor': ['gsap', '@gsap/react', 'animejs', 'lenis'],
+        },
+      },
+    },
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 1000,
+  },
 });
