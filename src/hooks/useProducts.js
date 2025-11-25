@@ -14,23 +14,36 @@ export function useProducts(storefrontId = null) {
         console.log('🛍️ Fetching products from API...', storefrontId ? `(storefront: ${storefrontId})` : '');
       }
       const response = await api.products.getProducts(storefrontId);
+      
+      // Handle null or undefined response
+      if (!response) {
+        console.warn('⚠️ Products API returned null/undefined response');
+        setProducts([]);
+        setError('No data received from server');
+        return;
+      }
+      
       if (process.env.NODE_ENV === 'development') {
         console.log('🛍️ Products response:', response.success ? `✅ ${response.data?.products?.length || 0} products` : '❌ Failed');
       }
-      if (response.success) {
-        const productsList = response.data.products || [];
+      
+      if (response && response.success) {
+        const productsList = response.data?.products || [];
         setProducts(productsList);
         if (process.env.NODE_ENV === 'development') {
           console.log('🛍️ Products loaded:', productsList.length);
         }
       } else {
-        setError('Failed to load products');
+        const errorMsg = response?.message || 'Failed to load products';
+        setError(errorMsg);
+        setProducts([]);
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.error('❌ Error fetching products:', err);
       }
-      setError(err.message || 'Failed to load products');
+      const errorMessage = err.message || 'Failed to load products';
+      setError(errorMessage);
       // Fallback to empty array on error
       setProducts([]);
     } finally {

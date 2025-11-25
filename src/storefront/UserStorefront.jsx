@@ -17,6 +17,79 @@ import { ContainerScrollAnimation } from '../components/ui/ScrollTriggerAnimatio
 import ImageTrail from '../components/ui/ImageTrail.jsx';
 import { motion } from 'framer-motion';
 
+const THEME_PRESETS = [
+  {
+    id: 'aurora',
+    focus: 'beauty',
+    gradient: 'linear-gradient(135deg, rgba(14,165,233,0.95), rgba(79,70,229,0.9))',
+    accent: '#8B5CF6',
+    texture: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 50%)',
+    glow: 'rgba(91, 33, 182, 0.35)',
+    badge: 'Aurora Glow',
+    highlights: ['Hand-crafted drops', 'Ethical sourcing', 'Instant onboarding'],
+    card: {
+      background: 'rgba(21,30,61,0.8)',
+      border: 'rgba(255,255,255,0.12)',
+      shadow: '0 20px 60px rgba(79,70,229,0.25)',
+    },
+  },
+  {
+    id: 'tidepool',
+    focus: 'wellness',
+    gradient: 'linear-gradient(135deg, rgba(8,145,178,0.95), rgba(6,78,59,0.92))',
+    accent: '#10B981',
+    texture: 'radial-gradient(circle at 80% 0%, rgba(16,185,129,0.2), transparent 55%)',
+    glow: 'rgba(13, 148, 136, 0.35)',
+    badge: 'Tidepool Calm',
+    highlights: ['Wellness rituals', 'Seasonal curations', 'Private events'],
+    card: {
+      background: 'rgba(4,44,57,0.85)',
+      border: 'rgba(16,185,129,0.15)',
+      shadow: '0 20px 60px rgba(13,148,136,0.25)',
+    },
+  },
+  {
+    id: 'ember',
+    focus: 'artisan',
+    gradient: 'linear-gradient(135deg, rgba(251,191,36,0.95), rgba(249,115,22,0.92))',
+    accent: '#F97316',
+    texture: 'radial-gradient(circle at 30% 80%, rgba(251,191,36,0.25), transparent 55%)',
+    glow: 'rgba(253, 186, 116, 0.3)',
+    badge: 'Ember Luxe',
+    highlights: ['Drop shipping ready', 'Premium packaging', 'Same-day prep'],
+    card: {
+      background: 'rgba(56,32,8,0.9)',
+      border: 'rgba(249,115,22,0.2)',
+      shadow: '0 20px 60px rgba(249,115,22,0.3)',
+    },
+  },
+];
+
+const FOCUS_LABELS = {
+  beauty: 'Beauty & Spa',
+  wellness: 'Wellness & Retreats',
+  artisan: 'Artisan Goods',
+  tech: 'Tech & Lifestyle',
+  lifestyle: 'Lifestyle Boutique',
+};
+
+const FOCUS_THEME_MAP = {
+  beauty: 'aurora',
+  wellness: 'tidepool',
+  artisan: 'ember',
+  tech: 'aurora',
+  lifestyle: 'aurora',
+};
+
+const stringHash = (value = '') => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
 gsap.registerPlugin(ScrollTrigger);
 
 export function UserStorefront({ onClose, customStorefront }) {
@@ -36,6 +109,38 @@ export function UserStorefront({ onClose, customStorefront }) {
   const heroBackgroundImage = customStorefront?.design?.hero?.backgroundImage || null;
   const storefrontType = customStorefront?.type || 'products';
   const storefrontId = customStorefront?._id || customStorefront?.id || null;
+  const focusKey =
+    customStorefront?.design?.focus ||
+    (storefrontType === 'spa' ? 'wellness' : storefrontType === 'products' ? 'artisan' : 'beauty');
+
+  const selectedTheme = useMemo(() => {
+    const presetFromFocus = FOCUS_THEME_MAP[focusKey];
+    const explicitThemeId = customStorefront?.design?.themePreset;
+    if (explicitThemeId) {
+      return THEME_PRESETS.find((theme) => theme.id === explicitThemeId) ?? THEME_PRESETS[0];
+    }
+    if (presetFromFocus) {
+      const focusTheme = THEME_PRESETS.find((theme) => theme.id === presetFromFocus);
+      if (focusTheme) return focusTheme;
+    }
+    const index = storefrontId ? stringHash(storefrontId) % THEME_PRESETS.length : 0;
+    return THEME_PRESETS[index];
+  }, [customStorefront, storefrontId, focusKey]);
+
+  const gradientAccent = customStorefront?.design?.colors?.gradient || selectedTheme.gradient;
+  const badgeLabel = customStorefront?.design?.branding?.badge || selectedTheme.badge;
+  const brandHighlights =
+    customStorefront?.design?.branding?.pillars?.length > 0
+      ? customStorefront.design.branding.pillars
+      : selectedTheme.highlights;
+  const experienceLabel = FOCUS_LABELS[focusKey] || 'Online Boutique';
+  const cardTheme = {
+    card: selectedTheme.card,
+    accent: customStorefront?.design?.colors?.accent || selectedTheme.accent,
+  };
+  const showProducts = storefrontType === 'products' || storefrontType === 'mixed';
+  const showServices = storefrontType === 'spa' || storefrontType === 'mixed';
+  const servicesFirst = showServices && (focusKey === 'beauty' || focusKey === 'wellness' || storefrontType === 'spa');
 
   // Fetch data based on storefront type - filter by storefrontId
   const { products: allProducts, loading: productsLoading } = useProducts(storefrontId);
@@ -124,6 +229,9 @@ export function UserStorefront({ onClose, customStorefront }) {
 
   // Image trail items
   const imageTrailItems = useMemo(() => {
+    if (customStorefront?.design?.gallery?.length) {
+      return customStorefront.design.gallery;
+    }
     const items = [];
     if (storefrontType === 'products' || storefrontType === 'mixed') {
       items.push(
@@ -139,10 +247,17 @@ export function UserStorefront({ onClose, customStorefront }) {
         'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=400&h=400&fit=crop',
       );
     }
-    return items.length > 0 ? items : [
-      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
-    ];
-  }, [storefrontType]);
+    return items.length > 0
+      ? items
+      : ['https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop'];
+  }, [customStorefront, storefrontType]);
+
+  const lookbookImages = useMemo(() => {
+    if (customStorefront?.design?.lookbook?.length) {
+      return customStorefront.design.lookbook;
+    }
+    return imageTrailItems.slice(0, 4);
+  }, [customStorefront, imageTrailItems]);
 
   // Cart functions
   const addToCart = (product, color = '', size = '', quantity = 1) => {
@@ -202,6 +317,128 @@ export function UserStorefront({ onClose, customStorefront }) {
     setSelectedService(service);
     setIsServiceModalOpen(true);
   };
+
+  const productsSection = (
+    <section className="relative z-10 py-16 px-6">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Products</h2>
+
+        {/* Category Filter */}
+        {productCategories.length > 1 && (
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
+            {productCategories.map((category) => (
+              <button
+                key={category}
+                onClick={() => {
+                  setActiveProductCategory(category);
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeProductCategory === category ? 'text-white' : 'text-white/60 hover:text-white/80'
+                }`}
+                style={{
+                  backgroundColor: activeProductCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Products Grid */}
+        {productsLoading ? (
+          <div className="text-center py-12 text-white/60">Loading products...</div>
+        ) : paginatedProducts.length === 0 ? (
+          <div className="text-center py-12 text-white/60">No products found in this category.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginatedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onViewDetails={() => handleViewProduct(product)}
+                onAddToCart={addToCart}
+                theme={cardTheme}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: currentPage === 1 ? 'rgba(255, 255, 255, 0.1)' : primaryColor,
+                color: 'white',
+              }}
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 text-white/80">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: currentPage === totalPages ? 'rgba(255, 255, 255, 0.1)' : primaryColor,
+                color: 'white',
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
+  const servicesSection = (
+    <section className="relative z-10 py-16 px-6">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Services</h2>
+
+        {/* Category Filter */}
+        {serviceCategories.length > 1 && (
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
+            {serviceCategories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveServiceCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeServiceCategory === category ? 'text-white' : 'text-white/60 hover:text-white/80'
+                }`}
+                style={{
+                  backgroundColor: activeServiceCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Services Grid */}
+        {servicesLoading ? (
+          <div className="text-center py-12 text-white/60">Loading services...</div>
+        ) : filteredServices.length === 0 ? (
+          <div className="text-center py-12 text-white/60">No services found in this category.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredServices.map((service) => (
+              <ServiceCard key={service.id} service={service} onViewDetails={() => handleViewService(service)} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
 
   return (
     <ContainerScrollAnimation className="min-h-screen bg-midnight text-white relative">
@@ -700,45 +937,34 @@ export function UserStorefront({ onClose, customStorefront }) {
                   />
                 ))}
               </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-8">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: currentPage === 1 ? 'rgba(255, 255, 255, 0.1)' : primaryColor,
-                    color: 'white',
-                  }}
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2 text-white/80">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: currentPage === totalPages ? 'rgba(255, 255, 255, 0.1)' : primaryColor,
-                    color: 'white',
-                  }}
-                >
-                  Next
-                </button>
-              </div>
-            )}
+            </div>
           </div>
-        </section>
-      )}
+          <div
+            className="rounded-[32px] border border-white/10 p-6 text-white relative overflow-hidden"
+            style={{ background: gradientAccent }}
+          >
+            <div className="relative z-10 space-y-3">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/80">Drop Status</p>
+              <h4 className="text-2xl font-display">{customStorefront?.design?.hero?.collectionName || 'Signature Capsule'}</h4>
+              <p className="text-sm text-white/80">
+                {customStorefront?.design?.hero?.collectionDescription ||
+                  'Limited-production pieces refreshed weekly. Built for online-only experiences.'}
+              </p>
+              <div className="flex items-center justify-between pt-2 text-sm text-white/80">
+                <span>Live inventory sync</span>
+                <span className="font-mono text-base text-white">ON</span>
+              </div>
+            </div>
+            <div className="absolute inset-y-0 right-0 w-1/2 opacity-30">
+              <div className="h-full w-full" style={{ backgroundImage: selectedTheme.texture }} />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {/* Services Section */}
-      {(storefrontType === 'spa' || storefrontType === 'mixed') && (
-        <section className="relative z-10 py-16 px-6">
+      {/* Lookbook / capsule */}
+      {lookbookImages.length > 0 && (
+        <section className="relative z-10 px-6 pb-12">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl sm:text-4xl font-display font-bold mb-8 text-center">Services</h2>
 
@@ -756,32 +982,22 @@ export function UserStorefront({ onClose, customStorefront }) {
                     style={{
                       backgroundColor: activeServiceCategory === category ? primaryColor : 'rgba(255, 255, 255, 0.1)',
                     }}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Services Grid */}
-            {servicesLoading ? (
-              <div className="text-center py-12 text-white/60">Loading services...</div>
-            ) : filteredServices.length === 0 ? (
-              <div className="text-center py-12 text-white/60">No services found in this category.</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredServices.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    onViewDetails={() => handleViewService(service)}
                   />
-                ))}
-              </div>
-            )}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent text-white">
+                    <p className="text-sm uppercase tracking-[0.4em] text-white/70">Drop {index + 1}</p>
+                    <p className="text-lg font-semibold">{customStorefront?.design?.hero?.title || storefrontName}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </section>
       )}
+
+      {/* Products/Services placement */}
+      {showProducts && !servicesFirst && productsSection}
+      {showServices && servicesSection}
+      {showProducts && servicesFirst && productsSection}
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 py-8 px-6 mt-16">

@@ -18,10 +18,17 @@ const fallbackImage =
     </svg>
   `);
 
-export function ProductCard({ product, onViewDetails, onAddToCart }) {
+export function ProductCard({ product, onViewDetails, onAddToCart, theme }) {
   const [imageSrc, setImageSrc] = useState(product.image || fallbackImage);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const cardTheme = {
+    background: theme?.card?.background || 'rgba(11,35,62,0.7)',
+    border: theme?.card?.border || 'rgba(255,255,255,0.08)',
+    shadow:
+      theme?.card?.shadow || '0 20px 60px rgba(29,160,230,0.3)',
+    accent: theme?.accent || '#1da0e6',
+  };
 
   const handleViewDetails = () => {
     if (onViewDetails) {

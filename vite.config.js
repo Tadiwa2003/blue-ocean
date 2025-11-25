@@ -21,9 +21,10 @@ export default defineConfig({
       origin: true,
       credentials: true,
     },
-    // WebSocket configuration for 21st.dev
-    ws: {
-      port: 5182,
+    // Watch options to prevent excessive file watching
+    watch: {
+      usePolling: false,
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
     },
   },
   // Optimize build to prevent refresh issues

@@ -13,6 +13,7 @@ export function Hero() {
 
   return (
     <section ref={sectionRef} id="hero" className="relative overflow-hidden pt-32">
+      {/* Background with Spline 3D */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"
@@ -39,8 +40,10 @@ export function Hero() {
           }}
         />
       </div>
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/75 via-midnight/60 to-midnight/40" />
-      <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_top_left,_rgba(27,152,224,0.15),_transparent_60%)]" />
+      
+      {/* Soft gradient overlays */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-r from-midnight/80 via-midnight/60 to-midnight/30" />
+      <div className="absolute inset-0 z-20 hero-ring-animation bg-[radial-gradient(circle_at_top_left,_rgba(27,152,224,0.2),_transparent_60%)]" />
 
       <div className="relative z-30 mx-auto max-w-6xl px-6 pb-24 pt-24 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center">
@@ -107,13 +110,19 @@ export function Hero() {
               >
                 How it works
               </Button>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60">
+            </motion.div>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={isInView ? { y: 0, opacity: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60"
+            >
               <a
                 href="#cta"
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/20 hover:text-white"
               >
-                <span className="text-xl"></span>
+                <span className="text-xl"></span>
                 <span>Download on the App Store</span>
               </a>
               <a
@@ -123,7 +132,7 @@ export function Hero() {
                 <span className="text-lg">▶</span>
                 <span>Get it on BrightPath Play</span>
               </a>
-            </div>
+            </motion.div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -194,7 +203,7 @@ export function Hero() {
                 </ul>
               </div>
             </article>
-          </div>
+          </motion.div>
         </div>
       </div>
 

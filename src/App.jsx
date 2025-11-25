@@ -15,11 +15,11 @@ import { ContactModal } from './components/ContactModal.jsx';
 import { SubscriptionRequiredModal } from './components/SubscriptionRequiredModal.jsx';
 import { Storefront } from './storefront/Storefront.jsx';
 import { BeautySpaStorefront } from './storefront/BeautySpaStorefront.jsx';
+import { AnayaFindsStorefront } from './storefront/AnayaFindsStorefront.jsx';
 import { UserStorefront } from './storefront/UserStorefront.jsx';
 import { StorefrontLoading } from './storefront/StorefrontLoading.jsx';
 import { CounterLoader } from './components/CounterLoader.jsx';
-import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
-import { ReactPlugin } from '@21st-extension/react';
+import { TwentyFirstToolbarWrapper } from './components/TwentyFirstToolbarWrapper.jsx';
 import { GradientBackground } from './components/ui/dark-gradient-background.jsx';
 import { ShaderAnimation } from './components/ShaderAnimation.jsx';
 import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimations.jsx';
@@ -244,10 +244,10 @@ function AppContent() {
     }
   }, [isAuthenticated, currentUser]);
 
-  // Verify 21st.dev extension is loaded and monitor connection
+  // Verify 21st.dev extension is loaded (single check on mount)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Initial connection status log
+      // Single connection status log on mount
       const logConnectionStatus = () => {
         const status = {
           toolbarAvailable: typeof TwentyFirstToolbar !== 'undefined',
@@ -261,43 +261,32 @@ function AppContent() {
         };
 
         console.log('%c✅ 21st.dev Extension Status', 'color: #4CAF50; font-weight: bold; font-size: 14px;', status);
-        console.log('%c🔗 Connection Info', 'color: #2196F3; font-weight: bold;', {
-          extensionInstalled: 'Check Cursor Extensions (Cmd+Shift+X)',
-          extensionEnabled: 'Make sure 21st extension is enabled',
-          devServerRunning: `http://localhost:${status.port}`,
-          browserOpen: status.url,
-          connectionPort: '5178',
-          extensionHostPort: '5747 (Cursor)',
-        });
       };
 
-      // Log initial status
+      // Log status once on mount
       logConnectionStatus();
 
-      // Enhanced toolbar detection with multiple strategies
+      // Single toolbar detection check (no polling)
       const detectToolbar = () => {
         const selectors = [
           '[data-21st-toolbar]',
           '[data-21st]',
           '[class*="21st"]',
           '[id*="21st"]',
-          '[class*="toolbar"]',
-          'div[data-extension="21st"]',
-          'div[class*="TwentyFirst"]',
         ];
 
         for (const selector of selectors) {
           try {
             const element = document.querySelector(selector);
             if (element && (element.offsetParent !== null || element.style.display !== 'none')) {
-              return { found: true, selector, element };
+              console.log(`%c✅ 21st.dev Toolbar Found: ${selector}`, 'color: #4CAF50; font-weight: bold;');
+              return true;
             }
           } catch (e) {
             // Ignore selector errors
           }
         }
-
-        return { found: false, selector: null, element: null };
+        return false;
       };
 
       // Monitor toolbar with extended retry logic
@@ -340,9 +329,9 @@ function AppContent() {
         }
       }, checkInterval);
 
-      // Cleanup on unmount
+      // Cleanup timeout on unmount
       return () => {
-        clearInterval(monitorToolbar);
+        clearTimeout(timeoutId);
       };
     }
   }, []);
