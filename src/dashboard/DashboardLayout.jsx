@@ -1804,6 +1804,64 @@ function StorefrontPanel({ subscription, onViewStorefront, onViewSpaStorefront, 
 
                             {/* Secondary Actions */}
                             <div className="flex gap-2">
+                              {/* Copy Link Button */}
+                              <Button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const storefrontUrl = `${window.location.origin}/store/${storefront.slug}`;
+
+                                  try {
+                                    await navigator.clipboard.writeText(storefrontUrl);
+                                    // Show success feedback
+                                    const button = e.currentTarget;
+                                    const originalText = button.innerHTML;
+                                    button.innerHTML = '<span class="flex items-center justify-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!</span>';
+                                    button.classList.add('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+
+                                    setTimeout(() => {
+                                      button.innerHTML = originalText;
+                                      button.classList.remove('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+                                    }, 2000);
+                                  } catch (err) {
+                                    // Fallback for older browsers
+                                    const textArea = document.createElement('textarea');
+                                    textArea.value = storefrontUrl;
+                                    textArea.style.position = 'fixed';
+                                    textArea.style.opacity = '0';
+                                    textArea.style.left = '-9999px';
+                                    document.body.appendChild(textArea);
+                                    textArea.focus();
+                                    textArea.select();
+
+                                    try {
+                                      document.execCommand('copy');
+                                      const button = e.currentTarget;
+                                      const originalText = button.innerHTML;
+                                      button.innerHTML = '<span class="flex items-center justify-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!</span>';
+                                      button.classList.add('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+
+                                      setTimeout(() => {
+                                        button.innerHTML = originalText;
+                                        button.classList.remove('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+                                      }, 2000);
+                                    } catch (copyErr) {
+                                      console.error('Failed to copy link:', copyErr);
+                                    }
+
+                                    document.body.removeChild(textArea);
+                                  }
+                                }}
+                                variant="ghost"
+                                className="flex-1 text-xs py-2 text-white/60 hover:text-white hover:bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300"
+                              >
+                                <span className="flex items-center justify-center gap-1.5">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                  Copy Link
+                                </span>
+                              </Button>
+
                               {(storefront.type === 'products' || storefront.type === 'mixed') && (
                                 <Button
                                   onClick={() => {
@@ -3559,7 +3617,8 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                       )}
 
                       {/* Actions */}
-                      <div className="pt-4 border-t border-white/10">
+                      <div className="pt-4 border-t border-white/10 space-y-2">
+                        {/* Primary Action - View Storefront */}
                         <Button
                           onClick={() => handleViewUserStorefront(storefront)}
                           className="w-full bg-gradient-to-r from-brand-500/80 to-brand-600/80 hover:from-brand-500 hover:to-brand-600 text-white font-medium text-sm py-2.5 shadow-lg shadow-brand-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/30 hover:scale-[1.02]"
@@ -3570,6 +3629,64 @@ function DashboardPanel({ currentUser, onViewStorefront, onViewSpaStorefront, su
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                             View Storefront
+                          </span>
+                        </Button>
+
+                        {/* Secondary Action - Copy Link */}
+                        <Button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const storefrontUrl = `${window.location.origin}/store/${storefront.slug}`;
+
+                            try {
+                              await navigator.clipboard.writeText(storefrontUrl);
+                              // Show success feedback
+                              const button = e.currentTarget;
+                              const originalText = button.innerHTML;
+                              button.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Link Copied!</span>';
+                              button.classList.add('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+
+                              setTimeout(() => {
+                                button.innerHTML = originalText;
+                                button.classList.remove('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+                              }, 2000);
+                            } catch (err) {
+                              // Fallback for older browsers
+                              const textArea = document.createElement('textarea');
+                              textArea.value = storefrontUrl;
+                              textArea.style.position = 'fixed';
+                              textArea.style.opacity = '0';
+                              textArea.style.left = '-9999px';
+                              document.body.appendChild(textArea);
+                              textArea.focus();
+                              textArea.select();
+
+                              try {
+                                document.execCommand('copy');
+                                const button = e.currentTarget;
+                                const originalText = button.innerHTML;
+                                button.innerHTML = '<span class="flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Link Copied!</span>';
+                                button.classList.add('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+
+                                setTimeout(() => {
+                                  button.innerHTML = originalText;
+                                  button.classList.remove('bg-emerald-500/20', 'border-emerald-500/40', 'text-emerald-300');
+                                }, 2000);
+                              } catch (copyErr) {
+                                console.error('Failed to copy link:', copyErr);
+                              }
+
+                              document.body.removeChild(textArea);
+                            }
+                          }}
+                          variant="ghost"
+                          className="w-full text-white/70 hover:text-white hover:bg-white/10 border border-white/20 hover:border-white/30 transition-all duration-300 font-medium text-sm py-2"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy Share Link
                           </span>
                         </Button>
                       </div>
