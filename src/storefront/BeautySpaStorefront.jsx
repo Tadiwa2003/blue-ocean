@@ -34,8 +34,8 @@ export function BeautySpaStorefront({ onClose, customStorefront = null }) {
   const heroBackgroundColor = customStorefront?.design?.hero?.backgroundColor || secondaryColor;
   const heroBackgroundImage = customStorefront?.design?.hero?.backgroundImage || null;
 
-  // Fetch services from backend
-  const { services: allServices, loading: servicesLoading, error: servicesError } = useServices();
+  // Fetch ONLY platform services (storefrontId=null) - excludes user storefront services
+  const { services: allServices, loading: servicesLoading, error: servicesError } = useServices('null');
 
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedService, setSelectedService] = useState(null);

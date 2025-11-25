@@ -26,6 +26,7 @@ export function Storefront({ onClose, customStorefront = null }) {
   // Extract custom storefront branding and design
   const storefrontName = customStorefront?.design?.branding?.storeName || customStorefront?.name || 'BrightPath Products';
   const storefrontTagline = customStorefront?.design?.branding?.tagline || 'Curated coastal luxury for people who live and shop by the tides.';
+  const storefrontLogo = customStorefront?.design?.branding?.logo || null;
   const heroTitle = customStorefront?.design?.hero?.title || 'Curated coastal luxury for people who live and shop by the tides.';
   const heroSubtitle = customStorefront?.design?.hero?.subtitle || 'Shop products & accessories';
   const primaryColor = customStorefront?.design?.colors?.primary || '#1da0e6';
@@ -80,8 +81,8 @@ export function Storefront({ onClose, customStorefront = null }) {
     }),
     [],
   );
-  // Fetch products from backend
-  const { products: allProducts, loading: productsLoading, error: productsError } = useProducts();
+  // Fetch ONLY platform products (storefrontId=null) - excludes user storefront products
+  const { products: allProducts, loading: productsLoading, error: productsError } = useProducts('null');
 
   // Filter out Beauty Spa Services - this is for products only
   const productItems = useMemo(
@@ -644,85 +645,10 @@ export function Storefront({ onClose, customStorefront = null }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // GSAP animations for products grid
+  // GSAP animations removed for cleaner product display
+  // Products now display without scroll-triggered or hover animations
   useEffect(() => {
-    if (!productsGridRef.current) return;
-
-    const cards = productsGridRef.current.querySelectorAll('.storefront-card');
-    if (cards.length === 0) return;
-
-    // Store event listeners for cleanup
-    const hoverHandlers = [];
-
-    // Set initial state
-    gsap.set(cards, {
-      opacity: 0,
-      y: 80,
-      scale: 0.85,
-      rotationX: -15,
-    });
-
-    // Create scroll-triggered animation
-    const scrollTrigger = ScrollTrigger.create({
-      trigger: productsGridRef.current,
-      start: 'top 75%',
-      toggleActions: 'play none none reverse',
-      onEnter: () => {
-        gsap.to(cards, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          rotationX: 0,
-          duration: 1,
-          ease: 'power3.out',
-          stagger: {
-            amount: 0.8,
-            from: 'start',
-          },
-        });
-      },
-    });
-
-    // Add hover effects with GSAP
-    cards.forEach((card) => {
-      const handleMouseEnter = () => {
-        gsap.to(card, {
-          y: -12,
-          scale: 1.03,
-          rotationX: 5,
-          duration: 0.4,
-          ease: 'power2.out',
-        });
-      };
-
-      const handleMouseLeave = () => {
-        gsap.to(card, {
-          y: 0,
-          scale: 1,
-          rotationX: 0,
-          duration: 0.4,
-          ease: 'power2.out',
-        });
-      };
-
-      card.addEventListener('mouseenter', handleMouseEnter);
-      card.addEventListener('mouseleave', handleMouseLeave);
-
-      hoverHandlers.push({ card, handleMouseEnter, handleMouseLeave });
-    });
-
-    return () => {
-      // Cleanup ScrollTrigger
-      if (scrollTrigger) {
-        scrollTrigger.kill();
-      }
-
-      // Cleanup event listeners
-      hoverHandlers.forEach(({ card, handleMouseEnter, handleMouseLeave }) => {
-        card.removeEventListener('mouseenter', handleMouseEnter);
-        card.removeEventListener('mouseleave', handleMouseLeave);
-      });
-    };
+    // Animation code removed
   }, [paginatedProducts]);
 
   return (
@@ -767,8 +693,19 @@ export function Storefront({ onClose, customStorefront = null }) {
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ocean/80 backdrop-blur-xl relative">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
-          <Logo className="hidden sm:flex" />
-          <p className="sm:hidden text-sm uppercase tracking-[0.35em] text-brand-200">BrightPath Products</p>
+          {storefrontLogo ? (
+            <img
+              src={storefrontLogo}
+              alt={storefrontName}
+              className="h-8 w-auto object-contain hidden sm:flex"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <Logo className="hidden sm:flex" style={{ display: storefrontLogo ? 'none' : 'flex' }} />
+          <p className="sm:hidden text-sm uppercase tracking-[0.35em] text-brand-200">{storefrontName}</p>
           <div className="flex items-center gap-2 sm:gap-3 text-sm text-white/70 ml-auto">
             <span className="hidden sm:inline">Shop products & accessories</span>
             <button
@@ -839,7 +776,25 @@ export function Storefront({ onClose, customStorefront = null }) {
             <div className="storefront-background-overlay absolute inset-0 bg-gradient-to-br from-midnight/60 via-ocean/50 to-midnight/70 z-10" />
           </div>
           <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-32 text-center">
-            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+            {/* Storefront Logo in Hero */}
+            {storefrontLogo && customStorefront?.design?.hero?.showLogo !== false ? (
+              <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s' }}>
+                <img
+                  src={storefrontLogo}
+                  alt={storefrontName}
+                  className="h-24 w-auto sm:h-32 md:h-40 object-contain mx-auto"
+                  style={{
+                    maxHeight: customStorefront?.design?.hero?.logoSize === 'small' ? '96px' :
+                      customStorefront?.design?.hero?.logoSize === 'large' ? '160px' : '128px'
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              </div>
+            ) : null}
+            <div className="storefront-hero-text mb-4" style={{ animationDelay: '0s', display: (storefrontLogo && customStorefront?.design?.hero?.showLogo !== false) ? 'none' : 'block' }}>
               <Logo className="h-24 w-auto sm:h-32 md:h-40" />
             </div>
             <span className="storefront-hero-text rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-brand-100">
@@ -957,7 +912,7 @@ export function Storefront({ onClose, customStorefront = null }) {
                 background="transparent"
               />
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr relative z-10" style={{ perspective: '1000px' }}>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr relative z-10">
               {productsLoading ? (
                 <div className="col-span-full flex flex-col items-center justify-center py-20">
                   <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-400 border-t-transparent"></div>
@@ -974,29 +929,16 @@ export function Storefront({ onClose, customStorefront = null }) {
                 </div>
               ) : (
                 paginatedProducts.map((product, index) => (
-                  <motion.div
+                  <div
                     key={product.id}
-                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{
-                      duration: 0.5,
-                      delay: index * 0.1,
-                      type: "spring",
-                      stiffness: 100
-                    }}
-                    whileHover={{ y: -5, scale: 1.02 }}
                     className="storefront-card"
-                    style={{
-                      animationDelay: `${index * 0.1}s`,
-                    }}
                   >
                     <ProductCard
                       product={product}
                       onViewDetails={handleViewProductDetails}
                       onAddToCart={(product) => addToCart(product)}
                     />
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
