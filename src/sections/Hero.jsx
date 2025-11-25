@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useInView } from 'framer-motion';
 
 // Inline base64 encoded gradient as guaranteed fallback
-const FALLBACK_GRADIENT = 
+const FALLBACK_GRADIENT =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGIyMzNlO3N0b3Atb3BhY2l0eToxIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMxZGEwZTY7c3RvcC1vcGFjaXR5OjAuNiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzA0MGIxODtzdG9wLW9wYWNpdHk6MSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=';
 
 export function Hero() {
@@ -47,15 +47,34 @@ export function Hero() {
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-1 backdrop-blur">
               <p className="text-xs font-sans text-brand-100 font-semibold uppercase tracking-[0.35em] m-0">
-                BrightPath · Tana's Beauty Boost Spa
+                Welcome to BrightPath
               </p>
             </div>
             <h1 className="text-left max-w-3xl font-display text-[2.75rem] leading-tight sm:text-[3.1rem] font-semibold sm:font-medium tracking-tight m-0 text-white">
-              Your Complete Marketplace Platform: Beauty Spa Services & Product Store
+              The All-in-One Digital Marketplace Platform
             </h1>
-            <p className="max-w-2xl text-left text-base md:text-lg font-sans text-white/80 font-normal leading-relaxed m-0">
-              BrightPath Marketplace powers two core businesses: Tana's Beauty Boost Spa for premium wellness services, and our merchant store for curated product sales. Plus, rent our platform to other merchants who want to sell their goods through our marketplace.
-            </p>
+            <div className="space-y-4">
+              <p className="max-w-2xl text-left text-base md:text-lg font-sans text-white/90 font-normal leading-relaxed m-0">
+                <strong className="text-brand-200">BrightPath</strong> is your comprehensive digital marketplace solution that empowers businesses to thrive online. We provide a powerful platform for entrepreneurs and merchants to launch, manage, and grow their digital storefronts with ease.
+              </p>
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-300">Our Joint Venture Businesses:</h3>
+                <div className="space-y-2 pl-4 border-l-2 border-brand-400/30">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-brand-400 flex-shrink-0" />
+                    <p className="text-sm text-white/85 leading-relaxed m-0">
+                      <strong className="text-white">Tana's Beauty Boost Spa</strong> – Premium wellness and beauty services featuring luxury treatments, therapeutic massages, rejuvenating facials, and complete wellness packages
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-brand-400 flex-shrink-0" />
+                    <p className="text-sm text-white/85 leading-relaxed m-0">
+                      <strong className="text-white">BrightPath Merchant Store</strong> – Curated marketplace for quality products with integrated inventory management, payment processing, and merchant rental options
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="grid gap-3 sm:flex sm:flex-wrap">
               <Button onClick={() => {
                 const retailSection = document.getElementById('retail');
@@ -108,55 +127,69 @@ export function Hero() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/8 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.4)] backdrop-blur-xl">
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
-              <div className="relative space-y-4 text-left text-white">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
-                  BrightPath Marketplace
-                </span>
-                <h2 className="font-display text-2xl">Merchant Store: Sell Your Products</h2>
-                <p className="text-sm text-white/80 leading-relaxed">
-                  Our merchant store platform lets you showcase and sell your products online. Manage inventory, track sales, and reach customers through our integrated marketplace. Perfect for businesses looking to expand their digital presence.
-              </p>
-                <ul className="space-y-2 text-xs text-white/65">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Easy product management and inventory tracking
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Integrated payment processing and order management
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
-                    Rent our platform to other merchants
-                  </li>
-                </ul>
-                  </div>
-            </article>
-
             <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-midnight/75 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.45)] backdrop-blur-xl">
               <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-brand-300/20 blur-3xl" />
               <div className="relative space-y-4 text-left text-white">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]">
-                  Tana&apos;s Beauty Boost Spa
-                  </span>
-                <h2 className="font-display text-2xl">Tana's Beauty Boost Spa: Premium Wellness Services</h2>
-                <p className="text-sm text-white/80 leading-relaxed">
-                  Experience luxury beauty and spa treatments at Tana's Beauty Boost Spa. From facials and massages to complete wellness packages, we offer a full range of services designed to rejuvenate and restore.
+                <span className="inline-flex items-center gap-2 rounded-full border border-brand-300/40 bg-brand-400/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-200">
+                  Joint Venture #1
+                </span>
+                <h2 className="font-display text-2xl font-semibold">Tana's Beauty Boost Spa</h2>
+                <p className="text-sm text-white/85 leading-relaxed font-medium">
+                  Premium Wellness & Beauty Services
                 </p>
-                <ul className="space-y-2 text-xs text-white/65">
+                <p className="text-sm text-white/75 leading-relaxed">
+                  Experience luxury beauty and spa treatments designed to rejuvenate and restore. From therapeutic massages to advanced skincare, we offer a complete wellness experience tailored to your needs.
+                </p>
+                <ul className="space-y-2.5 text-xs text-white/70">
                   <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Online booking system for all spa services
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-300 flex-shrink-0" />
+                    <span>Professional spa treatments & wellness packages</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Professional treatments and wellness packages
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-300 flex-shrink-0" />
+                    <span>Online booking system with real-time availability</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-200" />
-                    Gift cards and membership options available
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-300 flex-shrink-0" />
+                    <span>Gift cards, memberships & loyalty rewards</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-300 flex-shrink-0" />
+                    <span>Customized treatment plans for every client</span>
+                  </li>
+                </ul>
+              </div>
+            </article>
+
+            <article className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/8 p-6 shadow-[0_25px_45px_rgba(4,11,24,0.4)] backdrop-blur-xl">
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/20 blur-3xl" />
+              <div className="relative space-y-4 text-left text-white">
+                <span className="inline-flex items-center gap-2 rounded-full border border-brand-400/40 bg-brand-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-200">
+                  Joint Venture #2
+                </span>
+                <h2 className="font-display text-2xl font-semibold">BrightPath Merchant Store</h2>
+                <p className="text-sm text-white/85 leading-relaxed font-medium">
+                  Your Digital Storefront Solution
+                </p>
+                <p className="text-sm text-white/75 leading-relaxed">
+                  Launch and manage your online store with our comprehensive merchant platform. Sell products, track inventory, process payments, and grow your business—all in one place.
+                </p>
+                <ul className="space-y-2.5 text-xs text-white/70">
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+                    <span>Complete inventory & product management system</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+                    <span>Integrated payment processing & order tracking</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+                    <span>Rent our platform to other merchants & earn revenue</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+                    <span>Analytics dashboard with sales insights & reports</span>
                   </li>
                 </ul>
               </div>
@@ -165,7 +198,7 @@ export function Hero() {
         </div>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ y: 30, opacity: 0 }}
         animate={isInView ? { y: 0, opacity: 1 } : {}}
         transition={{ duration: 0.6, delay: 0.3 }}

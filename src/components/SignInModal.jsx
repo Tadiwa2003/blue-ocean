@@ -53,6 +53,18 @@ export function SignInModal({ open, onClose, onSuccess, initialMode = 'signin' }
     return () => document.removeEventListener('keydown', handleEscape);
   }, [open, onClose]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
   // Validate email format
   const validateEmail = (email) => {
     return EMAIL_REGEX.test(email);

@@ -61,12 +61,8 @@ const productSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Indexes
+// Indexes - remove duplicates (id, slug, userId, storefrontId already have indexes defined in schema)
 productSchema.index({ category: 1 });
-productSchema.index({ id: 1 });
-productSchema.index({ slug: 1 });
-productSchema.index({ userId: 1 });
-productSchema.index({ storefrontId: 1 });
 productSchema.index({ storefrontId: 1, category: 1 }); // Compound index for filtering
 
 const Product = mongoose.model('Product', productSchema);

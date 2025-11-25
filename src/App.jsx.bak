@@ -26,7 +26,6 @@ import { ContainerScrollAnimation } from './components/ui/ScrollTriggerAnimation
 import { downloadRitualMenu } from './utils/generateRitualMenu.js';
 import api from './services/api.js';
 import { ElevenLabsAgent } from './components/ElevenLabsAgent.jsx';
-import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -311,29 +310,29 @@ function AppContent() {
           checkCount++;
           const result = detectToolbar();
 
-          if (result.found && !connectionEstablished) {
-            connectionEstablished = true;
-            console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
-            console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
-              status: 'Connected',
-              selector: result.selector,
-              timestamp: new Date().toISOString(),
-            });
-            clearInterval(monitorToolbar);
-          } else if (checkCount >= maxChecks && !connectionEstablished) {
-            console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
-            console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
-              step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
-              step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
-              step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
-              step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
-              step5: '5. Verify dev server is running: npm run dev',
-              step6: '6. Check browser is at: http://localhost:5178',
-              step7: '7. Hard refresh browser: Cmd+Shift+R',
-              step8: '8. Check console for connection status',
-            });
-            clearInterval(monitorToolbar);
-          }
+        if (result.found && !connectionEstablished) {
+          connectionEstablished = true;
+          console.log(`%c✅ 21st.dev Toolbar Connected: ${result.selector}`, 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+          console.log('%c🎉 Connection Established!', 'color: #4CAF50; font-weight: bold;', {
+            status: 'Connected',
+            selector: result.selector,
+            timestamp: new Date().toISOString(),
+          });
+          clearInterval(monitorToolbar);
+        } else if (checkCount >= maxChecks && !connectionEstablished) {
+          console.warn('%c⚠️ 21st.dev Toolbar Not Detected', 'color: #FF9800; font-weight: bold; font-size: 14px;');
+          console.log('%c💡 Troubleshooting Steps:', 'color: #2196F3; font-weight: bold;', {
+            step1: '1. Open Cursor Extensions (Cmd+Shift+X)',
+            step2: '2. Search "21st extension" or "21st-dev.21st-extension"',
+            step3: '3. Ensure it is INSTALLED and ENABLED (not disabled)',
+            step4: '4. Reload Cursor: Cmd+Shift+P → "Developer: Reload Window"',
+            step5: '5. Verify dev server is running: npm run dev',
+            step6: '6. Check browser is at: http://localhost:5178',
+            step7: '7. Hard refresh browser: Cmd+Shift+R',
+            step8: '8. Check console for connection status',
+          });
+          clearInterval(monitorToolbar);
+        }
         } catch (error) {
           console.error('Toolbar monitoring error:', error);
           clearInterval(monitorToolbar);
@@ -506,10 +505,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <AppContent />
-      </ThemeProvider>
-    </ErrorBoundary>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <AppContent />
+    </ThemeProvider>
   );
 }

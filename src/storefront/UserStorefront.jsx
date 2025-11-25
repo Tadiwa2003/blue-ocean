@@ -27,6 +27,7 @@ export function UserStorefront({ onClose, customStorefront }) {
   // Extract storefront configuration
   const storefrontName = customStorefront?.design?.branding?.storeName || customStorefront?.name || 'My Store';
   const storefrontTagline = customStorefront?.design?.branding?.tagline || '';
+  const storefrontLogo = customStorefront?.design?.branding?.logo || null;
   const heroTitle = customStorefront?.design?.hero?.title || storefrontName;
   const heroSubtitle = customStorefront?.design?.hero?.subtitle || storefrontTagline;
   const primaryColor = customStorefront?.design?.colors?.primary || '#1da0e6';
@@ -245,12 +246,48 @@ export function UserStorefront({ onClose, customStorefront }) {
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <h1
-              className="text-lg sm:text-xl font-display font-bold truncate"
-              style={{ color: primaryColor }}
-            >
-              {storefrontName}
-            </h1>
+            {storefrontLogo ? (
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                  {/* Glow effect behind logo */}
+                  <div
+                    className="absolute inset-0 rounded-xl blur-md opacity-40"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <img
+                    src={storefrontLogo}
+                    alt={storefrontName}
+                    className="relative h-10 w-auto max-w-[120px] object-contain"
+                    style={{
+                      filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))'
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        parent.style.display = 'none';
+                      }
+                    }}
+                  />
+                </div>
+                {/* Show store name alongside logo if available */}
+                {storefrontName && (
+                  <h1
+                    className="text-lg sm:text-xl font-display font-bold truncate"
+                    style={{ color: primaryColor }}
+                  >
+                    {storefrontName}
+                  </h1>
+                )}
+              </div>
+            ) : (
+              <h1
+                className="text-lg sm:text-xl font-display font-bold truncate"
+                style={{ color: primaryColor }}
+              >
+                {storefrontName}
+              </h1>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {(storefrontType === 'products' || storefrontType === 'mixed') && (
@@ -335,6 +372,64 @@ export function UserStorefront({ onClose, customStorefront }) {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="relative mx-auto max-w-6xl px-6 text-center z-10"
         >
+          {/* Storefront Logo in Hero */}
+          {storefrontLogo && customStorefront?.design?.hero?.showLogo !== false && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mb-8 flex justify-center"
+            >
+              <div className="relative inline-flex items-center justify-center">
+                {/* Multi-layer glow effect */}
+                <div
+                  className="absolute inset-0 rounded-3xl blur-2xl opacity-30"
+                  style={{
+                    backgroundColor: primaryColor,
+                    transform: 'scale(1.2)'
+                  }}
+                />
+                <div
+                  className="absolute inset-0 rounded-2xl blur-xl opacity-20"
+                  style={{
+                    backgroundColor: primaryColor,
+                    transform: 'scale(1.1)'
+                  }}
+                />
+
+                {/* Logo container with background */}
+                <div
+                  className="relative px-8 py-6 rounded-2xl"
+                  style={{
+                    background: `radial-gradient(circle at center, ${primaryColor}15, transparent 70%)`,
+                  }}
+                >
+                  <img
+                    src={storefrontLogo}
+                    alt={storefrontName}
+                    className="h-24 sm:h-28 md:h-32 lg:h-36 w-auto object-contain mx-auto"
+                    style={{
+                      maxHeight: customStorefront?.design?.hero?.logoSize === 'small' ? '96px' :
+                        customStorefront?.design?.hero?.logoSize === 'large' ? '160px' : '128px',
+                      maxWidth: '100%',
+                      filter: `drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 8px ${primaryColor}40)`,
+                      imageRendering: 'high-quality',
+                      WebkitBackfaceVisibility: 'hidden',
+                      backfaceVisibility: 'hidden',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement?.parentElement;
+                      if (parent) {
+                        parent.style.display = 'none';
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Title with Glow Effect */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
